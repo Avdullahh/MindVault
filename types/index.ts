@@ -1,0 +1,30 @@
+import type { Database } from './database.generated';
+
+export type CategoryInsert    = Database['public']['Tables']['categories']['Insert'];
+export type CategoryUpdate    = Database['public']['Tables']['categories']['Update'];
+export type TagInsert         = Database['public']['Tables']['tags']['Insert'];
+export type TagUpdate         = Database['public']['Tables']['tags']['Update'];
+export type IdeaInsert        = Database['public']['Tables']['ideas']['Insert'];
+export type IdeaUpdate        = Database['public']['Tables']['ideas']['Update'];
+export type ProjectInsert     = Database['public']['Tables']['projects']['Insert'];
+export type ProjectUpdate     = Database['public']['Tables']['projects']['Update'];
+export type GoalInsert        = Database['public']['Tables']['goals']['Insert'];
+export type GoalUpdate        = Database['public']['Tables']['goals']['Update'];
+export type MilestoneInsert   = Database['public']['Tables']['milestones']['Insert'];
+export type MilestoneUpdate   = Database['public']['Tables']['milestones']['Update'];
+export type ActionStepInsert  = Database['public']['Tables']['action_steps']['Insert'];
+export type ActionStepUpdate  = Database['public']['Tables']['action_steps']['Update'];
+export type TaskInsert        = Database['public']['Tables']['tasks']['Insert'];
+export type TaskUpdate        = Database['public']['Tables']['tasks']['Update'];
+export type CalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert'];
+export type CalendarEventUpdate = Database['public']['Tables']['calendar_events']['Update'];
+
+export type Category      = Database['public']['Tables']['categories']['Row'];
+export type Tag           = Database['public']['Tables']['tags']['Row'];
+export type Project       = Database['public']['Tables']['projects']['Row'];
+export type Idea          = Database['public']['Tables']['ideas']['Row'];
+export type Goal          = Database['public']['Tables']['goals']['Row'];
+export type Milestone     = Database['public']['Tables']['milestones']['Row'];
+export type ActionStep    = Database['public']['Tables']['action_steps']['Row'];
+export type Task          = Database['public']['Tables']['tasks']['Row'];
+export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row'];

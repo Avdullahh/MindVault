@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+
+# Expo / React Native
+.expo/
+.expo-shared/
+dist/
+web-build/
+ios/
+android/
+*.tsbuildinfo
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# Supabase local CLI state (keep migrations/ tracked)
+supabase/.temp/
+supabase/.branches/
+
+# Editor / OS
+.vscode/
+.idea/
+.DS_Store
+*.log
