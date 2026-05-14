@@ -63,16 +63,6 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             </View>
 
             <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mb-2">
-              Milestones ({plan.milestones.length})
-            </Text>
-            {plan.milestones.map((m, i) => (
-              <View key={i} className="flex-row gap-2 mb-1.5">
-                <Text className="text-leather-400 text-sm">-</Text>
-                <Text className="text-leather-200 text-sm flex-1">{m.title}</Text>
-              </View>
-            ))}
-
-            <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mt-4 mb-2">
               Tasks to create ({checked.size} of {plan.tasks.length} selected)
             </Text>
             {plan.tasks.map((task, i) => (

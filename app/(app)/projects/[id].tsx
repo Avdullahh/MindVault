@@ -108,18 +108,6 @@ export default function ProjectDetail() {
         .single();
       if (goalErr || !goalRow) { setAiError(goalErr?.message ?? 'Failed to create goal'); return; }
 
-      for (let mi = 0; mi < previewPlan.milestones.length; mi++) {
-        const m = previewPlan.milestones[mi];
-        const { data: mRow, error: mErr } = await supabase
-          .from('milestones')
-          .insert({ goal_id: goalRow.id, title: m.title, position: mi })
-          .select('id')
-          .single();
-        if (mErr || !mRow) continue;
-        const steps = m.steps.map((s, si) => ({ milestone_id: mRow.id, title: s, done: false, position: si }));
-        await supabase.from('action_steps').insert(steps);
-      }
-
       if (checkedTasks.length > 0) {
         const { data: createdTasks, error: tasksErr } = await supabase
           .from('tasks')
