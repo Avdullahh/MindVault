@@ -53,7 +53,7 @@ export default function IdeasScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-8 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center"
+        className="absolute bottom-24 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add" size={28} color="#fff" />

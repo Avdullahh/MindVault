@@ -1,33 +1,43 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
 
-const BASE = `${process.env.EXPO_PUBLIC_SUPABASE_URL}/functions/v1`;
-
 export type AIStatus = 'idle' | 'loading' | 'success' | 'error';
-type AIState<T> = { status: AIStatus; data: T | null; error: string | null };
-type AIResult<T> = { data: T | null; error: string | null };
+export type AIState<T> = { status: AIStatus; data: T | null; error: string | null };
+export type AIResult<T> = { data: T | null; error: string | null };
 
 async function callEdgeFunction<T>(name: string, body: object): Promise<T> {
   const { data: { session } } = await supabase.auth.getSession();
-  const res = await fetch(`${BASE}/${name}`, {
-    method: 'POST',
+  if (!session) throw new Error('Not authenticated');
+
+  const { data, error } = await supabase.functions.invoke<T>(name, {
+    body,
     headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${session?.access_token ?? ''}`,
+      Authorization: `Bearer ${session.access_token}`,
     },
-    body: JSON.stringify(body),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({ error: res.statusText }));
-    throw new Error((err as { error?: string }).error ?? res.statusText);
+  if (error) {
+    let message = error.message;
+    const context = (error as { context?: Response }).context;
+    if (context) {
+      const payload = await context.clone().json().catch(() => null);
+      if (payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string') {
+        message = payload.error;
+      }
+    }
+    throw new Error(message);
   }
-  return res.json() as Promise<T>;
+  if (!data) throw new Error('No response from AI function');
+  return data;
 }
 
 export type CategoriseResult = { categoryName: string };
 export type ExpandResult = { questions: string[]; angles: string[]; related: string[] };
 export type PlanResult = { title: string; deadline: string; priority: 'high' | 'medium' | 'low'; milestones: { title: string; steps: string[] }[]; tasks: string[] };
 export type BriefResult = { greeting: string; events: string[]; resurface: { title: string; description: string } | null };
+export type CategoriseInput = { ideaTitle: string; ideaDescription?: string };
+export type ExpandInput = CategoriseInput;
+export type PlanGoalInput = { goalTitle: string; context?: string };
+export type MorningBriefInput = { timezone: string };
 
 function makeState<T>(): AIState<T> {
   return { status: 'idle', data: null, error: null };
@@ -39,52 +49,53 @@ export function useAI() {
   const [planState, setPlanState] = useState<AIState<PlanResult>>(makeState);
   const [briefState, setBriefState] = useState<AIState<BriefResult>>(makeState);
 
-  function wrap<T>(
+  async function run<T>(
     setState: React.Dispatch<React.SetStateAction<AIState<T>>>,
     fn: () => Promise<T>,
-  ) {
-    return async (): Promise<AIResult<T>> => {
-      setState({ status: 'loading', data: null, error: null });
-      try {
-        const data = await fn();
-        setState({ status: 'success', data, error: null });
-        return { data, error: null };
-      } catch (e: unknown) {
-        const error = e instanceof Error ? e.message : 'Unknown error';
-        setState({ status: 'error', data: null, error });
-        return { data: null, error };
-      }
-    };
+  ): Promise<AIResult<T>> {
+    setState({ status: 'loading', data: null, error: null });
+    try {
+      const data = await fn();
+      setState({ status: 'success', data, error: null });
+      return { data, error: null };
+    } catch (e: unknown) {
+      const error = e instanceof Error ? e.message : 'Unknown error';
+      setState({ status: 'error', data: null, error });
+      return { data: null, error };
+    }
   }
 
   const categorise = (ideaTitle: string, ideaDescription?: string) =>
-    wrap(setCategoriseState, () =>
-      callEdgeFunction<CategoriseResult>('ai-categorise', { ideaTitle, ideaDescription }),
-    )();
+    run(setCategoriseState, () =>
+      callEdgeFunction<CategoriseResult>('ai-categorise', { ideaTitle, ideaDescription } satisfies CategoriseInput),
+    );
 
   const expandIdea = (ideaTitle: string, ideaDescription?: string) =>
-    wrap(setExpandState, () =>
-      callEdgeFunction<ExpandResult>('ai-expand-idea', { ideaTitle, ideaDescription }),
-    )();
+    run(setExpandState, () =>
+      callEdgeFunction<ExpandResult>('ai-expand-idea', { ideaTitle, ideaDescription } satisfies ExpandInput),
+    );
 
-  const planGoal = (goalTitle: string) =>
-    wrap(setPlanState, () =>
-      callEdgeFunction<PlanResult>('ai-plan-goal', { goalTitle }),
-    )();
+  const planGoal = (goalTitle: string, context?: string) =>
+    run(setPlanState, () =>
+      callEdgeFunction<PlanResult>('ai-plan-goal', { goalTitle, context } satisfies PlanGoalInput),
+    );
 
   const morningBrief = () =>
-    wrap(setBriefState, () =>
+    run(setBriefState, () =>
       callEdgeFunction<BriefResult>('ai-morning-brief', {
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-      }),
-    )();
+      } satisfies MorningBriefInput),
+    );
 
   const resetExpand = () => setExpandState(makeState);
+  const resetBrief = () => setBriefState(makeState);
+  const resetPlan = () => setPlanState(makeState);
+  const resetCategorise = () => setCategoriseState(makeState);
 
   return {
-    categoriseState, categorise,
+    categoriseState, categorise, resetCategorise,
     expandState, expandIdea, resetExpand,
-    planState, planGoal,
-    briefState, morningBrief,
+    planState, planGoal, resetPlan,
+    briefState, morningBrief, resetBrief,
   };
 }

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Pressable, SectionList, Text, View } from 'react-native';
+import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useTasks } from '../../../hooks/use-tasks';
 import { TaskItem } from '../../../components/TaskItem';
@@ -7,6 +8,7 @@ import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EmptyState } from '../../../components/ui/EmptyState';
 
 export default function TasksScreen() {
+  const router = useRouter();
   const { tasks, loading, create, toggle } = useTasks();
   const [modalVisible, setModalVisible] = useState(false);
 
@@ -30,7 +32,7 @@ export default function TasksScreen() {
 
   const FAB = (
     <Pressable
-      className="absolute bottom-8 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center"
+      className="absolute bottom-24 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
       onPress={() => setModalVisible(true)}
     >
       <Ionicons name="add" size={28} color="#fff" />
@@ -43,7 +45,16 @@ export default function TasksScreen() {
         <View className="px-5 pt-14 pb-3">
           <Text className="text-2xl font-bold text-white">Tasks</Text>
         </View>
-        <EmptyState title="No tasks yet" subtitle="Tap + to add your first task" />
+        <EmptyState title="No tasks yet" subtitle="Generate a project plan with AI or add a manual task" />
+        <View className="px-5 mt-4">
+          <Pressable
+            className="bg-teal-900/40 border border-teal-700 rounded-xl px-4 py-3 flex-row items-center justify-center gap-2"
+            onPress={() => router.push('/(app)/projects')}
+          >
+            <Ionicons name="folder-open-outline" size={18} color="#2dd4bf" />
+            <Text className="text-teal-400 font-medium">Plan a project</Text>
+          </Pressable>
+        </View>
         {FAB}
         <CreateTaskModal visible={modalVisible} onClose={() => setModalVisible(false)} onCreate={create} />
       </View>

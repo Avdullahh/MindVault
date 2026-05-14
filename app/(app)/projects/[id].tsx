@@ -15,8 +15,6 @@ import { getUserId } from '../../../lib/get-user-id';
 import type { Idea, Task } from '../../../types';
 import type { PlanResult } from '../../../hooks/use-ai';
 
-type GoalRow = { id: string; title: string; priority: string | null; deadline: string | null };
-
 const PRIORITY_COLOR: Record<string, string> = {
   high: 'text-red-400',
   medium: 'text-yellow-400',
@@ -96,7 +94,7 @@ export default function ProjectDetail() {
   const handlePlanWithAI = async () => {
     const goalTitle = project.main_goal?.trim() || project.title;
     setAiError(null);
-    const { data, error } = await planGoal(goalTitle);
+    const { data, error } = await planGoal(goalTitle, project.main_goal ?? undefined);
     if (error) { setAiError(error); return; }
     if (!data) return;
     setPreviewPlan(data);
@@ -174,7 +172,6 @@ export default function ProjectDetail() {
         <View className="mb-5">
           <AIButton
             label="Plan with AI"
-            glyph="✦"
             loading={planState.status === 'loading'}
             onPress={handlePlanWithAI}
           />

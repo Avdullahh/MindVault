@@ -77,7 +77,6 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
         <View className="mb-3">
           <AIButton
             label="Plan with AI"
-            glyph="✦"
             loading={planState.status === 'loading'}
             onPress={handlePlanWithAI}
           />

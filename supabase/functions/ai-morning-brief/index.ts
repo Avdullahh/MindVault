@@ -1,7 +1,7 @@
-import { genAI } from '../_shared/gemini.ts';
+import { GeminiRequestError, generateText, parseJsonObject } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
-import { ok, unauthorised, internalError, badGateway, corsPrelight } from '../_shared/responses.ts';
+import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
 
 type Resurface = { title: string; description: string };
 type BriefResult = { greeting: string; events: string[]; resurface: Resurface | null };
@@ -34,9 +34,6 @@ function localDayBoundsUTC(timezone: string): { start: string; end: string; loca
   const [h, m, s] = localTimeOfProxy.split(':').map(Number);
   const offsetMs = (h * 3600 + m * 60 + s) * 1000;
 
-  // East of UTC: proxy date matches localDate → subtract offset.
-  // West of UTC: proxy date is the previous local day → add remainder.
-  // Correctly handles UTC+12/+13/+14 where h >= 12 but date still matches.
   const dateAtProxy = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(midnightProxy);
   const startMs = dateAtProxy === localDate
     ? midnightProxy.getTime() - offsetMs
@@ -49,50 +46,59 @@ function localDayBoundsUTC(timezone: string): { start: string; end: string; loca
 }
 
 Deno.serve(async (req) => {
-  if (req.method === 'OPTIONS') return corsPrelight();
-
-  const authed = await getAuthedClient(req);
-  if (!authed) return unauthorised();
-  if (!await checkProEntitlement(authed.userId)) return unauthorised();
-
-  let body: { timezone?: string } = {};
-  try { body = await req.json(); } catch { /* body is optional */ }
-
-  const timezone = typeof body.timezone === 'string' ? body.timezone : 'UTC';
-  const { localDate, start, end } = localDayBoundsUTC(timezone);
-
-  const [{ data: events }, { data: ideas }] = await Promise.all([
-    authed.client
-      .from('calendar_events')
-      .select('title')
-      .gte('start_at', start)
-      .lt('start_at', end)
-      .order('start_at', { ascending: true }),
-    authed.client
-      .from('ideas')
-      .select('title, description')
-      .order('last_viewed_at', { ascending: true, nullsFirst: true })
-      .limit(1),
-  ]);
-
-  const eventTitles = (events ?? []).map((e: { title: string }) => e.title);
-  const resurface = (ideas ?? [])[0] as { title: string; description: string | null } | undefined;
+  if (req.method === 'OPTIONS') return corsPreflight();
 
   try {
-    const model = genAI.getGenerativeModel({
-      model: 'gemini-2.0-flash',
-      generationConfig: { responseMimeType: 'application/json' },
-      systemInstruction: 'You are a personal assistant writing a brief morning summary.',
+    const authed = await getAuthedClient(req);
+    if (!authed) return unauthorised();
+    if (!await checkProEntitlement(authed.userId)) return paymentRequired();
+
+    let body: { timezone?: string } = {};
+    try { body = await req.json(); } catch { /* body is optional */ }
+
+    const timezone = typeof body.timezone === 'string' ? body.timezone : 'UTC';
+    let bounds: { localDate: string; start: string; end: string };
+    try {
+      bounds = localDayBoundsUTC(timezone);
+    } catch {
+      return badRequest('Invalid timezone');
+    }
+    const { localDate, start, end } = bounds;
+
+    const [{ data: events, error: eventsError }, { data: ideas, error: ideasError }] = await Promise.all([
+      authed.client
+        .from('calendar_events')
+        .select('title')
+        .gte('start_at', start)
+        .lt('start_at', end)
+        .order('start_at', { ascending: true }),
+      authed.client
+        .from('ideas')
+        .select('title, description')
+        .order('last_viewed_at', { ascending: true, nullsFirst: true })
+        .limit(1),
+    ]);
+
+    if (eventsError || ideasError) {
+      console.error('Failed to load brief context', eventsError ?? ideasError);
+      return internalError('Failed to load brief context');
+    }
+
+    const eventTitles = (events ?? []).map((e: { title: string }) => e.title);
+    const resurface = (ideas ?? [])[0] as { title: string; description: string | null } | undefined;
+    const raw = await generateText({
+      system: 'You are a personal assistant writing a brief morning summary. Return only valid JSON and no markdown.',
+      prompt: `Today is ${localDate}.\n\nCalendar events: ${eventTitles.length > 0 ? eventTitles.join(', ') : 'none'}\n\nIdea to resurface: ${resurface ? `"${resurface.title}"${resurface.description ? ` - ${resurface.description}` : ''}` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "events": ["one bullet per event"], "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
+      maxTokens: 800,
     });
-    const result = await model.generateContent(
-      `Today is ${localDate}.\n\nCalendar events: ${eventTitles.length > 0 ? eventTitles.join(', ') : 'none'}\n\nIdea to resurface: ${resurface ? `"${resurface.title}"` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "events": ["one bullet per event"], "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
-    );
-    const raw = result.response.text().trim();
+
     let parsed: unknown;
-    try { parsed = JSON.parse(raw); } catch { return badGateway('Model returned invalid JSON'); }
+    try { parsed = parseJsonObject(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();
     return ok(parsed);
-  } catch {
+  } catch (e) {
+    console.error(e);
+    if (e instanceof GeminiRequestError) return badGateway(e.message);
     return internalError();
   }
 });

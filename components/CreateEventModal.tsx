@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
@@ -27,7 +27,10 @@ function defaultEnd() {
 }
 
 export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Props) {
-  const initialDate = defaultDate ? new Date(`${defaultDate}T00:00:00`) : new Date();
+  const initialDate = useMemo(
+    () => defaultDate ? new Date(`${defaultDate}T00:00:00`) : new Date(),
+    [defaultDate],
+  );
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date>(initialDate);
   const [startTime, setStartTime] = useState<Date>(defaultStart());
@@ -43,6 +46,10 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
     setAllDay(false); setNotes(''); setCategoryId(null); setError(null);
   };
   const handleClose = () => { reset(); onClose(); };
+
+  useEffect(() => {
+    if (visible) setDate(initialDate);
+  }, [initialDate, visible]);
 
   const handleCreate = async () => {
     if (!title.trim()) { setError('Title is required'); return; }
