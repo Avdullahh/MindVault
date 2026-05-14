@@ -9,9 +9,11 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { useGoals } from '../../../hooks/use-goals';
 import { useAI } from '../../../hooks/use-ai';
 import { IdeaPickerModal } from '../../../components/IdeaPickerModal';
+import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { AIButton } from '../../../components/ui/AIButton';
 import { getUserId } from '../../../lib/get-user-id';
 import type { Idea, Task } from '../../../types';
+import type { PlanResult } from '../../../hooks/use-ai';
 
 type GoalRow = { id: string; title: string; priority: string | null; deadline: string | null };
 
@@ -37,6 +39,9 @@ export default function ProjectDetail() {
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [pickerVisible, setPickerVisible] = useState(false);
   const [aiError, setAiError] = useState<string | null>(null);
+  const [previewPlan, setPreviewPlan] = useState<PlanResult | null>(null);
+  const [previewVisible, setPreviewVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   const loadLinkedIdeas = () => fetchIdeasForProject(id).then(setLinkedIdeas);
 
@@ -94,30 +99,56 @@ export default function ProjectDetail() {
     const { data, error } = await planGoal(goalTitle);
     if (error) { setAiError(error); return; }
     if (!data) return;
+    setPreviewPlan(data);
+    setPreviewVisible(true);
+  };
 
-    const user_id = await getUserId().catch(() => null);
-    if (!user_id) { setAiError('Not authenticated'); return; }
+  const handleConfirmPlan = async (checkedTasks: string[]) => {
+    if (!previewPlan) return;
+    setSaving(true);
+    let succeeded = false;
+    try {
+      const user_id = await getUserId().catch(() => null);
+      if (!user_id) { setAiError('Not authenticated'); return; }
 
-    const { data: goalRow, error: goalErr } = await supabase
-      .from('goals')
-      .insert({ user_id, project_id: id, title: data.title, deadline: data.deadline, priority: data.priority })
-      .select('id')
-      .single();
-    if (goalErr || !goalRow) { setAiError(goalErr?.message ?? 'Failed to create goal'); return; }
-
-    for (let mi = 0; mi < data.milestones.length; mi++) {
-      const m = data.milestones[mi];
-      const { data: mRow, error: mErr } = await supabase
-        .from('milestones')
-        .insert({ goal_id: goalRow.id, title: m.title, position: mi })
+      const { data: goalRow, error: goalErr } = await supabase
+        .from('goals')
+        .insert({ user_id, project_id: id, title: previewPlan.title, deadline: previewPlan.deadline, priority: previewPlan.priority })
         .select('id')
         .single();
-      if (mErr || !mRow) continue;
-      const steps = m.steps.map((s, si) => ({ milestone_id: mRow.id, title: s, done: false, position: si }));
-      await supabase.from('action_steps').insert(steps);
-    }
+      if (goalErr || !goalRow) { setAiError(goalErr?.message ?? 'Failed to create goal'); return; }
 
-    await refetchGoals();
+      for (let mi = 0; mi < previewPlan.milestones.length; mi++) {
+        const m = previewPlan.milestones[mi];
+        const { data: mRow, error: mErr } = await supabase
+          .from('milestones')
+          .insert({ goal_id: goalRow.id, title: m.title, position: mi })
+          .select('id')
+          .single();
+        if (mErr || !mRow) continue;
+        const steps = m.steps.map((s, si) => ({ milestone_id: mRow.id, title: s, done: false, position: si }));
+        await supabase.from('action_steps').insert(steps);
+      }
+
+      if (checkedTasks.length > 0) {
+        const { data: createdTasks, error: tasksErr } = await supabase
+          .from('tasks')
+          .insert(checkedTasks.map((title) => ({ user_id, title, done: false })))
+          .select('id');
+        if (tasksErr) { setAiError(tasksErr.message); return; }
+        if (createdTasks && createdTasks.length > 0) {
+          const links = createdTasks.map((t: { id: string }) => ({ task_id: t.id, goal_id: goalRow.id }));
+          const { error: linksErr } = await supabase.from('task_goals').insert(links);
+          if (linksErr) { setAiError(linksErr.message); return; }
+        }
+      }
+
+      await refetchGoals();
+      succeeded = true;
+    } finally {
+      setSaving(false);
+      if (succeeded) { setPreviewVisible(false); setPreviewPlan(null); }
+    }
   };
 
   const toggleTask = async (taskId: string, done: boolean) => {
@@ -215,6 +246,13 @@ export default function ProjectDetail() {
         allIdeas={allIdeas}
         selectedIds={linkedIdeas.map((i) => i.id)}
         onToggle={handleIdeaToggle}
+      />
+      <AITaskPreviewModal
+        visible={previewVisible}
+        onClose={() => { setPreviewVisible(false); setPreviewPlan(null); }}
+        plan={previewPlan}
+        saving={saving}
+        onConfirm={handleConfirmPlan}
       />
     </View>
   );

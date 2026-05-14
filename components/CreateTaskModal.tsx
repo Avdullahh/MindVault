@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
+import { DatePicker } from './ui/DatePicker';
 import { CategoryPicker } from './CategoryPicker';
+import { toLocalDateString } from '../lib/date-utils';
 import type { TaskInsert } from '../types';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -22,24 +24,19 @@ const priorityStyle: Record<Priority, string> = {
 
 export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
   const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
+  const [dueDate, setDueDate] = useState<Date | null>(null);
   const [priority, setPriority] = useState<Priority | null>(null);
   const [notes, setNotes] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => { setTitle(''); setDueDate(new Date().toISOString().slice(0, 10)); setPriority(null); setNotes(''); setCategoryId(null); setError(null); };
+  const reset = () => { setTitle(''); setDueDate(null); setPriority(null); setNotes(''); setCategoryId(null); setError(null); };
   const handleClose = () => { reset(); onClose(); };
 
   const handleCreate = async () => {
     if (!title.trim()) { setError('Title is required'); return; }
-    let parsedDue: string | null = null;
-    if (dueDate.trim()) {
-      const d = new Date(dueDate.trim());
-      if (isNaN(d.getTime())) { setError('Invalid date — use YYYY-MM-DD'); return; }
-      parsedDue = dueDate.trim();
-    }
+    const parsedDue = dueDate ? toLocalDateString(dueDate) : null;
     setLoading(true); setError(null);
     const err = await onCreate({ title: title.trim(), due_date: parsedDue, priority, notes: notes.trim() || null, category_id: categoryId });
     setLoading(false);
@@ -48,7 +45,7 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={handleClose} title="New Task">
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
           className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
           placeholder="Title"
@@ -57,12 +54,11 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
           onChangeText={setTitle}
           maxLength={200}
         />
-        <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
-          placeholder="Due date (YYYY-MM-DD, optional)"
-          placeholderTextColor="#6b7280"
+        <DatePicker
           value={dueDate}
-          onChangeText={setDueDate}
+          onChange={setDueDate}
+          mode="date"
+          placeholder="Due date (optional)"
         />
         <View className="flex-row gap-2 mb-3">
           {PRIORITIES.map((p) => (
@@ -86,11 +82,11 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
           onChangeText={setNotes}
         />
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
-        {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
-        <View className="mt-2">
-          <Button label="Create task" onPress={handleCreate} loading={loading} />
-        </View>
       </ScrollView>
+      {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
+      <View className="mt-2 mb-2">
+        <Button label="Create task" onPress={handleCreate} loading={loading} />
+      </View>
     </ModalSheet>
   );
 }

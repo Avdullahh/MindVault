@@ -38,7 +38,14 @@ function localDayBoundsUTC(timezone: string): { start: string; end: string; loca
   const [h, m, s] = localTimeOfProxy.split(':').map(Number);
   const offsetMs = (h * 3600 + m * 60 + s) * 1000;
 
-  const startMs = midnightProxy.getTime() - offsetMs;
+  // Check what local DATE the proxy (midnight UTC) falls on.
+  // If it matches localDate, the timezone is east of UTC → local midnight is before UTC midnight → subtract.
+  // If it doesn't match (it's the previous local day), the timezone is west of UTC → add the remainder.
+  // This correctly handles UTC+12, +13, +14 where h >= 12 but the date still matches.
+  const dateAtProxy = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(midnightProxy);
+  const startMs = dateAtProxy === localDate
+    ? midnightProxy.getTime() - offsetMs
+    : midnightProxy.getTime() + (86400 * 1000 - offsetMs);
   return {
     localDate,
     start: new Date(startMs).toISOString(),

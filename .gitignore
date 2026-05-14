@@ -20,6 +20,10 @@ android/
 supabase/.temp/
 supabase/.branches/
 
+# Claude Code local settings (may contain tokens)
+.claude/settings.json
+.claude/settings.local.json
+
 # Editor / OS
 .vscode/
 .idea/

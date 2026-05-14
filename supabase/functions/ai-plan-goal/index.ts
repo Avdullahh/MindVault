@@ -6,7 +6,7 @@ import { ok, unauthorised, badRequest, internalError, badGateway, corsPrelight }
 const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 
 type Milestone = { title: string; steps: string[] };
-type PlanResult = { title: string; deadline: string; priority: 'high' | 'medium' | 'low'; milestones: Milestone[] };
+type PlanResult = { title: string; deadline: string; priority: 'high' | 'medium' | 'low'; milestones: Milestone[]; tasks: string[] };
 
 function isValid(v: unknown): v is PlanResult {
   if (typeof v !== 'object' || v === null) return false;
@@ -15,6 +15,8 @@ function isValid(v: unknown): v is PlanResult {
   if (!['high', 'medium', 'low'].includes(o.priority as string)) return false;
   if (!Array.isArray(o.milestones) || o.milestones.length < 2 || o.milestones.length > 4) return false;
   if (isNaN(new Date(o.deadline as string).getTime())) return false;
+  if (!Array.isArray(o.tasks) || o.tasks.length < 3 || o.tasks.length > 5) return false;
+  if (!(o.tasks as unknown[]).every((t) => typeof t === 'string')) return false;
   return (o.milestones as unknown[]).every((m) => {
     if (typeof m !== 'object' || m === null) return false;
     const ms = m as Record<string, unknown>;
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
       system: 'You are a goal planning assistant. Always respond with valid JSON only, no markdown, no prose.',
       messages: [{
         role: 'user',
-        content: `Plan this goal: "${body.goalTitle}"\n\nToday is ${today}. Respond with JSON:\n{\n  "title": "refined goal title",\n  "deadline": "YYYY-MM-DD",\n  "priority": "high|medium|low",\n  "milestones": [{ "title": "milestone", "steps": ["step 1", "step 2"] }]\n}\n2-4 milestones, 2-3 steps each.`,
+        content: `Plan this goal: "${body.goalTitle}"\n\nToday is ${today}. Respond with JSON:\n{\n  "title": "refined goal title",\n  "deadline": "YYYY-MM-DD",\n  "priority": "high|medium|low",\n  "milestones": [{ "title": "milestone", "steps": ["step 1", "step 2"] }],\n  "tasks": ["concrete action task 1", "concrete action task 2"]\n}\n2-4 milestones, 2-3 steps each. 3-5 flat tasks that are concrete first actions a person should take.`,
       }],
     });
 

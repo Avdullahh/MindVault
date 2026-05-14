@@ -3,8 +3,10 @@ import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
 import { AIButton } from './ui/AIButton';
+import { DatePicker } from './ui/DatePicker';
 import { CategoryPicker } from './CategoryPicker';
 import { useAI } from '../hooks/use-ai';
+import { toLocalDateString } from '../lib/date-utils';
 import type { GoalInsert } from '../types';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -25,13 +27,13 @@ const priorityStyle: Record<Priority, string> = {
 export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
   const { planGoal, planState } = useAI();
   const [title, setTitle] = useState('');
-  const [deadline, setDeadline] = useState(() => new Date().toISOString().slice(0, 10));
+  const [deadline, setDeadline] = useState<Date | null>(null);
   const [priority, setPriority] = useState<Priority | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => { setTitle(''); setDeadline(new Date().toISOString().slice(0, 10)); setPriority(null); setCategoryId(null); setError(null); };
+  const reset = () => { setTitle(''); setDeadline(null); setPriority(null); setCategoryId(null); setError(null); };
   const handleClose = () => { reset(); onClose(); };
 
   const handlePlanWithAI = async () => {
@@ -40,7 +42,12 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
     const { data, error: planError } = await planGoal(title.trim());
     if (data) {
       setTitle(data.title);
-      setDeadline(data.deadline);
+      if (data.deadline) {
+        const [y, m, d] = data.deadline.split('-').map(Number);
+        setDeadline(new Date(y, m - 1, d));
+      } else {
+        setDeadline(null);
+      }
       setPriority(data.priority);
     } else if (planError) {
       setError(planError);
@@ -49,12 +56,7 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
 
   const handleCreate = async () => {
     if (!title.trim()) { setError('Title is required'); return; }
-    let parsedDeadline: string | null = null;
-    if (deadline.trim()) {
-      const d = new Date(deadline.trim());
-      if (isNaN(d.getTime())) { setError('Invalid date — use YYYY-MM-DD'); return; }
-      parsedDeadline = deadline.trim();
-    }
+    const parsedDeadline = deadline ? toLocalDateString(deadline) : null;
     setLoading(true); setError(null);
     const err = await onCreate({ title: title.trim(), deadline: parsedDeadline, priority, category_id: categoryId });
     setLoading(false);
@@ -63,7 +65,7 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={handleClose} title="New Goal">
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
           className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-2"
           placeholder="Title"
@@ -72,7 +74,6 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
           onChangeText={setTitle}
           maxLength={200}
         />
-
         <View className="mb-3">
           <AIButton
             label="Plan with AI"
@@ -81,13 +82,11 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
             onPress={handlePlanWithAI}
           />
         </View>
-
-        <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
-          placeholder="Deadline (YYYY-MM-DD, optional)"
-          placeholderTextColor="#6b7280"
+        <DatePicker
           value={deadline}
-          onChangeText={setDeadline}
+          onChange={setDeadline}
+          mode="date"
+          placeholder="Deadline (optional)"
         />
         <View className="flex-row gap-2 mb-3">
           {PRIORITIES.map((p) => (
@@ -101,11 +100,11 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
           ))}
         </View>
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
-        {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
-        <View className="mt-2">
-          <Button label="Create goal" onPress={handleCreate} loading={loading} />
-        </View>
       </ScrollView>
+      {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
+      <View className="mt-2 mb-2">
+        <Button label="Create goal" onPress={handleCreate} loading={loading} />
+      </View>
     </ModalSheet>
   );
 }

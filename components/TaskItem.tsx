@@ -1,10 +1,10 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from './ui/Badge';
-import type { Task } from '../types';
+import type { TaskWithGoal } from '../hooks/use-tasks';
 
 type Props = {
-  task: Task;
+  task: TaskWithGoal;
   onToggle: () => void;
 };
 
@@ -34,6 +34,7 @@ export function TaskItem({ task, onToggle }: Props) {
           {task.title}
         </Text>
         <View className="flex-row items-center gap-2 mt-1 flex-wrap">
+          {task.goalTitle && <Text className="text-gray-500 text-xs" numberOfLines={1}>↳ {task.goalTitle}</Text>}
           {task.due_date && <Text className="text-gray-500 text-xs">{formatDue(task.due_date)}</Text>}
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>

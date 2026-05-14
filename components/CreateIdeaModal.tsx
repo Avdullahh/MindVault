@@ -31,7 +31,7 @@ export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={handleClose} title="New Idea">
-      <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
           className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
           placeholder="Title"
@@ -51,11 +51,11 @@ export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
           onChangeText={setDescription}
         />
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
-        {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
-        <View className="mt-2">
-          <Button label="Create idea" onPress={handleCreate} loading={loading} />
-        </View>
       </ScrollView>
+      {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
+      <View className="mt-2 mb-2">
+        <Button label="Create idea" onPress={handleCreate} loading={loading} />
+      </View>
     </ModalSheet>
   );
 }

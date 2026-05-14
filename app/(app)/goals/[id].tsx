@@ -9,7 +9,7 @@ import { useActionSteps } from '../../../hooks/use-action-steps';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { MilestoneItem } from '../../../components/MilestoneItem';
 import { IdeaPickerModal } from '../../../components/IdeaPickerModal';
-import type { Idea } from '../../../types';
+import type { Idea, Task } from '../../../types';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -23,6 +23,7 @@ export default function GoalDetail() {
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
+  const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [ideaPickerVisible, setIdeaPickerVisible] = useState(false);
 
   const loadLinkedIdeas = async () => {
@@ -30,7 +31,17 @@ export default function GoalDetail() {
     setLinkedIdeas(((data ?? []) as { ideas: Idea }[]).map((r) => r.ideas).filter(Boolean));
   };
 
-  useEffect(() => { if (id) loadLinkedIdeas(); }, [id]);
+  const loadLinkedTasks = async () => {
+    const { data } = await supabase.from('task_goals').select('tasks(*)').eq('goal_id', id);
+    setLinkedTasks(((data ?? []) as { tasks: Task }[]).map((r) => r.tasks).filter(Boolean));
+  };
+
+  const toggleTask = async (taskId: string, done: boolean) => {
+    await supabase.from('tasks').update({ done }).eq('id', taskId);
+    setLinkedTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, done } : t));
+  };
+
+  useEffect(() => { if (id) Promise.all([loadLinkedIdeas(), loadLinkedTasks()]); }, [id]);
 
   if (loading && !goal) {
     return (
@@ -125,6 +136,28 @@ export default function GoalDetail() {
             <Ionicons name="add-circle-outline" size={20} color="#2dd4bf" />
             <Text className="text-teal-400">Add milestone</Text>
           </Pressable>
+        )}
+
+        {linkedTasks.length > 0 && (
+          <>
+            <Text className="text-gray-400 text-sm font-medium mt-4 mb-3">Tasks</Text>
+            {linkedTasks.map((t) => (
+              <Pressable
+                key={t.id}
+                className="flex-row items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
+                onPress={() => toggleTask(t.id, !t.done)}
+              >
+                <Ionicons
+                  name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
+                  size={20}
+                  color={t.done ? '#2dd4bf' : '#6b7280'}
+                />
+                <Text className={`flex-1 text-sm ${t.done ? 'text-gray-500 line-through' : 'text-white'}`} numberOfLines={1}>
+                  {t.title}
+                </Text>
+              </Pressable>
+            ))}
+          </>
         )}
 
         <Text className="text-gray-400 text-sm font-medium mt-4 mb-3">Linked Ideas</Text>
