@@ -1,9 +1,7 @@
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { genAI } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { ok, unauthorised, badRequest, internalError, corsPrelight } from '../_shared/responses.ts';
-
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsPrelight();
@@ -23,17 +21,14 @@ Deno.serve(async (req) => {
   if (categoryNames.length === 0) return ok({ categoryName: 'Other' });
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 50,
-      system: 'You are a categorisation assistant. Reply with only the category name, nothing else.',
-      messages: [{
-        role: 'user',
-        content: `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle}"${ideaDescription ? `\n${ideaDescription}` : ''}\n\nWhich single category best fits? Reply with the category name only.`,
-      }],
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      systemInstruction: 'You are a categorisation assistant. Reply with only the category name, nothing else.',
     });
-
-    const raw = (message.content[0] as { text: string }).text.trim();
+    const result = await model.generateContent(
+      `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle}"${ideaDescription ? `\n${ideaDescription}` : ''}\n\nWhich single category best fits? Reply with the category name only.`,
+    );
+    const raw = result.response.text().trim();
     const match = categoryNames.find((n: string) => n.toLowerCase() === raw.toLowerCase()) ?? 'Other';
     return ok({ categoryName: match });
   } catch {

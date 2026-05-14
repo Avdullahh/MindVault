@@ -1,9 +1,7 @@
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { genAI } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { ok, unauthorised, badRequest, internalError, badGateway, corsPrelight } from '../_shared/responses.ts';
-
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 
 type Milestone = { title: string; steps: string[] };
 type PlanResult = { title: string; deadline: string; priority: 'high' | 'medium' | 'low'; milestones: Milestone[]; tasks: string[] };
@@ -44,17 +42,15 @@ Deno.serve(async (req) => {
   const today = new Date().toISOString().slice(0, 10);
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 1024,
-      system: 'You are a goal planning assistant. Always respond with valid JSON only, no markdown, no prose.',
-      messages: [{
-        role: 'user',
-        content: `Plan this goal: "${body.goalTitle}"\n\nToday is ${today}. Respond with JSON:\n{\n  "title": "refined goal title",\n  "deadline": "YYYY-MM-DD",\n  "priority": "high|medium|low",\n  "milestones": [{ "title": "milestone", "steps": ["step 1", "step 2"] }],\n  "tasks": ["concrete action task 1", "concrete action task 2"]\n}\n2-4 milestones, 2-3 steps each. 3-5 flat tasks that are concrete first actions a person should take.`,
-      }],
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      generationConfig: { responseMimeType: 'application/json' },
+      systemInstruction: 'You are a goal planning assistant.',
     });
-
-    const raw = (message.content[0] as { text: string }).text.trim();
+    const result = await model.generateContent(
+      `Plan this goal: "${body.goalTitle}"\n\nToday is ${today}. Respond with JSON:\n{\n  "title": "refined goal title",\n  "deadline": "YYYY-MM-DD",\n  "priority": "high|medium|low",\n  "milestones": [{ "title": "milestone", "steps": ["step 1", "step 2"] }],\n  "tasks": ["concrete action task 1", "concrete action task 2"]\n}\n2-4 milestones, 2-3 steps each. 3-5 flat tasks that are concrete first actions a person should take.`,
+    );
+    const raw = result.response.text().trim();
     let parsed: unknown;
     try { parsed = JSON.parse(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();

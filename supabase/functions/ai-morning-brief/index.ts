@@ -1,9 +1,7 @@
-import Anthropic from 'npm:@anthropic-ai/sdk';
+import { genAI } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { ok, unauthorised, internalError, badGateway, corsPrelight } from '../_shared/responses.ts';
-
-const anthropic = new Anthropic({ apiKey: Deno.env.get('ANTHROPIC_API_KEY') });
 
 type Resurface = { title: string; description: string };
 type BriefResult = { greeting: string; events: string[]; resurface: Resurface | null };
@@ -26,22 +24,19 @@ function localDayBoundsUTC(timezone: string): { start: string; end: string; loca
   const now = new Date();
   const localDate = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(now);
 
-  // Find what UTC time corresponds to midnight in the user's timezone.
-  // Take midnight UTC of that date as a proxy, then adjust by the local offset.
   const midnightProxy = new Date(`${localDate}T00:00:00Z`);
   const localTimeOfProxy = new Intl.DateTimeFormat('en-GB', {
     timeZone: timezone,
     hour: '2-digit', minute: '2-digit', second: '2-digit',
     hour12: false,
-  }).format(midnightProxy); // e.g. "05:00:00" for UTC+5
+  }).format(midnightProxy);
 
   const [h, m, s] = localTimeOfProxy.split(':').map(Number);
   const offsetMs = (h * 3600 + m * 60 + s) * 1000;
 
-  // Check what local DATE the proxy (midnight UTC) falls on.
-  // If it matches localDate, the timezone is east of UTC → local midnight is before UTC midnight → subtract.
-  // If it doesn't match (it's the previous local day), the timezone is west of UTC → add the remainder.
-  // This correctly handles UTC+12, +13, +14 where h >= 12 but the date still matches.
+  // East of UTC: proxy date matches localDate → subtract offset.
+  // West of UTC: proxy date is the previous local day → add remainder.
+  // Correctly handles UTC+12/+13/+14 where h >= 12 but date still matches.
   const dateAtProxy = new Intl.DateTimeFormat('en-CA', { timeZone: timezone }).format(midnightProxy);
   const startMs = dateAtProxy === localDate
     ? midnightProxy.getTime() - offsetMs
@@ -84,17 +79,15 @@ Deno.serve(async (req) => {
   const resurface = (ideas ?? [])[0] as { title: string; description: string | null } | undefined;
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-6',
-      max_tokens: 512,
-      system: 'You are a personal assistant writing a brief morning summary. Always respond with valid JSON only, no markdown, no prose.',
-      messages: [{
-        role: 'user',
-        content: `Today is ${localDate}.\n\nCalendar events: ${eventTitles.length > 0 ? eventTitles.join(', ') : 'none'}\n\nIdea to resurface: ${resurface ? `"${resurface.title}"` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "events": ["one bullet per event"], "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
-      }],
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash',
+      generationConfig: { responseMimeType: 'application/json' },
+      systemInstruction: 'You are a personal assistant writing a brief morning summary.',
     });
-
-    const raw = (message.content[0] as { text: string }).text.trim();
+    const result = await model.generateContent(
+      `Today is ${localDate}.\n\nCalendar events: ${eventTitles.length > 0 ? eventTitles.join(', ') : 'none'}\n\nIdea to resurface: ${resurface ? `"${resurface.title}"` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "events": ["one bullet per event"], "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
+    );
+    const raw = result.response.text().trim();
     let parsed: unknown;
     try { parsed = JSON.parse(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();
