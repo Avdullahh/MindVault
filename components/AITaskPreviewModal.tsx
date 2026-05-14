@@ -44,7 +44,7 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
     <ModalSheet visible={visible} onClose={onClose} title="AI Plan Preview">
       {!plan ? (
         <View className="items-center py-8">
-          <ActivityIndicator color="#2dd4bf" />
+          <ActivityIndicator color="#d4a017" />
         </View>
       ) : (
         <>
@@ -54,40 +54,40 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View className="bg-gray-800 rounded-xl px-4 py-3 mb-4">
-              <Text className="text-white font-semibold mb-1" numberOfLines={2}>{plan.title}</Text>
+            <View className="bg-leather-800 rounded-xl px-4 py-3 mb-4">
+              <Text className="text-leather-50 font-semibold mb-1" numberOfLines={2}>{plan.title}</Text>
               <View className="flex-row gap-2 flex-wrap">
                 <Badge label={plan.priority} color={priorityColor(plan.priority)} />
                 {plan.deadline ? <Badge label={plan.deadline} color="gray" /> : null}
               </View>
             </View>
 
-            <Text className="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-2">
+            <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mb-2">
               Milestones ({plan.milestones.length})
             </Text>
             {plan.milestones.map((m, i) => (
               <View key={i} className="flex-row gap-2 mb-1.5">
-                <Text className="text-gray-500 text-sm">-</Text>
-                <Text className="text-gray-300 text-sm flex-1">{m.title}</Text>
+                <Text className="text-leather-400 text-sm">-</Text>
+                <Text className="text-leather-200 text-sm flex-1">{m.title}</Text>
               </View>
             ))}
 
-            <Text className="text-gray-400 text-xs font-semibold uppercase tracking-wider mt-4 mb-2">
+            <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mt-4 mb-2">
               Tasks to create ({checked.size} of {plan.tasks.length} selected)
             </Text>
             {plan.tasks.map((task, i) => (
               <Pressable
                 key={i}
-                className="flex-row min-h-11 items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
+                className="flex-row min-h-11 items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2"
                 onPress={() => toggle(i)}
                 disabled={saving}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: checked.has(i), disabled: saving }}
               >
-                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
+                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-gold-500 border-gold-500' : 'border-leather-500'}`}>
                   {checked.has(i) ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
                 </View>
-                <Text className="text-white text-sm flex-1">{task}</Text>
+                <Text className="text-leather-50 text-sm flex-1">{task}</Text>
               </Pressable>
             ))}
           </ScrollView>

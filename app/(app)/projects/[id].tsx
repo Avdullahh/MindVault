@@ -21,7 +21,7 @@ import type { PlanResult } from '../../../hooks/use-ai';
 const PRIORITY_COLOR: Record<string, string> = {
   high: 'text-red-400',
   medium: 'text-yellow-400',
-  low: 'text-gray-400',
+  low: 'text-leather-300',
 };
 
 export default function ProjectDetail() {
@@ -54,16 +54,16 @@ export default function ProjectDetail() {
 
   if (loading && !project) {
     return (
-      <View className="flex-1 bg-gray-900 justify-center items-center">
-        <ActivityIndicator color="#2dd4bf" />
+      <View className="flex-1 bg-leather-900 justify-center items-center">
+        <ActivityIndicator color="#d4a017" />
       </View>
     );
   }
 
   if (!project) {
     return (
-      <View className="flex-1 bg-gray-900 justify-center items-center">
-        <Text className="text-gray-400">Project not found</Text>
+      <View className="flex-1 bg-leather-900 justify-center items-center">
+        <Text className="text-leather-300">Project not found</Text>
       </View>
     );
   }
@@ -148,10 +148,10 @@ export default function ProjectDetail() {
   };
 
   return (
-    <View className="flex-1 bg-gray-900">
+    <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
         <Pressable onPress={() => router.back()}>
-          <Ionicons name="chevron-back" size={24} color="#2dd4bf" />
+          <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
         <Pressable onPress={handleDelete}>
           <Ionicons name="trash-outline" size={20} color="#f87171" />
@@ -159,8 +159,8 @@ export default function ProjectDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        <Text className="text-white text-xl font-bold mb-2">{project.title}</Text>
-        {project.main_goal && <Text className="text-gray-400 mb-5">{project.main_goal}</Text>}
+        <Text className="text-leather-50 text-xl font-bold mb-2" style={{ fontFamily: 'Georgia' }}>{project.title}</Text>
+        {project.main_goal && <Text className="text-leather-300 mb-5">{project.main_goal}</Text>}
 
         <View className="mb-5">
           <AIButton
@@ -171,18 +171,18 @@ export default function ProjectDetail() {
           {aiError && <Text className="text-red-400 text-xs mt-2">{aiError}</Text>}
         </View>
 
-        <Text className="text-gray-400 text-sm font-medium mb-3">Goals</Text>
+        <Text className="text-leather-300 text-sm font-medium mb-3">Goals</Text>
         {projectGoals.length === 0
-          ? <Text className="text-gray-600 text-sm mb-4">No goals yet — use Plan with AI to generate one</Text>
+          ? <Text className="text-leather-500 text-sm mb-4">No goals yet — use Plan with AI to generate one</Text>
           : projectGoals.map((g) => (
               <Pressable
                 key={g.id}
-                className="bg-gray-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between"
+                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between"
                 onPress={() => router.push(`/(app)/goals/${g.id}`)}
               >
-                <Text className="text-white flex-1" numberOfLines={1}>{g.title}</Text>
+                <Text className="text-leather-50 flex-1" numberOfLines={1}>{g.title}</Text>
                 {g.priority && (
-                  <Text className={`text-xs ml-2 capitalize ${PRIORITY_COLOR[g.priority] ?? 'text-gray-400'}`}>
+                  <Text className={`text-xs ml-2 capitalize ${PRIORITY_COLOR[g.priority] ?? 'text-leather-300'}`}>
                     {g.priority}
                   </Text>
                 )}
@@ -191,62 +191,62 @@ export default function ProjectDetail() {
         }
 
         <View className="flex-row items-center justify-between mt-4 mb-3">
-          <Text className="text-gray-400 text-sm font-medium">Tasks</Text>
+          <Text className="text-leather-300 text-sm font-medium">Tasks</Text>
           <Pressable onPress={() => setCreateTaskVisible(true)} className="flex-row items-center gap-1">
-            <Ionicons name="add-circle-outline" size={18} color="#2dd4bf" />
-            <Text className="text-teal-400 text-sm">Add task</Text>
+            <Ionicons name="add-circle-outline" size={18} color="#d4a017" />
+            <Text className="text-gold-400 text-sm">Add task</Text>
           </Pressable>
         </View>
         {projectTasks.length === 0
-          ? <Text className="text-gray-600 text-sm mb-4">No tasks yet</Text>
+          ? <Text className="text-leather-500 text-sm mb-4">No tasks yet</Text>
           : projectTasks.map((t) => (
               <View
                 key={t.id}
-                className="flex-row items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
+                className="flex-row items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2"
               >
                 <Pressable onPress={() => toggleTask(t.id, !t.done)} hitSlop={8}>
                   <Ionicons
                     name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
                     size={20}
-                    color={t.done ? '#2dd4bf' : '#6b7280'}
+                    color={t.done ? '#d4a017' : '#7a6050'}
                   />
                 </Pressable>
                 <View className="flex-1">
-                  <Text className={`text-sm ${t.done ? 'text-gray-500 line-through' : 'text-white'}`} numberOfLines={1}>
+                  <Text className={`text-sm ${t.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
                     {t.title}
                   </Text>
-                  {t.due_date ? <Text className="text-gray-500 text-xs mt-0.5">{t.due_date}</Text> : null}
+                  {t.due_date ? <Text className="text-leather-400 text-xs mt-0.5">{t.due_date}</Text> : null}
                 </View>
                 {t.priority ? (
-                  <Text className={`text-xs capitalize ${PRIORITY_COLOR[t.priority] ?? 'text-gray-400'}`}>
+                  <Text className={`text-xs capitalize ${PRIORITY_COLOR[t.priority] ?? 'text-leather-300'}`}>
                     {t.priority}
                   </Text>
                 ) : null}
                 <Pressable onPress={() => setEditingTask(t)} hitSlop={8} className="p-1">
-                  <Ionicons name="pencil-outline" size={16} color="#6b7280" />
+                  <Ionicons name="pencil-outline" size={16} color="#7a6050" />
                 </Pressable>
                 <Pressable onPress={() => handleDeleteTask(t.id)} hitSlop={8} className="p-1">
-                  <Ionicons name="trash-outline" size={16} color="#6b7280" />
+                  <Ionicons name="trash-outline" size={16} color="#7a6050" />
                 </Pressable>
               </View>
             ))
         }
 
-        <Text className="text-gray-400 text-sm font-medium mt-4 mb-3">Referenced Ideas</Text>
+        <Text className="text-leather-300 text-sm font-medium mt-4 mb-3">Referenced Ideas</Text>
         {linkedIdeas.length === 0
-          ? <Text className="text-gray-600 text-sm mb-4">No ideas linked yet</Text>
+          ? <Text className="text-leather-500 text-sm mb-4">No ideas linked yet</Text>
           : linkedIdeas.map((idea) => (
-              <View key={idea.id} className="bg-gray-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
-                <Text className="text-white flex-1" numberOfLines={1}>{idea.title}</Text>
+              <View key={idea.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
+                <Text className="text-leather-50 flex-1" numberOfLines={1}>{idea.title}</Text>
                 <Pressable onPress={() => handleIdeaToggle(idea.id)}>
-                  <Ionicons name="close-circle-outline" size={18} color="#6b7280" />
+                  <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
                 </Pressable>
               </View>
             ))
         }
         <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color="#2dd4bf" />
-          <Text className="text-teal-400">Link idea</Text>
+          <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
+          <Text className="text-gold-400">Link idea</Text>
         </Pressable>
       </ScrollView>
 

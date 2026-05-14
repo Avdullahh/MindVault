@@ -13,9 +13,9 @@ export default function GoalsScreen() {
   const [modalVisible, setModalVisible] = useState(false);
 
   return (
-    <View className="flex-1 bg-gray-900">
+    <View className="flex-1 bg-leather-900">
       <View className="px-5 pt-14 pb-3">
-        <Text className="text-2xl font-bold text-white">Goals</Text>
+        <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Goals</Text>
       </View>
 
       {!loading && goals.length === 0 ? (
@@ -32,7 +32,7 @@ export default function GoalsScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add" size={28} color="#fff" />

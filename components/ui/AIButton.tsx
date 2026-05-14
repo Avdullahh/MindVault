@@ -47,7 +47,7 @@ export function AIButton({
   return (
     <View className={flex ? 'flex-1' : ''}>
       <Pressable
-        className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-gray-700 bg-gray-800 opacity-60' : 'border-teal-700 bg-teal-900/40'}`}
+        className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-leather-600 bg-leather-800 opacity-60' : 'border-gold-700 bg-gold-900/40'}`}
         onPress={handlePress}
         disabled={inactive}
         accessibilityRole="button"
@@ -55,15 +55,15 @@ export function AIButton({
         hitSlop={compact ? 6 : undefined}
       >
         {busy ? (
-          <ActivityIndicator size="small" color="#2dd4bf" />
+          <ActivityIndicator size="small" color="#d4a017" />
         ) : glyph ? (
           <Text className="text-lg">{glyph}</Text>
         ) : (
-          <Ionicons name={icon} size={14} color="#2dd4bf" />
+          <Ionicons name={icon} size={14} color="#d4a017" />
         )}
-        <Text className="text-teal-400 text-sm font-medium">{label}</Text>
+        <Text className="text-gold-400 text-sm font-medium">{label}</Text>
       </Pressable>
-      {hint ? <Text className="text-gray-500 text-xs text-center mt-1.5 px-1">{hint}</Text> : null}
+      {hint ? <Text className="text-leather-400 text-xs text-center mt-1.5 px-1">{hint}</Text> : null}
     </View>
   );
 }

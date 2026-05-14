@@ -22,13 +22,13 @@ export function CategoryPicker({ value, onChange }: Props) {
   return (
     <>
       <Pressable
-        className="bg-gray-800 rounded-xl px-4 py-3 flex-row items-center justify-between mb-3"
+        className="bg-leather-800 rounded-xl px-4 py-3 flex-row items-center justify-between mb-3"
         onPress={() => setOpen(true)}
       >
-        <Text className={selected ? 'text-white' : 'text-gray-500'}>
+        <Text className={selected ? 'text-leather-50' : 'text-leather-400'}>
           {selected ? selected.name : 'Category (optional)'}
         </Text>
-        <Text className="text-gray-500 text-sm">▾</Text>
+        <Text className="text-leather-400 text-sm">▾</Text>
       </Pressable>
 
       <ModalSheet visible={open} onClose={() => setOpen(false)} title="Select category">
@@ -37,11 +37,11 @@ export function CategoryPicker({ value, onChange }: Props) {
           keyExtractor={(item) => item.id ?? '__none__'}
           renderItem={({ item }) => (
             <Pressable
-              className="py-3 px-2 border-b border-gray-800 flex-row items-center justify-between"
+              className="py-3 px-2 border-b border-leather-800 flex-row items-center justify-between"
               onPress={() => { onChange(item.id); setOpen(false); }}
             >
-              <Text className="text-white">{item.name}</Text>
-              {item.id === value && <Text className="text-teal-400">✓</Text>}
+              <Text className="text-leather-50">{item.name}</Text>
+              {item.id === value && <Text className="text-gold-400">✓</Text>}
             </Pressable>
           )}
         />

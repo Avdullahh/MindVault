@@ -19,7 +19,7 @@ const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
 const priorityStyle: Record<Priority, string> = {
   high:   'bg-red-900 border-red-700',
   medium: 'bg-yellow-900 border-yellow-700',
-  low:    'bg-gray-700 border-gray-600',
+  low:    'bg-leather-600 border-leather-500',
 };
 
 export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
@@ -47,9 +47,9 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
     <ModalSheet visible={visible} onClose={handleClose} title="New Task">
       <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
           placeholder="Title"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           value={title}
           onChangeText={setTitle}
           maxLength={200}
@@ -64,17 +64,17 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
           {PRIORITIES.map((p) => (
             <Pressable
               key={p}
-              className={`flex-1 py-2 rounded-xl border items-center ${priority === p ? priorityStyle[p] : 'bg-gray-800 border-gray-700'}`}
+              className={`flex-1 py-2 rounded-xl border items-center ${priority === p ? priorityStyle[p] : 'bg-leather-800 border-leather-600'}`}
               onPress={() => setPriority(priority === p ? null : p)}
             >
-              <Text className="text-white text-sm capitalize">{p}</Text>
+              <Text className="text-leather-50 text-sm capitalize">{p}</Text>
             </Pressable>
           ))}
         </View>
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
           placeholder="Notes (optional)"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           multiline
           numberOfLines={3}
           textAlignVertical="top"

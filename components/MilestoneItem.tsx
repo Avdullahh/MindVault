@@ -23,11 +23,11 @@ export function MilestoneItem({ milestone, onToggleStep, onRemoveMilestone, onAd
   };
 
   return (
-    <View className="bg-gray-700 rounded-xl mb-3 overflow-hidden">
+    <View className="bg-leather-600 rounded-xl mb-3 overflow-hidden">
       <View className="flex-row items-center px-4 py-3">
         <Pressable className="flex-1 flex-row items-center gap-2" onPress={() => setExpanded((e) => !e)}>
-          <Ionicons name={expanded ? 'chevron-down' : 'chevron-forward'} size={16} color="#9ca3af" />
-          <Text className="text-white font-medium flex-1">{milestone.title}</Text>
+          <Ionicons name={expanded ? 'chevron-down' : 'chevron-forward'} size={16} color="#a89070" />
+          <Text className="text-leather-50 font-medium flex-1">{milestone.title}</Text>
         </Pressable>
         <Pressable
           onPress={() =>
@@ -37,7 +37,7 @@ export function MilestoneItem({ milestone, onToggleStep, onRemoveMilestone, onAd
             ])
           }
         >
-          <Ionicons name="trash-outline" size={16} color="#6b7280" />
+          <Ionicons name="trash-outline" size={16} color="#7a6050" />
         </Pressable>
       </View>
 
@@ -49,42 +49,42 @@ export function MilestoneItem({ milestone, onToggleStep, onRemoveMilestone, onAd
             .map((step) => (
               <Pressable
                 key={step.id}
-                className="flex-row items-center gap-3 py-2 border-t border-gray-600"
+                className="flex-row items-center gap-3 py-2 border-t border-leather-500"
                 onPress={() => onToggleStep(step.id, !step.done)}
               >
                 <Ionicons
                   name={step.done ? 'checkmark-circle' : 'ellipse-outline'}
                   size={20}
-                  color={step.done ? '#2dd4bf' : '#6b7280'}
+                  color={step.done ? '#d4a017' : '#7a6050'}
                 />
-                <Text className={`flex-1 text-sm ${step.done ? 'text-gray-500 line-through' : 'text-gray-200'}`}>
+                <Text className={`flex-1 text-sm ${step.done ? 'text-leather-400 line-through' : 'text-leather-100'}`}>
                   {step.title}
                 </Text>
               </Pressable>
             ))}
 
           {addingStep ? (
-            <View className="flex-row items-center gap-2 pt-2 border-t border-gray-600">
+            <View className="flex-row items-center gap-2 pt-2 border-t border-leather-500">
               <TextInput
-                className="flex-1 text-white text-sm py-1"
+                className="flex-1 text-leather-50 text-sm py-1"
                 placeholder="Step title..."
-                placeholderTextColor="#6b7280"
+                placeholderTextColor="#7a6050"
                 value={stepTitle}
                 onChangeText={setStepTitle}
                 autoFocus
                 onSubmitEditing={handleAddStep}
               />
               <Pressable onPress={handleAddStep}>
-                <Ionicons name="checkmark" size={18} color="#2dd4bf" />
+                <Ionicons name="checkmark" size={18} color="#d4a017" />
               </Pressable>
               <Pressable onPress={() => setAddingStep(false)}>
-                <Ionicons name="close" size={18} color="#6b7280" />
+                <Ionicons name="close" size={18} color="#7a6050" />
               </Pressable>
             </View>
           ) : (
-            <Pressable className="flex-row items-center gap-2 pt-2 border-t border-gray-600" onPress={() => setAddingStep(true)}>
-              <Ionicons name="add-circle-outline" size={16} color="#6b7280" />
-              <Text className="text-gray-500 text-sm">Add step</Text>
+            <Pressable className="flex-row items-center gap-2 pt-2 border-t border-leather-500" onPress={() => setAddingStep(true)}>
+              <Ionicons name="add-circle-outline" size={16} color="#7a6050" />
+              <Text className="text-leather-400 text-sm">Add step</Text>
             </Pressable>
           )}
         </View>

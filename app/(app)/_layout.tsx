@@ -25,7 +25,7 @@ export default function AppLayout() {
     });
   }, []);
 
-  if (!ready) return <View className="flex-1 bg-gray-900" />;
+  if (!ready) return <View className="flex-1 bg-leather-900" />;
 
   return (
     <Tabs
@@ -40,9 +40,9 @@ export default function AppLayout() {
       }}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#111827', borderTopColor: '#374151' },
-        tabBarActiveTintColor: '#2dd4bf',
-        tabBarInactiveTintColor: '#6b7280',
+        tabBarStyle: { backgroundColor: '#141009', borderTopColor: '#3d2b1a' },
+        tabBarActiveTintColor: '#d4a017',
+        tabBarInactiveTintColor: '#7a6050',
       }}
     >
       <Tabs.Screen

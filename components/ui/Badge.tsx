@@ -3,8 +3,8 @@ import { Text, View } from 'react-native';
 type Color = 'teal' | 'gray' | 'red' | 'yellow';
 
 const colorMap: Record<Color, { bg: string; text: string }> = {
-  teal:   { bg: 'bg-teal-900',   text: 'text-teal-300'   },
-  gray:   { bg: 'bg-gray-700',   text: 'text-gray-300'   },
+  teal:   { bg: 'bg-gold-900',   text: 'text-gold-400'   },
+  gray:   { bg: 'bg-leather-600',   text: 'text-leather-200'   },
   red:    { bg: 'bg-red-900',    text: 'text-red-300'    },
   yellow: { bg: 'bg-yellow-900', text: 'text-yellow-300' },
 };

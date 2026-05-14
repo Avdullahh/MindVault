@@ -21,21 +21,21 @@ function formatDue(date: string | null) {
 
 export function TaskItem({ task, onToggle }: Props) {
   return (
-    <View className="flex-row items-center gap-3 py-3 border-b border-gray-800">
+    <View className="flex-row items-center gap-3 py-3 border-b border-leather-800">
       <Pressable onPress={onToggle}>
         <Ionicons
           name={task.done ? 'checkmark-circle' : 'ellipse-outline'}
           size={24}
-          color={task.done ? '#2dd4bf' : '#6b7280'}
+          color={task.done ? '#d4a017' : '#7a6050'}
         />
       </Pressable>
       <View className="flex-1">
-        <Text className={`text-base ${task.done ? 'text-gray-500 line-through' : 'text-white'}`} numberOfLines={1}>
+        <Text className={`text-base ${task.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
           {task.title}
         </Text>
         <View className="flex-row items-center gap-2 mt-1 flex-wrap">
-          {task.goalTitle && <Text className="text-gray-500 text-xs" numberOfLines={1}>↳ {task.goalTitle}</Text>}
-          {task.due_date && <Text className="text-gray-500 text-xs">{formatDue(task.due_date)}</Text>}
+          {task.goalTitle && <Text className="text-leather-400 text-xs" numberOfLines={1}>↳ {task.goalTitle}</Text>}
+          {task.due_date && <Text className="text-leather-400 text-xs">{formatDue(task.due_date)}</Text>}
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>
       </View>

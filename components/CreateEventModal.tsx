@@ -75,9 +75,9 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         showsVerticalScrollIndicator={false}
       >
         <TextInput
-          className="bg-gray-800 text-white rounded-xl min-h-11 px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl min-h-11 px-4 py-3 mb-3"
           placeholder="Title"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           value={title}
           onChangeText={setTitle}
           maxLength={200}
@@ -86,13 +86,13 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         />
         <DatePicker value={date} onChange={setDate} mode="date" />
         <Pressable
-          className="flex-row min-h-11 items-center justify-between bg-gray-800 rounded-xl px-4 py-3 mb-3"
+          className="flex-row min-h-11 items-center justify-between bg-leather-800 rounded-xl px-4 py-3 mb-3"
           onPress={() => setAllDay((v) => !v)}
           accessibilityRole="switch"
           accessibilityState={{ checked: !allDay }}
         >
-          <Text className="text-white">Set specific time</Text>
-          <View className={`w-12 h-6 rounded-full ${!allDay ? 'bg-teal-500' : 'bg-gray-600'} justify-center`}>
+          <Text className="text-leather-50">Set specific time</Text>
+          <View className={`w-12 h-6 rounded-full ${!allDay ? 'bg-gold-500' : 'bg-leather-500'} justify-center`}>
             <View className={`w-5 h-5 bg-white rounded-full mx-0.5 ${!allDay ? 'self-end' : 'self-start'}`} />
           </View>
         </Pressable>
@@ -108,9 +108,9 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         )}
         <TextInput
           ref={notesInputRef}
-          className="bg-gray-800 text-white rounded-xl min-h-24 px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl min-h-24 px-4 py-3 mb-3"
           placeholder="Notes (optional)"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           multiline
           numberOfLines={3}
           textAlignVertical="top"

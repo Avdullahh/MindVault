@@ -19,22 +19,22 @@ export default function Login() {
   };
 
   return (
-    <View className="flex-1 bg-gray-900 justify-center px-6">
-      <Text className="text-3xl font-bold text-teal-400 mb-8">MindVault</Text>
+    <View className="flex-1 bg-leather-900 justify-center px-6">
+      <Text className="text-3xl font-bold text-gold-400 mb-8" style={{ fontFamily: 'Georgia' }}>MindVault</Text>
 
       <TextInput
-        className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-4"
+        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4"
         placeholder="Email"
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#7a6050"
         autoCapitalize="none"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
       />
       <TextInput
-        className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-4"
+        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4"
         placeholder="Password"
-        placeholderTextColor="#6b7280"
+        placeholderTextColor="#7a6050"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
@@ -43,21 +43,21 @@ export default function Login() {
       {error && <Text className="text-red-400 mb-4 text-sm">{error}</Text>}
 
       <Pressable
-        className="bg-teal-500 rounded-xl py-3 items-center mb-6"
+        className="bg-gold-500 rounded-xl py-3 items-center mb-6"
         onPress={handleSignIn}
         disabled={loading}
       >
         {loading
           ? <ActivityIndicator color="#fff" />
-          : <Text className="text-white font-semibold text-base">Log in</Text>
+          : <Text className="text-leather-50 font-semibold text-base">Log in</Text>
         }
       </Pressable>
 
       <Link href="/(auth)/register" asChild>
         <Pressable className="items-center">
-          <Text className="text-gray-400">
+          <Text className="text-leather-300">
             Don't have an account?{' '}
-            <Text className="text-teal-400">Sign up</Text>
+            <Text className="text-gold-400">Sign up</Text>
           </Text>
         </Pressable>
       </Link>

@@ -71,16 +71,16 @@ export default function IdeaDetail() {
 
   if (loading && !idea) {
     return (
-      <View className="flex-1 bg-gray-900 justify-center items-center">
-        <ActivityIndicator color="#2dd4bf" />
+      <View className="flex-1 bg-leather-900 justify-center items-center">
+        <ActivityIndicator color="#d4a017" />
       </View>
     );
   }
 
   if (!idea) {
     return (
-      <View className="flex-1 bg-gray-900 justify-center items-center">
-        <Text className="text-gray-400">Idea not found</Text>
+      <View className="flex-1 bg-leather-900 justify-center items-center">
+        <Text className="text-leather-300">Idea not found</Text>
       </View>
     );
   }
@@ -124,14 +124,14 @@ export default function IdeaDetail() {
   };
 
   return (
-    <View className="flex-1 bg-gray-900">
+    <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
         <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
-          <Ionicons name="chevron-back" size={24} color="#2dd4bf" />
+          <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
         <View className="flex-row gap-2">
           <Pressable className="min-h-11 px-3 items-center justify-center" onPress={handleSave} disabled={saving || !title.trim()} accessibilityRole="button" accessibilityState={{ disabled: saving || !title.trim(), busy: saving }}>
-            <Text className={saving ? 'text-gray-500' : 'text-teal-400 font-semibold'}>Save</Text>
+            <Text className={saving ? 'text-leather-400' : 'text-gold-400 font-semibold'}>Save</Text>
           </Pressable>
           <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete idea">
             <Ionicons name="trash-outline" size={20} color="#f87171" />
@@ -141,19 +141,19 @@ export default function IdeaDetail() {
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <TextInput
-          className="text-white text-xl font-bold mb-3 bg-gray-800 rounded-xl min-h-11 px-4 py-3"
+          className="text-leather-50 text-xl font-bold mb-3 bg-leather-800 rounded-xl min-h-11 px-4 py-3"
           value={title}
           onChangeText={setTitle}
           placeholder="Title"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           returnKeyType="next"
         />
         <TextInput
-          className="text-gray-300 bg-gray-800 rounded-xl min-h-32 px-4 py-3 mb-4"
+          className="text-leather-200 bg-leather-800 rounded-xl min-h-32 px-4 py-3 mb-4"
           value={description}
           onChangeText={setDescription}
           placeholder="Description"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           multiline
           numberOfLines={6}
           textAlignVertical="top"
@@ -182,39 +182,39 @@ export default function IdeaDetail() {
           <Text className="text-red-400 text-xs mb-3">{categoriseState.error}</Text>
         )}
 
-        <Text className="text-gray-400 text-sm font-medium mb-2">Category</Text>
+        <Text className="text-leather-300 text-sm font-medium mb-2">Category</Text>
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
-        <Text className="text-gray-400 text-sm font-medium mt-4 mb-2">Tags</Text>
+        <Text className="text-leather-300 text-sm font-medium mt-4 mb-2">Tags</Text>
         <View className="flex-row flex-wrap mb-2">
           {ideaTags.map((t) => (
             <Tag key={t.id} label={t.name} onRemove={() => handleTagToggle(t.id)} />
           ))}
         </View>
         <Pressable className="self-start min-h-11 justify-center mb-6" onPress={() => setTagPickerVisible(true)}>
-          <Text className="text-teal-400 text-sm">+ Add tag</Text>
+          <Text className="text-gold-400 text-sm">+ Add tag</Text>
         </Pressable>
 
-        <Text className="text-gray-400 text-sm font-medium mb-2">Linked Goals</Text>
+        <Text className="text-leather-300 text-sm font-medium mb-2">Linked Goals</Text>
         {linkedGoals.map((g) => (
-          <View key={g.id} className="bg-gray-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
-            <Text className="text-white flex-1" numberOfLines={1}>{g.title}</Text>
+          <View key={g.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
+            <Text className="text-leather-50 flex-1" numberOfLines={1}>{g.title}</Text>
             <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleGoalToggle(g.id)} accessibilityRole="button" accessibilityLabel={`Unlink ${g.title}`}>
-              <Ionicons name="close-circle-outline" size={18} color="#6b7280" />
+              <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
             </Pressable>
           </View>
         ))}
         <Pressable className="flex-row min-h-11 items-center gap-2 mb-6" onPress={() => setGoalPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={18} color="#2dd4bf" />
-          <Text className="text-teal-400 text-sm">Link goal</Text>
+          <Ionicons name="add-circle-outline" size={18} color="#d4a017" />
+          <Text className="text-gold-400 text-sm">Link goal</Text>
         </Pressable>
 
-        <Text className="text-gray-400 text-sm font-medium mb-2">Linked Projects</Text>
+        <Text className="text-leather-300 text-sm font-medium mb-2">Linked Projects</Text>
         {linkedProjects.length === 0
-          ? <Text className="text-gray-600 text-sm mb-4">No projects linked</Text>
+          ? <Text className="text-leather-500 text-sm mb-4">No projects linked</Text>
           : linkedProjects.map((p) => (
-              <Pressable key={p.id} className="bg-gray-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
-                <Text className="text-white" numberOfLines={1}>{p.title}</Text>
+              <Pressable key={p.id} className="bg-leather-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
+                <Text className="text-leather-50" numberOfLines={1}>{p.title}</Text>
               </Pressable>
             ))
         }
@@ -223,8 +223,8 @@ export default function IdeaDetail() {
       <ModalSheet visible={expandState.status !== 'idle'} onClose={resetExpand} title="Expand with AI">
         {expandState.status === 'loading' && (
           <View className="items-center py-8">
-            <ActivityIndicator color="#2dd4bf" />
-            <Text className="text-gray-400 mt-3 text-sm">Thinking…</Text>
+            <ActivityIndicator color="#d4a017" />
+            <Text className="text-leather-300 mt-3 text-sm">Thinking…</Text>
           </View>
         )}
         {expandState.status === 'error' && (
@@ -234,13 +234,13 @@ export default function IdeaDetail() {
           <ScrollView showsVerticalScrollIndicator={false}>
             {(Object.keys(EXPAND_SECTION_LABELS) as (keyof typeof EXPAND_SECTION_LABELS)[]).map((key) => (
               <View key={key} className="mb-4">
-                <Text className="text-teal-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                <Text className="text-gold-400 text-xs font-semibold uppercase tracking-wider mb-2">
                   {EXPAND_SECTION_LABELS[key]}
                 </Text>
                 {expandState.data![key].map((item, i) => (
                   <View key={i} className="flex-row gap-2 mb-1.5">
-                    <Text className="text-gray-500 text-sm">·</Text>
-                    <Text className="text-gray-200 text-sm flex-1">{item}</Text>
+                    <Text className="text-leather-400 text-sm">·</Text>
+                    <Text className="text-leather-100 text-sm flex-1">{item}</Text>
                   </View>
                 ))}
               </View>

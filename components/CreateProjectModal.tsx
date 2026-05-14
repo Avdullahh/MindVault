@@ -33,17 +33,17 @@ export function CreateProjectModal({ visible, onClose, onCreate }: Props) {
     <ModalSheet visible={visible} onClose={handleClose} title="New Project">
       <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
           placeholder="Title"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           value={title}
           onChangeText={setTitle}
           maxLength={200}
         />
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
+          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
           placeholder="Main goal (optional)"
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           multiline
           numberOfLines={3}
           textAlignVertical="top"

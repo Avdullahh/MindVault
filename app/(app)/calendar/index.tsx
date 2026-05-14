@@ -106,10 +106,10 @@ function getWeekdayLabels(locale: string) {
 }
 
 function getDayTextClass(selected: boolean, isToday: boolean, inCurrentMonth: boolean) {
-  if (selected) return 'text-white font-semibold';
-  if (isToday) return 'text-teal-400 font-semibold';
-  if (inCurrentMonth) return 'text-gray-100';
-  return 'text-gray-600';
+  if (selected) return 'text-leather-50 font-semibold';
+  if (isToday) return 'text-gold-400 font-semibold';
+  if (inCurrentMonth) return 'text-leather-50';
+  return 'text-leather-500';
 }
 
 export default function CalendarScreen() {
@@ -150,27 +150,27 @@ export default function CalendarScreen() {
     <>
       <View className="flex-row items-center justify-between mb-4">
         <Pressable
-          className="w-11 h-11 items-center justify-center rounded-full bg-gray-800"
+          className="w-11 h-11 items-center justify-center rounded-full bg-leather-800"
           onPress={() => setSelectedDate(toIsoDate(addDays(monthStart, -1)))}
           accessibilityRole="button"
           accessibilityLabel="Previous month"
         >
-          <Ionicons name="chevron-back" size={22} color="#2dd4bf" />
+          <Ionicons name="chevron-back" size={22} color="#d4a017" />
         </Pressable>
-        <Text className="text-white text-lg font-bold">{monthLabel}</Text>
+        <Text className="text-leather-50 text-lg font-bold">{monthLabel}</Text>
         <Pressable
-          className="w-11 h-11 items-center justify-center rounded-full bg-gray-800"
+          className="w-11 h-11 items-center justify-center rounded-full bg-leather-800"
           onPress={() => setSelectedDate(toIsoDate(addDays(monthEnd, 1)))}
           accessibilityRole="button"
           accessibilityLabel="Next month"
         >
-          <Ionicons name="chevron-forward" size={22} color="#2dd4bf" />
+          <Ionicons name="chevron-forward" size={22} color="#d4a017" />
         </Pressable>
       </View>
 
       <View className="flex-row mb-2">
         {weekdayLabels.map((label) => (
-          <Text key={label} className={`flex-1 text-center font-semibold text-gray-500 ${weekdayTextSize}`}>
+          <Text key={label} className={`flex-1 text-center font-semibold text-leather-400 ${weekdayTextSize}`}>
             {label}
           </Text>
         ))}
@@ -190,12 +190,12 @@ export default function CalendarScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
               >
-                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-teal-700' : 'bg-transparent'}`}>
+                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-gold-700' : 'bg-transparent'}`}>
                   <Text className={`text-base ${getDayTextClass(selected, isToday, day.inCurrentMonth)}`}>
                     {day.label}
                   </Text>
                   {hasEvents && (
-                    <View className={`w-1.5 h-1.5 rounded-full mt-0.5 ${selected ? 'bg-white' : 'bg-teal-400'}`} />
+                    <View className={`w-1.5 h-1.5 rounded-full mt-0.5 ${selected ? 'bg-white' : 'bg-gold-400'}`} />
                   )}
                 </View>
               </Pressable>
@@ -209,18 +209,18 @@ export default function CalendarScreen() {
   const eventsList = (
     <>
       <View className="px-5 py-3">
-        <Text className="text-white font-semibold">{selectedDateLabel}</Text>
+        <Text className="text-leather-50 font-semibold">{selectedDateLabel}</Text>
       </View>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#2dd4bf" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#d4a017" />}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {dayEvents.length === 0 ? (
-          <View className="bg-gray-800 rounded-xl border border-gray-700 px-4 py-5">
-            <Text className="text-white font-medium">No events for this day</Text>
-            <Text className="text-gray-500 text-sm mt-1">Tap + to add one and connect it to your plan.</Text>
+          <View className="bg-leather-800 rounded-xl border border-leather-600 px-4 py-5">
+            <Text className="text-leather-50 font-medium">No events for this day</Text>
+            <Text className="text-leather-400 text-sm mt-1">Tap + to add one and connect it to your plan.</Text>
           </View>
         ) : (
           <>
@@ -244,9 +244,9 @@ export default function CalendarScreen() {
   return (
     <>
       {isIPad ? (
-        <View className="flex-1 flex-row bg-gray-900">
-          <View style={{ width: calendarWidth }} className="pt-14 px-4 border-r border-gray-800">
-            <Text className="text-2xl font-bold text-white mb-3">Calendar</Text>
+        <View className="flex-1 flex-row bg-leather-900">
+          <View style={{ width: calendarWidth }} className="pt-14 px-4 border-r border-leather-800">
+            <Text className="text-2xl font-bold text-leather-50 mb-3" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
             {calendarGrid('text-sm')}
           </View>
           <View className="flex-1 pt-14">
@@ -254,9 +254,9 @@ export default function CalendarScreen() {
           </View>
         </View>
       ) : (
-        <View className="flex-1 bg-gray-900">
+        <View className="flex-1 bg-leather-900">
           <View className="px-5 pt-14 pb-2">
-            <Text className="text-2xl font-bold text-white">Calendar</Text>
+            <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
           </View>
           <View className="px-5 py-3">
             {calendarGrid('text-xs')}
@@ -266,7 +266,7 @@ export default function CalendarScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
         accessibilityRole="button"
         accessibilityLabel="Create event"

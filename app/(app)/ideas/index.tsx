@@ -21,19 +21,19 @@ export default function IdeasScreen() {
     : ideas;
 
   return (
-    <View className="flex-1 bg-gray-900">
+    <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Text className="text-2xl font-bold text-white">Ideas</Text>
+        <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Ideas</Text>
         <Pressable onPress={() => router.push('/(app)/settings')}>
-          <Ionicons name="settings-outline" size={22} color="#6b7280" />
+          <Ionicons name="settings-outline" size={22} color="#7a6050" />
         </Pressable>
       </View>
 
       <View className="px-5 mb-3">
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3"
+          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3"
           placeholder="Search ideas..."
-          placeholderTextColor="#6b7280"
+          placeholderTextColor="#7a6050"
           value={query}
           onChangeText={setQuery}
         />
@@ -53,7 +53,7 @@ export default function IdeasScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-teal-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add" size={28} color="#fff" />

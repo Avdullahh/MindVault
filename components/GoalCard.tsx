@@ -34,8 +34,8 @@ export function GoalCard({ goal, onPress }: Props) {
   const pct = total > 0 ? done / total : 0;
 
   return (
-    <Pressable className="bg-gray-800 rounded-2xl p-4 mb-3" onPress={onPress}>
-      <Text className="text-white font-semibold text-base mb-2" numberOfLines={2}>{goal.title}</Text>
+    <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3" onPress={onPress}>
+      <Text className="text-leather-50 font-semibold text-base mb-2" numberOfLines={2}>{goal.title}</Text>
 
       <View className="flex-row gap-2 flex-wrap mb-3">
         {goal.priority && <Badge label={goal.priority} color={priorityColor(goal.priority)} />}
@@ -49,10 +49,10 @@ export function GoalCard({ goal, onPress }: Props) {
 
       {total > 0 && (
         <View>
-          <View className="h-1.5 bg-gray-700 rounded-full overflow-hidden">
-            <View className="h-full bg-teal-500 rounded-full" style={{ width: `${Math.round(pct * 100)}%` }} />
+          <View className="h-1.5 bg-leather-600 rounded-full overflow-hidden">
+            <View className="h-full bg-gold-500 rounded-full" style={{ width: `${Math.round(pct * 100)}%` }} />
           </View>
-          <Text className="text-gray-500 text-xs mt-1">{done}/{total} steps done</Text>
+          <Text className="text-leather-400 text-xs mt-1">{done}/{total} steps done</Text>
         </View>
       )}
     </Pressable>
