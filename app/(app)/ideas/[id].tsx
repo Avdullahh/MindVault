@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
+import { emitDataChange } from '../../../lib/data-events';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useIdeaTags } from '../../../hooks/use-idea-tags';
 import { useTags } from '../../../hooks/use-tags';
@@ -112,6 +113,7 @@ export default function IdeaDetail() {
     if (linked) await supabase.from('goal_ideas').delete().eq('idea_id', id).eq('goal_id', goalId);
     else await supabase.from('goal_ideas').insert({ idea_id: id, goal_id: goalId });
     await loadLinkedGoals();
+    emitDataChange(['ideas', 'goals']);
   };
 
   const handleSuggestCategory = async () => {

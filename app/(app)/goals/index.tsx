@@ -19,7 +19,13 @@ export default function GoalsScreen() {
       </View>
 
       {!loading && goals.length === 0 ? (
-        <EmptyState title="No goals yet" subtitle="Break your ideas into goals with milestones" />
+        <EmptyState
+          title="No goals yet"
+          subtitle="Turn a direction into milestones and action steps when an idea is ready to become a plan."
+          actionLabel="Create goal"
+          icon="flag-outline"
+          onAction={() => setModalVisible(true)}
+        />
       ) : (
         <FlatList
           data={goals}

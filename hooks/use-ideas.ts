@@ -1,11 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
+import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
 import type { Idea, IdeaInsert } from '../types';
+
+const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 type CreatePayload = Pick<IdeaInsert, 'title' | 'description' | 'category_id'>;
 
 export function useIdeas() {
+  const source = useRef(Symbol('ideas'));
   const [ideas, setIdeas] = useState<Idea[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +31,7 @@ export function useIdeas() {
     const { error: err } = await supabase.from('ideas').insert({ ...payload, user_id });
     if (err) return err.message;
     await fetch();
+    emitDataChange('ideas', source.current);
     return null;
   };
 
@@ -37,6 +42,7 @@ export function useIdeas() {
     const { error: err } = await supabase.from('ideas').update(payload).eq('id', id);
     if (err) return err.message;
     await fetch();
+    emitDataChange('ideas', source.current);
     return null;
   };
 
@@ -44,18 +50,25 @@ export function useIdeas() {
     const { error: err } = await supabase.from('ideas').delete().eq('id', id);
     if (err) return err.message;
     setIdeas((prev) => prev.filter((i) => i.id !== id));
+    emitDataChange(['ideas', 'projects', 'goals'], source.current);
     return null;
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+    return subscribeToDataChanges('ideas', (eventSource) => {
+      if (eventSource !== source.current) fetch();
+    });
+  }, []);
 
-  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
-  const cutoff = Date.now() - THIRTY_DAYS_MS;
-  const forgottenIdeas = ideas.filter((i) => {
-    const lastSeen = i.last_viewed_at ? new Date(i.last_viewed_at).getTime() : null;
-    const created = new Date(i.created_at).getTime();
-    return lastSeen !== null ? lastSeen < cutoff : created < cutoff;
-  });
+  const forgottenIdeas = useMemo(() => {
+    const cutoff = Date.now() - THIRTY_DAYS_MS;
+    return ideas.filter((i) => {
+      const lastSeen = i.last_viewed_at ? new Date(i.last_viewed_at).getTime() : null;
+      const created = new Date(i.created_at).getTime();
+      return lastSeen !== null ? lastSeen < cutoff : created < cutoff;
+    });
+  }, [ideas]);
 
   return { ideas, forgottenIdeas, loading, error, refetch: fetch, create, update, remove };
 }

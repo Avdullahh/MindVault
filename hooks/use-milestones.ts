@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { emitDataChange } from '../lib/data-events';
 import type { MilestoneInsert } from '../types';
 
 export function useMilestones(onRefresh: () => Promise<void>) {
@@ -7,6 +8,7 @@ export function useMilestones(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('milestones').insert(payload);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 
@@ -14,6 +16,7 @@ export function useMilestones(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('milestones').update({ title }).eq('id', id);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 
@@ -21,6 +24,7 @@ export function useMilestones(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('milestones').delete().eq('id', id);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 

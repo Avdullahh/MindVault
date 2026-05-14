@@ -3,6 +3,7 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
+import { emitDataChange } from '../../../lib/data-events';
 import { useGoals } from '../../../hooks/use-goals';
 import { useMilestones } from '../../../hooks/use-milestones';
 import { useActionSteps } from '../../../hooks/use-action-steps';
@@ -39,6 +40,7 @@ export default function GoalDetail() {
   const toggleTask = async (taskId: string, done: boolean) => {
     await supabase.from('tasks').update({ done }).eq('id', taskId);
     setLinkedTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, done } : t));
+    emitDataChange(['tasks', 'goals', 'projects']);
   };
 
   useEffect(() => { if (id) Promise.all([loadLinkedIdeas(), loadLinkedTasks()]); }, [id]);
@@ -78,6 +80,7 @@ export default function GoalDetail() {
     if (linked) await supabase.from('goal_ideas').delete().eq('goal_id', id).eq('idea_id', ideaId);
     else await supabase.from('goal_ideas').insert({ goal_id: id, idea_id: ideaId });
     await loadLinkedIdeas();
+    emitDataChange(['goals', 'ideas']);
   };
 
   return (

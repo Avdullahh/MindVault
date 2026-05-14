@@ -19,7 +19,13 @@ export default function ProjectsScreen() {
       </View>
 
       {!loading && projects.length === 0 ? (
-        <EmptyState title="No projects yet" subtitle="Group ideas and goals into a project" />
+        <EmptyState
+          title="No projects yet"
+          subtitle="Group related ideas, goals, and tasks when a theme becomes bigger than a single note."
+          actionLabel="Start project"
+          icon="folder-outline"
+          onAction={() => setModalVisible(true)}
+        />
       ) : (
         <FlatList
           data={projects}
@@ -32,7 +38,7 @@ export default function ProjectsScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-8 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center"
+        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
       >
         <Ionicons name="add" size={28} color="#fff" />

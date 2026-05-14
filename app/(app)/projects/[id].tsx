@@ -14,6 +14,7 @@ import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EditTaskModal } from '../../../components/EditTaskModal';
 import { AIButton } from '../../../components/ui/AIButton';
+import { emitDataChange } from '../../../lib/data-events';
 import { getUserId } from '../../../lib/get-user-id';
 import type { Idea, Task } from '../../../types';
 import type { PlanResult } from '../../../hooks/use-ai';
@@ -133,6 +134,7 @@ export default function ProjectDetail() {
       }
 
       await refetchGoals();
+      emitDataChange(['goals', 'tasks', 'projects']);
       succeeded = true;
     } finally {
       setSaving(false);

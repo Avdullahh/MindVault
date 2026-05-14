@@ -65,7 +65,6 @@ export default function AppLayout() {
         name="calendar/index"
         options={{ title: 'Calendar', tabBarIcon: tabIcon('calendar-outline') }}
       />
-      <Tabs.Screen name="tasks/index" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
     </Tabs>
   );

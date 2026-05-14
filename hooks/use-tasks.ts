@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
+import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
 import type { Task, TaskInsert } from '../types';
 
 export type TaskWithGoal = Task & {
@@ -8,6 +9,7 @@ export type TaskWithGoal = Task & {
 };
 
 export function useProjectTasks(projectId: string) {
+  const source = useRef(Symbol('tasks'));
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -25,13 +27,14 @@ export function useProjectTasks(projectId: string) {
   };
 
   const create = async (
-    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes'>,
+    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes' | 'category_id'>,
   ): Promise<string | null> => {
     const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';
     const { error: err } = await supabase.from('tasks').insert({ ...payload, user_id, project_id: projectId });
     if (err) return err.message;
     await fetch();
+    emitDataChange(['tasks', 'projects', 'goals'], source.current);
     return null;
   };
 
@@ -42,6 +45,7 @@ export function useProjectTasks(projectId: string) {
     const { error: err } = await supabase.from('tasks').update(payload).eq('id', id);
     if (err) return err.message;
     setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } : t)));
+    emitDataChange(['tasks', 'projects', 'goals'], source.current);
     return null;
   };
 
@@ -51,10 +55,16 @@ export function useProjectTasks(projectId: string) {
     const { error: err } = await supabase.from('tasks').delete().eq('id', id);
     if (err) return err.message;
     setTasks((prev) => prev.filter((t) => t.id !== id));
+    emitDataChange(['tasks', 'projects', 'goals'], source.current);
     return null;
   };
 
-  useEffect(() => { fetch(); }, [projectId]);
+  useEffect(() => {
+    fetch();
+    return subscribeToDataChanges('tasks', (eventSource) => {
+      if (eventSource !== source.current) fetch();
+    });
+  }, [projectId]);
 
   return { tasks, loading, error, refetch: fetch, create, update, toggle, remove };
 }

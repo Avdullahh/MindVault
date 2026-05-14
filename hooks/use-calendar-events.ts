@@ -1,9 +1,11 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
+import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
 import type { CalendarEvent, CalendarEventInsert } from '../types';
 
 export function useCalendarEvents() {
+  const source = useRef(Symbol('calendar_events'));
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -30,6 +32,7 @@ export function useCalendarEvents() {
     const { error: err } = await supabase.from('calendar_events').insert({ ...payload, user_id });
     if (err) return err.message;
     await fetch();
+    emitDataChange('calendar_events', source.current);
     return null;
   };
 
@@ -40,6 +43,7 @@ export function useCalendarEvents() {
     const { error: err } = await supabase.from('calendar_events').update(payload).eq('id', id);
     if (err) return err.message;
     await fetch();
+    emitDataChange(['calendar_events', 'tasks'], source.current);
     return null;
   };
 
@@ -50,6 +54,7 @@ export function useCalendarEvents() {
     const { error: err } = await supabase.from('calendar_events').update({ done: next }).eq('id', id);
     if (err) return err.message;
     setEvents((prev) => prev.map((e) => (e.id === id ? { ...e, done: next } : e)));
+    emitDataChange('calendar_events', source.current);
     return null;
   };
 
@@ -57,6 +62,7 @@ export function useCalendarEvents() {
     const { error: err } = await supabase.from('calendar_events').delete().eq('id', id);
     if (err) return err.message;
     setEvents((prev) => prev.filter((e) => e.id !== id));
+    emitDataChange(['calendar_events', 'tasks'], source.current);
     return null;
   };
 
@@ -77,7 +83,12 @@ export function useCalendarEvents() {
     return map;
   }, [events]);
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => {
+    fetch();
+    return subscribeToDataChanges('calendar_events', (eventSource) => {
+      if (eventSource !== source.current) fetch();
+    });
+  }, []);
 
   return { events, eventsByDate, loading, error, refetch: fetch, create, update, toggleDone, remove };
 }

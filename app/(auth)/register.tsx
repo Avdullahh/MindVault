@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
+import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 
 export default function Register() {
   const { signUp } = useAuth();
@@ -12,6 +13,14 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async () => {
+    if (!email.trim() || !password) {
+      setError('Enter an email and password');
+      return;
+    }
+    if (password.length < 8) {
+      setError('Use at least 8 characters for your password');
+      return;
+    }
     setLoading(true);
     setError(null);
     const err = await signUp(email.trim(), password);
@@ -37,7 +46,7 @@ export default function Register() {
   }
 
   return (
-    <View className="flex-1 bg-leather-900 justify-center px-6">
+    <AuthFormContainer>
       <Text className="text-3xl font-bold text-gold-400 mb-8" style={{ fontFamily: 'Georgia' }}>Create account</Text>
 
       <TextInput
@@ -79,6 +88,6 @@ export default function Register() {
           </Text>
         </Pressable>
       </Link>
-    </View>
+    </AuthFormContainer>
   );
 }

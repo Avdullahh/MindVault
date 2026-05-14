@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
+import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 
 export default function Login() {
   const { signIn } = useAuth();
@@ -11,6 +12,10 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
 
   const handleSignIn = async () => {
+    if (!email.trim() || !password) {
+      setError('Enter your email and password');
+      return;
+    }
     setLoading(true);
     setError(null);
     const err = await signIn(email.trim(), password);
@@ -19,8 +24,9 @@ export default function Login() {
   };
 
   return (
-    <View className="flex-1 bg-leather-900 justify-center px-6">
-      <Text className="text-3xl font-bold text-gold-400 mb-8" style={{ fontFamily: 'Georgia' }}>MindVault</Text>
+    <AuthFormContainer>
+      <Text className="text-3xl font-bold text-gold-400 mb-2" style={{ fontFamily: 'Georgia' }}>MindVault</Text>
+      <Text className="text-leather-300 text-sm leading-5 mb-8">Capture ideas, connect them to action, and come back to what matters.</Text>
 
       <TextInput
         className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4"
@@ -61,6 +67,6 @@ export default function Login() {
           </Text>
         </Pressable>
       </Link>
-    </View>
+    </AuthFormContainer>
   );
 }

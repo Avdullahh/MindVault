@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { emitDataChange } from '../lib/data-events';
 import type { ActionStepInsert } from '../types';
 
 export function useActionSteps(onRefresh: () => Promise<void>) {
@@ -7,6 +8,7 @@ export function useActionSteps(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('action_steps').insert(payload);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 
@@ -14,6 +16,7 @@ export function useActionSteps(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('action_steps').update({ done }).eq('id', id);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 
@@ -21,6 +24,7 @@ export function useActionSteps(onRefresh: () => Promise<void>) {
     const { error } = await supabase.from('action_steps').delete().eq('id', id);
     if (error) return error.message;
     await onRefresh();
+    emitDataChange(['goals', 'projects']);
     return null;
   };
 

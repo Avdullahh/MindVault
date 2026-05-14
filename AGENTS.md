@@ -1,42 +1,174 @@
-# MindVault — Quick Reference
+# MindVault Agent Instructions
 
-**The Problem**
-Ideas are fragile. They arrive mid-conversation, during a morning walk, or right before sleep — and they vanish before you find something to write them on. The tools that do exist solve half the problem. Note apps capture ideas but rarely help you act on them. Calendars and task managers organise time but have no connection to the thinking that drives what you want to do with that time. The result is a graveyard of half-remembered ideas scattered across different apps, notebooks, and voice memos that never see daylight again. The idea existed. Then life happened. Then it was gone.
+AGENTS.md is the operating manual for coding agents in this repository. Keep it specific, current, and short enough to be useful. When code, commands, schema, or folder ownership changes, update this file in the same change.
 
-**Vision:** Smart second brain for iOS (iPad-first). Captures ideas, resurfaces them, plans goals with AI, and links everything to a calendar. Not a note app — the connective layer between thinking and doing.
+## Product Context
 
-**Design:** AI is always opt-in (never automatic). Everything interconnected — ideas link to goals, tasks, and events. Free tier: capture, organise, manual planning. Pro: AI features (expansion, goal planning, categorisation, morning brief).
+MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, projects, and calendar events, and helps users turn thinking into action.
 
-**Stack:** Expo + TypeScript · NativeWind · Expo Router · Supabase (Postgres + Auth + RLS + Edge Functions) · Gemini (server-side only) · RevenueCat · EAS Build/Submit
+The app is not a generic notes app. Treat it as the connective layer between thinking and doing.
 
-**Schema (17 tables):**
-- Core: `categories`, `tags`, `ideas`, `projects`, `goals`, `calendar_events`, `tasks`, `milestones`, `action_steps`
-- Junctions: `idea_tags`, `project_ideas`, `goal_ideas`, `task_ideas`, `task_goals`, `event_ideas`, `event_goals`, `event_tasks`
-- All user tables: RLS policy `auth.uid() = user_id`
+Core product rules:
+- AI is always opt-in and user-triggered. Never run AI automatically in the background.
+- Free tier includes capture, organization, and manual planning.
+- Pro tier gates AI expansion, goal planning, categorization, and morning brief features.
+- Ideas, goals, tasks, projects, and events should be meaningfully cross-linkable.
+- Prefer calm, focused UI over decorative or marketing-style screens.
 
-**Build order:** 
-The order matters. Each phase builds on a stable foundation before adding complexity.
+## Tech Stack
 
-Phase 1 — Foundation Set up the Supabase project, run the full schema SQL, enable RLS on every table, and write all policies before writing a single line of app code. Generate TypeScript types using the Supabase CLI immediately (supabase gen types typescript). This means types are available from day one and all future code is typed against the real schema.
+- Expo 54, React Native 0.81, React 19, TypeScript strict mode
+- Expo Router for file-based navigation under `app/`
+- NativeWind and Tailwind for styling
+- Supabase for Postgres, Auth, RLS, generated types, and Edge Functions
+- Gemini only from Supabase Edge Functions, never from the client bundle
+- RevenueCat for subscriptions
+- Secure session storage via `expo-secure-store`
+- Package manager: npm, with `package-lock.json`
 
-Phase 2 — Expo Project Setup Initialise the Expo project with TypeScript template. Install and configure NativeWind, Expo Router, and the Supabase client. Create a centralised Supabase client module that is imported everywhere — never instantiate the client in component files.
+## Commands
 
-Phase 3 — Authentication Build auth before anything else. Login, registration, Apple Sign In, and session persistence. Every subsequent screen depends on the authenticated user. Validate that RLS is working correctly at this stage by attempting to read data as an unauthenticated user and confirming it fails.
+Use the commands that exist in `package.json` unless you add and document new scripts.
 
-Phase 4 — Core Features (in order) Ideas → Categories and Tags → Goals and Milestones → Projects → Calendar → Tasks → Cross-linking (junction table UI)
+- Install dependencies: `npm install`
+- Start Expo: `npm run start`
+- Run iOS target: `npm run ios`
+- Run Android target: `npm run android`
+- Run web target: `npm run web`
+- Type-check app code: `npx tsc --noEmit`
 
-Build each feature vertically: data hook → screen → component — before moving to the next. Do not build all screens first and then wire data.
+There are currently no lint or test scripts in `package.json`. Do not claim lint/tests passed unless you added the scripts or ran an equivalent command explicitly.
 
-Phase 5 — AI Features Build all four Edge Functions. Test them independently via the Supabase dashboard before connecting them to the app. Gate every function behind auth and subscription checks from the start — never add the gate later as an afterthought.
+Supabase type generation depends on a linked project or project id. When schema changes, regenerate `types/database.generated.ts` with the Supabase CLI before writing app code against the new schema.
 
-Phase 6 — Subscriptions Integrate RevenueCat. Build the paywall UI. Verify that removing Pro entitlement immediately removes AI feature access without requiring an app restart.
+## Repository Map
 
-Phase 7 — Notifications + Polish Daily brief scheduling, iPad layout optimisation, animation polish, Apple Calendar sync toggle.
+- `app/` - Expo Router routes and screen composition
+- `app/(auth)/` - login and registration routes
+- `app/(app)/` - authenticated app routes
+- `components/` - feature components and modals
+- `components/ui/` - shared UI primitives
+- `context/` - app-wide React context, including auth state
+- `hooks/` - data hooks and feature operations; Supabase queries live here
+- `lib/` - shared utilities and the single Supabase client
+- `types/` - generated database types and app-level type aliases
+- `supabase/migrations/` - database schema migrations
+- `supabase/functions/` - Edge Functions and shared Deno helpers
 
-**Conventions:**
-- `snake_case` DB · `camelCase` TS · `PascalCase` components · `kebab-case` screen files
-- Hooks own all Supabase queries; UI never imports `supabase` directly
-- `lib/supabase.ts` — single client · `components/ui/` — shared primitives · `types/index.ts` — type aliases
-- Gemini API key in Supabase secrets only, never in the client bundle
-- Sessions in `expo-secure-store` (iOS Keychain), never `AsyncStorage`
-- Edge Functions: auth → Pro check (Phase 6) → validate input → call AI → typed response
+## Architecture Rules
+
+- `lib/supabase.ts` is the only client-side Supabase client module.
+- UI components and route files must not instantiate Supabase clients.
+- Hooks own Supabase reads/writes and expose typed operations to screens/components.
+- Keep feature work vertical: data hook, screen behavior, then component polish.
+- Prefer generated database types from `types/database.generated.ts` over hand-written table shapes.
+- Put app-friendly type aliases in `types/index.ts`.
+- Keep shared UI primitives in `components/ui/`; do not duplicate button, card, badge, tag, modal, or date picker behavior in feature files.
+- Use existing local patterns before introducing new abstractions.
+
+## Naming Conventions
+
+- Database tables, columns, and SQL identifiers: `snake_case`
+- TypeScript variables and functions: `camelCase`
+- React components and exported component files: `PascalCase`
+- Expo Router screen files: `kebab-case` where a descriptive route name is needed
+- Hooks: `use-*.ts`
+- Supabase Edge Functions: kebab-case directories under `supabase/functions/`
+
+## Data Model
+
+Core tables:
+- `categories`
+- `tags`
+- `ideas`
+- `projects`
+- `goals`
+- `calendar_events`
+- `tasks`
+- `milestones`
+- `action_steps`
+
+Junction tables:
+- `idea_tags`
+- `project_ideas`
+- `goal_ideas`
+- `task_ideas`
+- `task_goals`
+- `event_ideas`
+- `event_goals`
+- `event_tasks`
+
+All user-owned tables must enforce RLS with user isolation equivalent to `auth.uid() = user_id`. Do not weaken RLS for convenience.
+Foreign-key links between user-owned rows must also prove same-user ownership in RLS policies.
+Tasks are project-scoped in the product UI and database writes; do not add a global Tasks route or create tasks without `project_id`.
+
+## Security And Secrets
+
+- Never commit `.env` secrets or real service keys.
+- Client-exposed Supabase values must use `EXPO_PUBLIC_SUPABASE_URL` and `EXPO_PUBLIC_SUPABASE_ANON_KEY`.
+- Gemini API keys belong only in Supabase secrets.
+- Store sessions in `expo-secure-store`, not AsyncStorage.
+- Preserve the chunked SecureStore behavior in `lib/supabase.ts`; Supabase sessions can exceed the iOS per-key size limit.
+- Treat unauthenticated data access as a bug unless the feature is intentionally public.
+
+## Edge Functions And AI
+
+Current AI function pattern:
+1. Authenticate the request.
+2. Check Pro entitlement when the feature is Pro-gated.
+3. Validate the input.
+4. Call Gemini server-side.
+5. Return a typed response.
+
+Never call Gemini from React Native code. Never add automatic AI categorization, expansion, planning, or brief generation without an explicit user action or scheduled feature requirement.
+
+Shared Edge Function utilities live in `supabase/functions/_shared/`. Reuse them instead of re-implementing auth, entitlement, Gemini, or response handling in each function.
+
+## UX And Product Quality
+
+- Design for iPad first, then make phone layouts work cleanly.
+- Keep screens useful immediately; avoid landing-page or marketing copy inside the app.
+- Prefer dense, scannable organization for lists, calendars, tasks, and planning views.
+- AI actions should feel optional, clearly labeled, and reversible when practical.
+- Empty states should help the user take the next meaningful action.
+- Preserve cross-linking flows when editing ideas, goals, tasks, projects, and events.
+
+## Build Order
+
+When adding major product areas, follow this dependency order unless the user explicitly asks for a narrow fix:
+
+1. Foundation: schema, RLS, policies, generated types.
+2. Expo setup: NativeWind, Expo Router, Supabase client.
+3. Authentication: login, registration, Apple Sign In when implemented, session persistence, RLS validation.
+4. Core features: ideas, categories/tags, goals/milestones, projects, calendar, tasks, cross-linking UI.
+5. AI features: Edge Functions first, dashboard/function testing, then app integration.
+6. Subscriptions: RevenueCat, paywall, entitlement refresh, AI access removal without restart.
+7. Notifications and polish: daily brief scheduling, iPad optimization, animation polish, Apple Calendar sync toggle.
+
+## Change Workflow
+
+- Read the relevant files before editing.
+- Keep changes scoped to the user's request.
+- Do not rewrite unrelated files or reformat broad areas without a reason.
+- Do not revert user changes unless the user explicitly asks.
+- Ask before destructive actions such as deleting files, resetting git state, or replacing migrations.
+- If changing schema, add a migration and regenerate types.
+- If changing an API shape, update every caller and the related TypeScript types.
+- If adding dependencies, prefer established Expo-compatible packages and update `package-lock.json`.
+
+## Verification
+
+Before handing off code changes:
+
+- Run `npx tsc --noEmit` for app TypeScript changes.
+- For route or component changes, start Expo with the relevant target when practical.
+- For Supabase migrations, inspect SQL for RLS and user isolation.
+- For Edge Functions, verify auth, entitlement behavior, input validation, and typed responses.
+- If a check cannot be run, state that clearly in the final response.
+
+## Git And PR Guidance
+
+- Do not commit, push, or open a PR unless the user asks.
+- Commit titles and descriptions must both be accurate and concise.
+- Mention the verification performed in the PR or final summary.
+- Keep generated files in the same commit as the source change that requires them.

@@ -16,9 +16,9 @@ type Props = {
 const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
 
 const PRIORITY_LABELS: Record<Priority, string> = {
-  high: '🔴  High',
-  medium: '🟡  Medium',
-  low: '⚪  Low',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 const priorityActive: Record<Priority, string> = {

@@ -21,9 +21,9 @@ const priorityActive: Record<Priority, string> = {
 };
 
 const PRIORITY_LABELS: Record<Priority, string> = {
-  high: '🔴  High',
-  medium: '🟡  Medium',
-  low: '⚪  Low',
+  high: 'High',
+  medium: 'Medium',
+  low: 'Low',
 };
 
 export function CreateTaskModal({ visible, onClose, onCreate }: Props) {

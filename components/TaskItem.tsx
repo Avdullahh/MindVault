@@ -34,7 +34,7 @@ export function TaskItem({ task, onToggle }: Props) {
           {task.title}
         </Text>
         <View className="flex-row items-center gap-2 mt-1 flex-wrap">
-          {task.goalTitle && <Text className="text-leather-400 text-xs" numberOfLines={1}>↳ {task.goalTitle}</Text>}
+          {task.goalTitle && <Text className="text-leather-400 text-xs" numberOfLines={1}>Goal: {task.goalTitle}</Text>}
           {task.due_date && <Text className="text-leather-400 text-xs">{formatDue(task.due_date)}</Text>}
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>

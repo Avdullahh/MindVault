@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { emitDataChange } from '../lib/data-events';
 import type { Idea } from '../types';
 
 export function useProjectIdeas() {
@@ -17,6 +18,7 @@ export function useProjectIdeas() {
     setLoading(true);
     const { error } = await supabase.from('project_ideas').insert({ project_id: projectId, idea_id: ideaId });
     setLoading(false);
+    if (!error) emitDataChange(['projects', 'ideas']);
     return error?.message ?? null;
   };
 
@@ -28,6 +30,7 @@ export function useProjectIdeas() {
       .eq('project_id', projectId)
       .eq('idea_id', ideaId);
     setLoading(false);
+    if (!error) emitDataChange(['projects', 'ideas']);
     return error?.message ?? null;
   };
 

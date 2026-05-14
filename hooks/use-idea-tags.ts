@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabase';
+import { emitDataChange } from '../lib/data-events';
 import type { Tag } from '../types';
 
 export function useIdeaTags() {
@@ -17,6 +18,7 @@ export function useIdeaTags() {
     setLoading(true);
     const { error } = await supabase.from('idea_tags').insert({ idea_id: ideaId, tag_id: tagId });
     setLoading(false);
+    if (!error) emitDataChange(['ideas', 'tags']);
     return error?.message ?? null;
   };
 
@@ -28,6 +30,7 @@ export function useIdeaTags() {
       .eq('idea_id', ideaId)
       .eq('tag_id', tagId);
     setLoading(false);
+    if (!error) emitDataChange(['ideas', 'tags']);
     return error?.message ?? null;
   };
 

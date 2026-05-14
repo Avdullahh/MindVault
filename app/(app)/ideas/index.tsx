@@ -40,7 +40,13 @@ export default function IdeasScreen() {
       </View>
 
       {!loading && filtered.length === 0 ? (
-        <EmptyState title="No ideas yet" subtitle="Tap + to capture your first idea" />
+        <EmptyState
+          icon="bulb-outline"
+          {...(query.trim()
+            ? { title: 'No matching ideas', subtitle: 'Try a different search or capture a new thought.' }
+            : { title: 'No ideas yet', subtitle: 'Capture the thought now, organize it later, and connect it when it becomes useful.', actionLabel: 'Capture idea', onAction: () => setModalVisible(true) }
+          )}
+        />
       ) : (
         <FlatList
           data={filtered}
