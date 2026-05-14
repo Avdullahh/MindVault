@@ -8,9 +8,10 @@ import { useGoals } from '../../../hooks/use-goals';
 import { useMilestones } from '../../../hooks/use-milestones';
 import { useActionSteps } from '../../../hooks/use-action-steps';
 import { useIdeas } from '../../../hooks/use-ideas';
+import { useProjects } from '../../../hooks/use-projects';
 import { MilestoneItem } from '../../../components/MilestoneItem';
-import { IdeaPickerModal } from '../../../components/IdeaPickerModal';
-import type { Idea, Task } from '../../../types';
+import { ItemPickerModal } from '../../../components/ItemPickerModal';
+import type { Idea, Project, Task } from '../../../types';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -19,13 +20,16 @@ export default function GoalDetail() {
   const { create: createMilestone, remove: removeMilestone } = useMilestones(refetch);
   const { create: createStep, toggle: toggleStep } = useActionSteps(refetch);
   const { ideas: allIdeas } = useIdeas();
+  const { projects: allProjects } = useProjects();
 
   const goal = goals.find((g) => g.id === id);
   const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
   const [addingMilestone, setAddingMilestone] = useState(false);
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
+  const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
   const [ideaPickerVisible, setIdeaPickerVisible] = useState(false);
+  const [projectPickerVisible, setProjectPickerVisible] = useState(false);
 
   const loadLinkedIdeas = async () => {
     const { data } = await supabase.from('goal_ideas').select('ideas(*)').eq('goal_id', id);
@@ -37,13 +41,28 @@ export default function GoalDetail() {
     setLinkedTasks(((data ?? []) as { tasks: Task }[]).map((r) => r.tasks).filter(Boolean));
   };
 
+  const loadLinkedProjects = async () => {
+    const { data } = await supabase.from('goal_projects').select('projects(*)').eq('goal_id', id);
+    setLinkedProjects(((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean));
+  };
+
   const toggleTask = async (taskId: string, done: boolean) => {
     await supabase.from('tasks').update({ done }).eq('id', taskId);
     setLinkedTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, done } : t));
     emitDataChange(['tasks', 'goals', 'projects']);
   };
 
-  useEffect(() => { if (id) Promise.all([loadLinkedIdeas(), loadLinkedTasks()]); }, [id]);
+  const handleProjectToggle = async (projectId: string) => {
+    const linked = linkedProjects.some((p) => p.id === projectId);
+    if (linked) await supabase.from('goal_projects').delete().eq('goal_id', id).eq('project_id', projectId);
+    else await supabase.from('goal_projects').insert({ goal_id: id, project_id: projectId });
+    await loadLinkedProjects();
+    emitDataChange(['goals', 'projects']);
+  };
+
+  useEffect(() => {
+    if (id) void Promise.all([loadLinkedIdeas(), loadLinkedTasks(), loadLinkedProjects()]);
+  }, [id]);
 
   if (loading && !goal) {
     return (
@@ -176,14 +195,41 @@ export default function GoalDetail() {
           <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
           <Text className="text-gold-400">Link idea</Text>
         </Pressable>
+
+        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Linked Projects</Text>
+        {linkedProjects.map((project) => (
+          <View key={project.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
+            <Text className="text-leather-50 flex-1" numberOfLines={1}>{project.title}</Text>
+            <Pressable onPress={() => handleProjectToggle(project.id)}>
+              <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
+            </Pressable>
+          </View>
+        ))}
+        <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setProjectPickerVisible(true)}>
+          <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
+          <Text className="text-gold-400">Link project</Text>
+        </Pressable>
       </ScrollView>
 
-      <IdeaPickerModal
+      <ItemPickerModal
         visible={ideaPickerVisible}
         onClose={() => setIdeaPickerVisible(false)}
-        allIdeas={allIdeas}
+        title="Link Idea"
+        items={allIdeas}
         selectedIds={linkedIdeas.map((i) => i.id)}
         onToggle={handleIdeaToggle}
+        searchPlaceholder="Search ideas..."
+        emptyMessage="No ideas found"
+      />
+      <ItemPickerModal
+        visible={projectPickerVisible}
+        onClose={() => setProjectPickerVisible(false)}
+        title="Link Project"
+        items={allProjects}
+        selectedIds={linkedProjects.map((p) => p.id)}
+        onToggle={handleProjectToggle}
+        searchPlaceholder="Search projects..."
+        emptyMessage="No projects found"
       />
     </View>
   );

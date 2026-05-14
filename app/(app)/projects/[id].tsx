@@ -9,7 +9,7 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { useGoals } from '../../../hooks/use-goals';
 import { useProjectTasks } from '../../../hooks/use-tasks';
 import { useAI } from '../../../hooks/use-ai';
-import { IdeaPickerModal } from '../../../components/IdeaPickerModal';
+import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EditTaskModal } from '../../../components/EditTaskModal';
@@ -224,12 +224,15 @@ export default function ProjectDetail() {
         </Pressable>
       </ScrollView>
 
-      <IdeaPickerModal
+      <ItemPickerModal
         visible={pickerVisible}
         onClose={() => setPickerVisible(false)}
-        allIdeas={allIdeas}
+        title="Link Idea"
+        items={allIdeas}
         selectedIds={linkedIdeas.map((i) => i.id)}
         onToggle={handleIdeaToggle}
+        searchPlaceholder="Search ideas..."
+        emptyMessage="No ideas found"
       />
       <AITaskPreviewModal
         visible={previewVisible}

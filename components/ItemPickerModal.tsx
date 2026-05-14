@@ -1,28 +1,41 @@
 import { useState } from 'react';
 import { FlatList, Pressable, Text, TextInput } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
-import type { Idea } from '../types';
+
+type Item = { id: string; title: string };
 
 type Props = {
   visible: boolean;
   onClose: () => void;
-  allIdeas: Idea[];
+  title: string;
+  items: Item[];
   selectedIds: string[];
-  onToggle: (ideaId: string) => void;
+  onToggle: (id: string) => void;
+  searchPlaceholder?: string;
+  emptyMessage?: string;
 };
 
-export function IdeaPickerModal({ visible, onClose, allIdeas, selectedIds, onToggle }: Props) {
+export function ItemPickerModal({
+  visible,
+  onClose,
+  title,
+  items,
+  selectedIds,
+  onToggle,
+  searchPlaceholder = 'Search...',
+  emptyMessage = 'No items found',
+}: Props) {
   const [query, setQuery] = useState('');
 
   const filtered = query.trim()
-    ? allIdeas.filter((i) => i.title.toLowerCase().includes(query.toLowerCase()))
-    : allIdeas;
+    ? items.filter((i) => i.title.toLowerCase().includes(query.toLowerCase()))
+    : items;
 
   return (
-    <ModalSheet visible={visible} onClose={onClose} title="Link Idea">
+    <ModalSheet visible={visible} onClose={onClose} title={title}>
       <TextInput
         className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
-        placeholder="Search ideas..."
+        placeholder={searchPlaceholder}
         placeholderTextColor="#7a6050"
         value={query}
         onChangeText={setQuery}
@@ -40,7 +53,7 @@ export function IdeaPickerModal({ visible, onClose, allIdeas, selectedIds, onTog
             {selectedIds.includes(item.id) && <Text className="text-gold-400">✓</Text>}
           </Pressable>
         )}
-        ListEmptyComponent={<Text className="text-leather-400 text-center py-4">No ideas found</Text>}
+        ListEmptyComponent={<Text className="text-leather-400 text-center py-4">{emptyMessage}</Text>}
       />
     </ModalSheet>
   );

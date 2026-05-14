@@ -11,7 +11,7 @@ import { useGoals } from '../../../hooks/use-goals';
 import { useAI } from '../../../hooks/use-ai';
 import { CategoryPicker } from '../../../components/CategoryPicker';
 import { TagPicker } from '../../../components/TagPicker';
-import { GoalPickerModal } from '../../../components/GoalPickerModal';
+import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { ModalSheet } from '../../../components/ui/ModalSheet';
 import { AIButton } from '../../../components/ui/AIButton';
 import { Tag } from '../../../components/ui/Tag';
@@ -260,12 +260,15 @@ export default function IdeaDetail() {
         onCreateTag={createTag}
       />
 
-      <GoalPickerModal
+      <ItemPickerModal
         visible={goalPickerVisible}
         onClose={() => setGoalPickerVisible(false)}
-        allGoals={allGoals}
+        title="Link Goal"
+        items={allGoals}
         selectedIds={linkedGoals.map((g) => g.id)}
         onToggle={handleGoalToggle}
+        searchPlaceholder="Search goals..."
+        emptyMessage="No goals yet"
       />
     </View>
   );
