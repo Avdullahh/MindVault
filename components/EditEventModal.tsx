@@ -1,58 +1,46 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
 import { DatePicker } from './ui/DatePicker';
 import { CategoryPicker } from './CategoryPicker';
 import { toLocalDateString, toLocalTimeString } from '../lib/date-utils';
-import type { CalendarEventInsert } from '../types';
+import type { CalendarEvent } from '../types';
 
 type Props = {
+  event: CalendarEvent | null;
   visible: boolean;
   onClose: () => void;
-  defaultDate?: string;
-  onCreate: (payload: Pick<CalendarEventInsert, 'title' | 'start_at' | 'end_at' | 'all_day' | 'notes' | 'category_id'>) => Promise<string | null>;
+  onSave: (id: string, payload: Partial<Pick<CalendarEvent, 'title' | 'start_at' | 'end_at' | 'all_day' | 'notes' | 'category_id'>>) => Promise<string | null>;
 };
 
-function defaultStart() {
-  const d = new Date();
-  d.setHours(9, 0, 0, 0);
-  return d;
-}
-
-function defaultEnd() {
-  const d = new Date();
-  d.setHours(10, 0, 0, 0);
-  return d;
-}
-
-export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Props) {
+export function EditEventModal({ event, visible, onClose, onSave }: Props) {
   const notesInputRef = useRef<TextInput>(null);
-  const initialDate = useMemo(
-    () => defaultDate ? new Date(`${defaultDate}T00:00:00`) : new Date(),
-    [defaultDate],
-  );
   const [title, setTitle] = useState('');
-  const [date, setDate] = useState<Date>(initialDate);
-  const [startTime, setStartTime] = useState<Date>(defaultStart());
-  const [endTime, setEndTime] = useState<Date>(defaultEnd());
+  const [date, setDate] = useState<Date>(new Date());
+  const [startTime, setStartTime] = useState<Date>(new Date());
+  const [endTime, setEndTime] = useState<Date>(new Date());
   const [allDay, setAllDay] = useState(true);
   const [notes, setNotes] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => {
-    setTitle(''); setDate(initialDate); setStartTime(defaultStart()); setEndTime(defaultEnd());
-    setAllDay(true); setNotes(''); setCategoryId(null); setError(null);
-  };
-  const handleClose = () => { reset(); onClose(); };
-
   useEffect(() => {
-    if (visible) setDate(initialDate);
-  }, [initialDate, visible]);
+    if (!event || !visible) return;
+    setTitle(event.title);
+    setNotes(event.notes ?? '');
+    setCategoryId(event.category_id ?? null);
+    setAllDay(event.all_day);
+    setError(null);
+    const start = new Date(event.start_at);
+    setDate(new Date(start.getFullYear(), start.getMonth(), start.getDate()));
+    setStartTime(start);
+    setEndTime(event.end_at ? new Date(event.end_at) : start);
+  }, [event, visible]);
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
+    if (!event) return;
     if (!title.trim()) { setError('Title is required'); return; }
     const dateStr = toLocalDateString(date);
     const startIso = allDay
@@ -60,13 +48,14 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
       : `${dateStr}T${toLocalTimeString(startTime)}:00`;
     const endIso = allDay ? null : `${dateStr}T${toLocalTimeString(endTime)}:00`;
     setLoading(true); setError(null);
-    const err = await onCreate({ title: title.trim(), start_at: startIso, end_at: endIso, all_day: allDay, notes: notes.trim() || null, category_id: categoryId });
+    const err = await onSave(event.id, { title: title.trim(), start_at: startIso, end_at: endIso, all_day: allDay, notes: notes.trim() || null, category_id: categoryId });
     setLoading(false);
-    if (err) { setError(err); } else { reset(); onClose(); }
+    if (err) setError(err);
+    else onClose();
   };
 
   return (
-    <ModalSheet visible={visible} onClose={handleClose} title="New Event">
+    <ModalSheet visible={visible} onClose={onClose} title="Edit Event">
       <ScrollView
         style={{ flexShrink: 1 }}
         contentContainerStyle={{ paddingBottom: 12 }}
@@ -120,13 +109,13 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         />
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
       </ScrollView>
-      {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
+      {error ? <Text className="text-red-400 text-sm mb-3">{error}</Text> : null}
       <View className="flex-row gap-3 mt-2 mb-2">
         <View className="flex-1">
-          <Button label="Cancel" onPress={handleClose} variant="ghost" disabled={loading} />
+          <Button label="Cancel" onPress={onClose} variant="ghost" disabled={loading} />
         </View>
         <View className="flex-1">
-          <Button label="Create event" onPress={handleCreate} loading={loading} disabled={!title.trim()} />
+          <Button label="Save changes" onPress={handleSave} loading={loading} disabled={!title.trim()} />
         </View>
       </View>
     </ModalSheet>

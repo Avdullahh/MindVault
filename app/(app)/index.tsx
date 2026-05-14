@@ -6,9 +6,9 @@ import { useAI } from '../../hooks/use-ai';
 import { useCalendarEvents } from '../../hooks/use-calendar-events';
 import { useGoals, type GoalWithMilestones } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
-import { useTasks, type TaskWithGoal } from '../../hooks/use-tasks';
+import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
-import type { CalendarEvent, Idea } from '../../types';
+import type { CalendarEvent } from '../../types';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -24,15 +24,10 @@ function formatEventTime(event: CalendarEvent) {
   return new Date(event.start_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 }
 
-function formatDate(iso: string | null) {
-  if (!iso) return null;
-  return new Date(`${iso}T00:00:00`).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-}
-
 function goalProgress(goal: GoalWithMilestones) {
-  const steps = goal.milestones.flatMap((milestone) => milestone.action_steps);
-  if (steps.length === 0) return 0;
-  return Math.round((steps.filter((step) => step.done).length / steps.length) * 100);
+  let done = 0, total = 0;
+  for (const m of goal.milestones) for (const s of m.action_steps) { total++; if (s.done) done++; }
+  return total > 0 ? Math.round((done / total) * 100) : 0;
 }
 
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
@@ -40,7 +35,7 @@ function SectionHeader({ title, action, onPress }: { title: string; action?: str
     <View className="flex-row items-center justify-between mb-3">
       <Text className="text-white text-lg font-semibold">{title}</Text>
       {action && onPress ? (
-        <Pressable onPress={onPress}>
+        <Pressable className="min-h-11 px-2 -mr-2 items-center justify-center" onPress={onPress}>
           <Text className="text-teal-400 text-sm font-medium">{action}</Text>
         </Pressable>
       ) : null}
@@ -58,25 +53,17 @@ function EmptyCard({ text }: { text: string }) {
 
 export default function DashboardScreen() {
   const router = useRouter();
-  const { ideas, loading: ideasLoading, refetch: refetchIdeas } = useIdeas();
+  const { ideas, forgottenIdeas, loading: ideasLoading, refetch: refetchIdeas } = useIdeas();
   const { goals, loading: goalsLoading, refetch: refetchGoals } = useGoals();
-  const { tasks, loading: tasksLoading, refetch: refetchTasks } = useTasks();
+  const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
   const { events, loading: eventsLoading, refetch: refetchEvents } = useCalendarEvents();
   const { morningBrief, briefState } = useAI();
 
-  const loading = ideasLoading || goalsLoading || tasksLoading || eventsLoading;
+  const loading = ideasLoading || goalsLoading || projectsLoading || eventsLoading;
   const dateLabel = useMemo(
     () => new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
     [],
   );
-
-  const allPendingTasks = useMemo(
-    () => tasks
-      .filter((task) => !task.done)
-      .sort((a, b) => (a.due_date ?? '9999-12-31').localeCompare(b.due_date ?? '9999-12-31')),
-    [tasks],
-  );
-  const pendingTasks = useMemo(() => allPendingTasks.slice(0, 4), [allPendingTasks]);
 
   const allUpcomingEvents = useMemo(
     () => events
@@ -89,9 +76,8 @@ export default function DashboardScreen() {
       .sort((a, b) => a.start_at.localeCompare(b.start_at)),
     [events],
   );
-  const upcomingEvents = useMemo(() => allUpcomingEvents.slice(0, 4), [allUpcomingEvents]);
+  const upcomingEvents = useMemo(() => allUpcomingEvents.slice(0, 3), [allUpcomingEvents]);
 
-  const recentIdeas = useMemo(() => ideas.slice(0, 3), [ideas]);
   const activeGoals = useMemo(
     () => goals
       .slice()
@@ -101,42 +87,37 @@ export default function DashboardScreen() {
         if (!b.deadline) return -1;
         return a.deadline.localeCompare(b.deadline);
       })
-      .slice(0, 3),
+      .slice(0, 2),
     [goals],
   );
 
-  const metrics: Metric[] = [
-    { label: 'Ideas', value: ideas.length, icon: 'bulb-outline', route: '/(app)/ideas' },
-    { label: 'Goals', value: goals.length, icon: 'flag-outline', route: '/(app)/goals' },
-    { label: 'Tasks due', value: allPendingTasks.length, icon: 'checkmark-circle-outline', route: '/(app)/tasks' },
-    { label: 'Upcoming', value: allUpcomingEvents.length, icon: 'calendar-outline', route: '/(app)/calendar' },
-  ];
-
-  const refresh = async () => {
-    await Promise.all([refetchIdeas(), refetchGoals(), refetchTasks(), refetchEvents()]);
-  };
-
-  const renderTask = (task: TaskWithGoal) => (
-    <Pressable
-      key={task.id}
-      className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700"
-      onPress={() => router.push('/(app)/tasks')}
-    >
-      <Text className="text-white font-medium" numberOfLines={1}>{task.title}</Text>
-      <View className="flex-row items-center gap-2 mt-1">
-        {task.goalTitle ? <Text className="text-gray-500 text-xs flex-1" numberOfLines={1}>From {task.goalTitle}</Text> : null}
-        {task.due_date ? <Text className="text-teal-400 text-xs">{formatDate(task.due_date)}</Text> : null}
-      </View>
-    </Pressable>
+  const goalProgressMap = useMemo(
+    () => Object.fromEntries(activeGoals.map((g) => [g.id, goalProgress(g)])),
+    [activeGoals],
   );
 
+  const metrics = useMemo<Metric[]>(
+    () => [
+      { label: 'Ideas', value: ideas.length, icon: 'bulb-outline', route: '/(app)/ideas' },
+      { label: 'Goals', value: goals.length, icon: 'flag-outline', route: '/(app)/goals' },
+      { label: 'Projects', value: projects.length, icon: 'folder-outline', route: '/(app)/projects' },
+      { label: 'Upcoming', value: allUpcomingEvents.length, icon: 'calendar-outline', route: '/(app)/calendar' },
+    ],
+    [ideas.length, goals.length, projects.length, allUpcomingEvents.length],
+  );
+
+  const refresh = async () => {
+    await Promise.all([refetchIdeas(), refetchGoals(), refetchProjects(), refetchEvents()]);
+  };
+
   const renderGoal = (goal: GoalWithMilestones) => {
-    const progress = goalProgress(goal);
+    const progress = goalProgressMap[goal.id] ?? 0;
     return (
       <Pressable
         key={goal.id}
-        className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700"
+        className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700 min-h-16"
         onPress={() => router.push(`/(app)/goals/${goal.id}`)}
+        accessibilityRole="button"
       >
         <View className="flex-row items-start justify-between gap-3">
           <Text className="text-white font-medium flex-1" numberOfLines={1}>{goal.title}</Text>
@@ -149,22 +130,12 @@ export default function DashboardScreen() {
     );
   };
 
-  const renderIdea = (idea: Idea) => (
-    <Pressable
-      key={idea.id}
-      className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700"
-      onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
-    >
-      <Text className="text-white font-medium" numberOfLines={1}>{idea.title}</Text>
-      {idea.description ? <Text className="text-gray-500 text-xs mt-1" numberOfLines={1}>{idea.description}</Text> : null}
-    </Pressable>
-  );
-
   const renderEvent = (event: CalendarEvent) => (
     <Pressable
       key={event.id}
-      className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700 flex-row gap-3"
+      className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-gray-700 flex-row gap-3 min-h-16"
       onPress={() => router.push('/(app)/calendar')}
+      accessibilityRole="button"
     >
       <Text className="text-teal-400 text-xs font-semibold w-16">{formatEventTime(event)}</Text>
       <View className="flex-1">
@@ -178,10 +149,10 @@ export default function DashboardScreen() {
     <View className="flex-1 bg-gray-900">
       <View className="flex-row items-start justify-between px-5 pt-14 pb-4">
         <View>
-          <Text className="text-2xl font-bold text-white">Home</Text>
+        <Text className="text-2xl font-bold text-white">Home</Text>
           <Text className="text-gray-500 text-sm mt-1">{dateLabel}</Text>
         </View>
-        <Pressable className="w-10 h-10 rounded-full bg-gray-800 items-center justify-center" onPress={() => router.push('/(app)/settings')}>
+        <Pressable className="w-11 h-11 rounded-full bg-gray-800 items-center justify-center" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
           <Ionicons name="settings-outline" size={20} color="#6b7280" />
         </Pressable>
       </View>
@@ -195,9 +166,10 @@ export default function DashboardScreen() {
           {metrics.map((metric) => (
             <Pressable
               key={metric.label}
-              className="bg-gray-800 rounded-2xl p-4 border border-gray-700"
+              className="bg-gray-800 rounded-2xl p-4 border border-gray-700 min-h-28"
               style={{ width: '47%' }}
               onPress={() => router.push(metric.route)}
+              accessibilityRole="button"
             >
               <Ionicons name={metric.icon} size={20} color="#2dd4bf" />
               <Text className="text-white text-2xl font-bold mt-3">{metric.value}</Text>
@@ -206,11 +178,42 @@ export default function DashboardScreen() {
           ))}
         </View>
 
-        <View className="bg-gray-800 rounded-2xl p-4 mb-6 border border-teal-900">
+        {forgottenIdeas.length > 0 && (
+          <View className="mb-5">
+            <SectionHeader title="Revisit an Idea" />
+            {forgottenIdeas.slice(0, 2).map((idea) => (
+              <Pressable
+                key={idea.id}
+                className="bg-gray-800 rounded-xl px-4 py-3 mb-2 border border-teal-900 flex-row min-h-16 items-center justify-between"
+                onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
+              >
+                <View className="flex-1 mr-3">
+                  <Text className="text-white font-medium" numberOfLines={1}>{idea.title}</Text>
+                  {idea.description ? (
+                    <Text className="text-gray-500 text-xs mt-1" numberOfLines={1}>{idea.description}</Text>
+                  ) : null}
+                </View>
+                <Text className="text-teal-400 text-xs font-semibold">Revisit</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        <SectionHeader title="Active Goals" action="View all" onPress={() => router.push('/(app)/goals')} />
+        <View className="mb-5">
+          {activeGoals.length > 0 ? activeGoals.map(renderGoal) : <EmptyCard text="No goals yet. Turn an idea into a goal to connect planning with action." />}
+        </View>
+
+        <SectionHeader title="Upcoming Events" action="Calendar" onPress={() => router.push('/(app)/calendar')} />
+        <View className="mb-6">
+          {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
+        </View>
+
+        <View className="bg-gray-800 rounded-2xl p-4 border border-teal-900">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-white font-semibold">Morning brief</Text>
-              <Text className="text-gray-500 text-xs mt-1">Summarise today, surface ideas, and choose the next action.</Text>
+              <Text className="text-gray-500 text-xs mt-1">Reads your calendar events and ideas vault, then surfaces a forgotten idea and today's agenda.</Text>
             </View>
             <AIButton
               label={briefState.status === 'success' ? 'Refresh' : 'Generate'}
@@ -233,7 +236,7 @@ export default function DashboardScreen() {
               <Text className="text-gray-200 text-sm leading-5">{briefState.data.greeting}</Text>
               {briefState.data.resurface ? (
                 <Pressable
-                  className="bg-gray-900 rounded-xl p-3 mt-3"
+                  className="bg-gray-900 rounded-xl p-3 mt-3 min-h-16"
                   onPress={() => router.push('/(app)/ideas')}
                 >
                   <Text className="text-teal-400 text-xs font-semibold uppercase">Resurface</Text>
@@ -243,26 +246,6 @@ export default function DashboardScreen() {
               ) : null}
             </View>
           ) : null}
-        </View>
-
-        <SectionHeader title="Next Tasks" action="View all" onPress={() => router.push('/(app)/tasks')} />
-        <View className="mb-5">
-          {pendingTasks.length > 0 ? pendingTasks.map(renderTask) : <EmptyCard text="No open tasks. Generate a project plan with AI or add a task manually." />}
-        </View>
-
-        <SectionHeader title="Active Goals" action="View all" onPress={() => router.push('/(app)/goals')} />
-        <View className="mb-5">
-          {activeGoals.length > 0 ? activeGoals.map(renderGoal) : <EmptyCard text="No goals yet. Turn an idea into a goal to connect planning with action." />}
-        </View>
-
-        <SectionHeader title="Upcoming Events" action="Calendar" onPress={() => router.push('/(app)/calendar')} />
-        <View className="mb-5">
-          {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
-        </View>
-
-        <SectionHeader title="Recent Ideas" action="Ideas" onPress={() => router.push('/(app)/ideas')} />
-        <View>
-          {recentIdeas.length > 0 ? recentIdeas.map(renderIdea) : <EmptyCard text="Capture an idea, then link it to goals, projects, tasks, or events." />}
         </View>
       </ScrollView>
     </View>

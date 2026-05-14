@@ -7,7 +7,7 @@ Ideas are fragile. They arrive mid-conversation, during a morning walk, or right
 
 **Design:** AI is always opt-in (never automatic). Everything interconnected — ideas link to goals, tasks, and events. Free tier: capture, organise, manual planning. Pro: AI features (expansion, goal planning, categorisation, morning brief).
 
-**Stack:** Expo + TypeScript · NativeWind · Expo Router · Supabase (Postgres + Auth + RLS + Edge Functions) · Anthropic claude-sonnet-4-6 (server-side only) · RevenueCat · EAS Build/Submit
+**Stack:** Expo + TypeScript · NativeWind · Expo Router · Supabase (Postgres + Auth + RLS + Edge Functions) · Gemini (server-side only) · RevenueCat · EAS Build/Submit
 
 **Schema (17 tables):**
 - Core: `categories`, `tags`, `ideas`, `projects`, `goals`, `calendar_events`, `tasks`, `milestones`, `action_steps`
@@ -37,6 +37,6 @@ Phase 7 — Notifications + Polish Daily brief scheduling, iPad layout optimisat
 - `snake_case` DB · `camelCase` TS · `PascalCase` components · `kebab-case` screen files
 - Hooks own all Supabase queries; UI never imports `supabase` directly
 - `lib/supabase.ts` — single client · `components/ui/` — shared primitives · `types/index.ts` — type aliases
-- Anthropic API key in Supabase secrets only, never in the client bundle
+- Gemini API key in Supabase secrets only, never in the client bundle
 - Sessions in `expo-secure-store` (iOS Keychain), never `AsyncStorage`
 - Edge Functions: auth → Pro check (Phase 6) → validate input → call AI → typed response

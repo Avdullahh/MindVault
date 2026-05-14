@@ -47,8 +47,13 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
           <ActivityIndicator color="#2dd4bf" />
         </View>
       ) : (
-        <View style={{ flex: 1 }}>
-          <ScrollView showsVerticalScrollIndicator={false}>
+        <>
+          <ScrollView
+            style={{ flexShrink: 1 }}
+            contentContainerStyle={{ paddingBottom: 12 }}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
             <View className="bg-gray-800 rounded-xl px-4 py-3 mb-4">
               <Text className="text-white font-semibold mb-1" numberOfLines={2}>{plan.title}</Text>
               <View className="flex-row gap-2 flex-wrap">
@@ -73,10 +78,13 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             {plan.tasks.map((task, i) => (
               <Pressable
                 key={i}
-                className="flex-row items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
+                className="flex-row min-h-11 items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
                 onPress={() => toggle(i)}
+                disabled={saving}
+                accessibilityRole="checkbox"
+                accessibilityState={{ checked: checked.has(i), disabled: saving }}
               >
-                <View className={`w-5 h-5 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
+                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-teal-500 border-teal-500' : 'border-gray-600'}`}>
                   {checked.has(i) ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
                 </View>
                 <Text className="text-white text-sm flex-1">{task}</Text>
@@ -84,14 +92,20 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             ))}
           </ScrollView>
 
-          <View className="mt-2 mb-2">
-            <Button
-              label={saving ? 'Saving...' : `Confirm & Save${checked.size > 0 ? ` (${checked.size} tasks)` : ''}`}
-              onPress={handleConfirm}
-              loading={saving}
-            />
+          <View className="flex-row gap-3 mt-2 mb-2">
+            <View className="flex-1">
+              <Button label="Cancel" onPress={onClose} variant="ghost" disabled={saving} />
+            </View>
+            <View className="flex-1">
+              <Button
+                label={saving ? 'Saving...' : `Save${checked.size > 0 ? ` (${checked.size})` : ''}`}
+                onPress={handleConfirm}
+                loading={saving}
+                disabled={checked.size === 0}
+              />
+            </View>
           </View>
-        </View>
+        </>
       )}
     </ModalSheet>
   );

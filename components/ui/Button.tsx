@@ -16,7 +16,7 @@ export function Button({ label, onPress, variant = 'primary', loading = false, d
       onPress={onPress}
       disabled={disabled || loading}
       className={[
-        'rounded-xl py-3 items-center',
+        'rounded-xl min-h-11 px-4 py-3 items-center justify-center',
         isPrimary ? 'bg-teal-500' : 'border border-teal-500',
         disabled || loading ? 'opacity-50' : '',
       ].join(' ')}

@@ -49,5 +49,13 @@ export function useIdeas() {
 
   useEffect(() => { fetch(); }, []);
 
-  return { ideas, loading, error, refetch: fetch, create, update, remove };
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+  const cutoff = Date.now() - THIRTY_DAYS_MS;
+  const forgottenIdeas = ideas.filter((i) => {
+    const lastSeen = i.last_viewed_at ? new Date(i.last_viewed_at).getTime() : null;
+    const created = new Date(i.created_at).getTime();
+    return lastSeen !== null ? lastSeen < cutoff : created < cutoff;
+  });
+
+  return { ideas, forgottenIdeas, loading, error, refetch: fetch, create, update, remove };
 }

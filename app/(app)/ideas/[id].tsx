@@ -126,29 +126,30 @@ export default function IdeaDetail() {
   return (
     <View className="flex-1 bg-gray-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Pressable onPress={() => router.back()}>
+        <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
           <Ionicons name="chevron-back" size={24} color="#2dd4bf" />
         </Pressable>
-        <View className="flex-row gap-4">
-          <Pressable onPress={handleSave} disabled={saving}>
+        <View className="flex-row gap-2">
+          <Pressable className="min-h-11 px-3 items-center justify-center" onPress={handleSave} disabled={saving || !title.trim()} accessibilityRole="button" accessibilityState={{ disabled: saving || !title.trim(), busy: saving }}>
             <Text className={saving ? 'text-gray-500' : 'text-teal-400 font-semibold'}>Save</Text>
           </Pressable>
-          <Pressable onPress={handleDelete}>
+          <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete idea">
             <Ionicons name="trash-outline" size={20} color="#f87171" />
           </Pressable>
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <TextInput
-          className="text-white text-xl font-bold mb-3 bg-gray-800 rounded-xl px-4 py-3"
+          className="text-white text-xl font-bold mb-3 bg-gray-800 rounded-xl min-h-11 px-4 py-3"
           value={title}
           onChangeText={setTitle}
           placeholder="Title"
           placeholderTextColor="#6b7280"
+          returnKeyType="next"
         />
         <TextInput
-          className="text-gray-300 bg-gray-800 rounded-xl px-4 py-3 mb-4"
+          className="text-gray-300 bg-gray-800 rounded-xl min-h-32 px-4 py-3 mb-4"
           value={description}
           onChangeText={setDescription}
           placeholder="Description"
@@ -165,6 +166,7 @@ export default function IdeaDetail() {
             loading={categoriseState.status === 'loading'}
             onPress={handleSuggestCategory}
             flex
+            hint="Reads your title & description, then suggests a matching category"
           />
           <AIButton
             label="Expand with AI"
@@ -172,6 +174,7 @@ export default function IdeaDetail() {
             loading={expandState.status === 'loading'}
             onPress={handleExpand}
             flex
+            hint="Generates questions, fresh angles, and related concepts for this idea"
           />
         </View>
 
@@ -188,7 +191,7 @@ export default function IdeaDetail() {
             <Tag key={t.id} label={t.name} onRemove={() => handleTagToggle(t.id)} />
           ))}
         </View>
-        <Pressable className="self-start mb-6" onPress={() => setTagPickerVisible(true)}>
+        <Pressable className="self-start min-h-11 justify-center mb-6" onPress={() => setTagPickerVisible(true)}>
           <Text className="text-teal-400 text-sm">+ Add tag</Text>
         </Pressable>
 
@@ -196,12 +199,12 @@ export default function IdeaDetail() {
         {linkedGoals.map((g) => (
           <View key={g.id} className="bg-gray-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
             <Text className="text-white flex-1" numberOfLines={1}>{g.title}</Text>
-            <Pressable onPress={() => handleGoalToggle(g.id)}>
+            <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleGoalToggle(g.id)} accessibilityRole="button" accessibilityLabel={`Unlink ${g.title}`}>
               <Ionicons name="close-circle-outline" size={18} color="#6b7280" />
             </Pressable>
           </View>
         ))}
-        <Pressable className="flex-row items-center gap-2 mb-6" onPress={() => setGoalPickerVisible(true)}>
+        <Pressable className="flex-row min-h-11 items-center gap-2 mb-6" onPress={() => setGoalPickerVisible(true)}>
           <Ionicons name="add-circle-outline" size={18} color="#2dd4bf" />
           <Text className="text-teal-400 text-sm">Link goal</Text>
         </Pressable>
@@ -210,7 +213,7 @@ export default function IdeaDetail() {
         {linkedProjects.length === 0
           ? <Text className="text-gray-600 text-sm mb-4">No projects linked</Text>
           : linkedProjects.map((p) => (
-              <Pressable key={p.id} className="bg-gray-800 rounded-xl px-4 py-3 mb-2" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
+              <Pressable key={p.id} className="bg-gray-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
                 <Text className="text-white" numberOfLines={1}>{p.title}</Text>
               </Pressable>
             ))

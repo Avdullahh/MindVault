@@ -65,20 +65,28 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={handleClose} title="New Goal">
-      <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        style={{ flexShrink: 1 }}
+        contentContainerStyle={{ paddingBottom: 12 }}
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="interactive"
+        showsVerticalScrollIndicator={false}
+      >
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-2"
+          className="bg-gray-800 text-white rounded-xl min-h-11 px-4 py-3 mb-2"
           placeholder="Title"
           placeholderTextColor="#6b7280"
           value={title}
           onChangeText={setTitle}
           maxLength={200}
+          returnKeyType="done"
         />
         <View className="mb-3">
           <AIButton
             label="Plan with AI"
             loading={planState.status === 'loading'}
             onPress={handlePlanWithAI}
+            hint="Refines your title, suggests a deadline, sets priority, and generates milestones"
           />
         </View>
         <DatePicker
@@ -91,8 +99,10 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
           {PRIORITIES.map((p) => (
             <Pressable
               key={p}
-              className={`flex-1 py-2 rounded-xl border items-center ${priority === p ? priorityStyle[p] : 'bg-gray-800 border-gray-700'}`}
+              className={`flex-1 min-h-11 px-2 py-2 rounded-xl border items-center justify-center ${priority === p ? priorityStyle[p] : 'bg-gray-800 border-gray-700'}`}
               onPress={() => setPriority(priority === p ? null : p)}
+              accessibilityRole="button"
+              accessibilityState={{ selected: priority === p }}
             >
               <Text className="text-white text-sm capitalize">{p}</Text>
             </Pressable>
@@ -101,8 +111,13 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
       </ScrollView>
       {error && <Text className="text-red-400 text-sm mb-3">{error}</Text>}
-      <View className="mt-2 mb-2">
-        <Button label="Create goal" onPress={handleCreate} loading={loading} />
+      <View className="flex-row gap-3 mt-2 mb-2">
+        <View className="flex-1">
+          <Button label="Cancel" onPress={handleClose} variant="ghost" disabled={loading} />
+        </View>
+        <View className="flex-1">
+          <Button label="Create goal" onPress={handleCreate} loading={loading} disabled={!title.trim()} />
+        </View>
       </View>
     </ModalSheet>
   );

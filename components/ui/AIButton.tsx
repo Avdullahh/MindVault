@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { ActivityIndicator, Pressable, Text, Vibration, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -13,6 +13,7 @@ type Props = {
   glyph?: string;
   flex?: boolean;
   compact?: boolean;
+  hint?: string;
 };
 
 export function AIButton({
@@ -24,6 +25,7 @@ export function AIButton({
   glyph,
   flex = false,
   compact = false,
+  hint,
 }: Props) {
   const [internalLoading, setInternalLoading] = useState(false);
   const busy = loading ?? internalLoading;
@@ -31,6 +33,7 @@ export function AIButton({
 
   const handlePress = async () => {
     if (inactive) return;
+    Vibration.vibrate(8);
     const result = onPress();
     if (!result || typeof result.then !== 'function') return;
     setInternalLoading(true);
@@ -42,19 +45,25 @@ export function AIButton({
   };
 
   return (
-    <Pressable
-      className={`${flex ? 'flex-1 ' : ''}flex-row items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-gray-700 bg-gray-800 opacity-60' : 'border-teal-700 bg-teal-900/40'}`}
-      onPress={handlePress}
-      disabled={inactive}
-    >
-      {busy ? (
-        <ActivityIndicator size="small" color="#2dd4bf" />
-      ) : glyph ? (
-        <Text className="text-lg">{glyph}</Text>
-      ) : (
-        <Ionicons name={icon} size={14} color="#2dd4bf" />
-      )}
-      <Text className="text-teal-400 text-sm font-medium">{label}</Text>
-    </Pressable>
+    <View className={flex ? 'flex-1' : ''}>
+      <Pressable
+        className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-gray-700 bg-gray-800 opacity-60' : 'border-teal-700 bg-teal-900/40'}`}
+        onPress={handlePress}
+        disabled={inactive}
+        accessibilityRole="button"
+        accessibilityState={{ disabled: inactive, busy }}
+        hitSlop={compact ? 6 : undefined}
+      >
+        {busy ? (
+          <ActivityIndicator size="small" color="#2dd4bf" />
+        ) : glyph ? (
+          <Text className="text-lg">{glyph}</Text>
+        ) : (
+          <Ionicons name={icon} size={14} color="#2dd4bf" />
+        )}
+        <Text className="text-teal-400 text-sm font-medium">{label}</Text>
+      </Pressable>
+      {hint ? <Text className="text-gray-500 text-xs text-center mt-1.5 px-1">{hint}</Text> : null}
+    </View>
   );
 }

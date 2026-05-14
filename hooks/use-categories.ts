@@ -13,9 +13,13 @@ export function useCategories() {
     const { data, error: err } = await supabase
       .from('categories')
       .select('*')
-      .order('name');
+      .order('is_protected', { ascending: true })
+      .order('name', { ascending: true });
     if (err) setError(err.message);
-    else setCategories(data ?? []);
+    else {
+      setError(null);
+      setCategories(data ?? []);
+    }
     setLoading(false);
   };
 

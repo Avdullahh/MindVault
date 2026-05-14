@@ -3,10 +3,12 @@ import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import type { Task, TaskInsert } from '../types';
 
-export type TaskWithGoal = Task & { goalTitle?: string };
+export type TaskWithGoal = Task & {
+  goalTitle?: string | null;
+};
 
-export function useTasks() {
-  const [tasks, setTasks] = useState<TaskWithGoal[]>([]);
+export function useProjectTasks(projectId: string) {
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -14,24 +16,20 @@ export function useTasks() {
     setLoading(true);
     const { data, error: err } = await supabase
       .from('tasks')
-      .select('*, task_goals(goals(title))')
-      .order('created_at', { ascending: false });
+      .select('*')
+      .eq('project_id', projectId)
+      .order('created_at', { ascending: true });
     if (err) { setError(err.message); setLoading(false); return; }
-    const mapped: TaskWithGoal[] = (data ?? []).map((t: Task & { task_goals?: { goals: { title: string } | null }[] }) => {
-      const firstGoal = t.task_goals?.[0]?.goals;
-      const { task_goals: _tg, ...rest } = t as Task & { task_goals?: unknown };
-      return { ...rest, goalTitle: firstGoal?.title ?? undefined };
-    });
-    setTasks(mapped);
+    setTasks(data ?? []);
     setLoading(false);
   };
 
   const create = async (
-    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes' | 'category_id'>,
+    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes'>,
   ): Promise<string | null> => {
     const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';
-    const { error: err } = await supabase.from('tasks').insert({ ...payload, user_id });
+    const { error: err } = await supabase.from('tasks').insert({ ...payload, user_id, project_id: projectId });
     if (err) return err.message;
     await fetch();
     return null;
@@ -43,7 +41,7 @@ export function useTasks() {
   ): Promise<string | null> => {
     const { error: err } = await supabase.from('tasks').update(payload).eq('id', id);
     if (err) return err.message;
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } as TaskWithGoal : t)));
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, ...payload } : t)));
     return null;
   };
 
@@ -56,7 +54,7 @@ export function useTasks() {
     return null;
   };
 
-  useEffect(() => { fetch(); }, []);
+  useEffect(() => { fetch(); }, [projectId]);
 
   return { tasks, loading, error, refetch: fetch, create, update, toggle, remove };
 }

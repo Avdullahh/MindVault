@@ -243,14 +243,23 @@ create or replace function public.handle_new_user()
 returns trigger as $$
 begin
   insert into public.categories (user_id, name, is_protected) values
-    (new.id, 'Business',  false),
-    (new.id, 'Creative',  false),
-    (new.id, 'Personal',  false),
-    (new.id, 'Learning',  false),
-    (new.id, 'Tech',      false),
-    (new.id, 'Health',    false),
-    (new.id, 'Finance',   false),
-    (new.id, 'Other',     true);   -- protected
+    (new.id, 'Business',      false),
+    (new.id, 'Creative',      false),
+    (new.id, 'Entertainment', false),
+    (new.id, 'Family',        false),
+    (new.id, 'Finance',       false),
+    (new.id, 'Fitness',       false),
+    (new.id, 'Health',        false),
+    (new.id, 'Hobbies',       false),
+    (new.id, 'Learning',      false),
+    (new.id, 'Personal',      false),
+    (new.id, 'Productivity',  false),
+    (new.id, 'Research',      false),
+    (new.id, 'Social',        false),
+    (new.id, 'Tech',          false),
+    (new.id, 'Travel',        false),
+    (new.id, 'Writing',       false),
+    (new.id, 'Other',         true);   -- protected, always last
   return new;
 end;
 $$ language plpgsql security definer;

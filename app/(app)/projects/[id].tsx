@@ -7,9 +7,12 @@ import { useProjects } from '../../../hooks/use-projects';
 import { useProjectIdeas } from '../../../hooks/use-project-ideas';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useGoals } from '../../../hooks/use-goals';
+import { useProjectTasks } from '../../../hooks/use-tasks';
 import { useAI } from '../../../hooks/use-ai';
 import { IdeaPickerModal } from '../../../components/IdeaPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
+import { CreateTaskModal } from '../../../components/CreateTaskModal';
+import { EditTaskModal } from '../../../components/EditTaskModal';
 import { AIButton } from '../../../components/ui/AIButton';
 import { getUserId } from '../../../lib/get-user-id';
 import type { Idea, Task } from '../../../types';
@@ -28,14 +31,16 @@ export default function ProjectDetail() {
   const { fetchIdeasForProject, linkIdea, unlinkIdea } = useProjectIdeas();
   const { ideas: allIdeas } = useIdeas();
   const { goals: allGoals, refetch: refetchGoals } = useGoals();
+  const { tasks: projectTasks, create: createTask, update: updateTask, toggle: toggleTask, remove: removeTask } = useProjectTasks(id);
   const { planGoal, planState } = useAI();
 
   const project = projects.find((p) => p.id === id);
   const projectGoals = allGoals.filter((g) => g.project_id === id);
 
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
-  const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [createTaskVisible, setCreateTaskVisible] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
   const [previewPlan, setPreviewPlan] = useState<PlanResult | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
@@ -43,23 +48,9 @@ export default function ProjectDetail() {
 
   const loadLinkedIdeas = () => fetchIdeasForProject(id).then(setLinkedIdeas);
 
-  const loadLinkedTasks = async () => {
-    if (projectGoals.length === 0) { setLinkedTasks([]); return; }
-    const goalIds = projectGoals.map((g) => g.id);
-    const { data } = await supabase
-      .from('tasks')
-      .select('*, task_goals!inner(goal_id)')
-      .in('task_goals.goal_id', goalIds);
-    setLinkedTasks((data ?? []) as Task[]);
-  };
-
   useEffect(() => {
     if (id) loadLinkedIdeas();
   }, [id]);
-
-  useEffect(() => {
-    loadLinkedTasks();
-  }, [projectGoals.length]);
 
   if (loading && !project) {
     return (
@@ -131,7 +122,7 @@ export default function ProjectDetail() {
       if (checkedTasks.length > 0) {
         const { data: createdTasks, error: tasksErr } = await supabase
           .from('tasks')
-          .insert(checkedTasks.map((title) => ({ user_id, title, done: false })))
+          .insert(checkedTasks.map((title) => ({ user_id, title, done: false, project_id: id })))
           .select('id');
         if (tasksErr) { setAiError(tasksErr.message); return; }
         if (createdTasks && createdTasks.length > 0) {
@@ -149,9 +140,11 @@ export default function ProjectDetail() {
     }
   };
 
-  const toggleTask = async (taskId: string, done: boolean) => {
-    await supabase.from('tasks').update({ done }).eq('id', taskId);
-    setLinkedTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, done } : t));
+  const handleDeleteTask = (taskId: string) => {
+    Alert.alert('Delete task', 'This cannot be undone.', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => removeTask(taskId) },
+    ]);
   };
 
   return (
@@ -197,27 +190,47 @@ export default function ProjectDetail() {
             ))
         }
 
-        {linkedTasks.length > 0 && (
-          <>
-            <Text className="text-gray-400 text-sm font-medium mt-4 mb-3">Tasks</Text>
-            {linkedTasks.map((t) => (
-              <Pressable
+        <View className="flex-row items-center justify-between mt-4 mb-3">
+          <Text className="text-gray-400 text-sm font-medium">Tasks</Text>
+          <Pressable onPress={() => setCreateTaskVisible(true)} className="flex-row items-center gap-1">
+            <Ionicons name="add-circle-outline" size={18} color="#2dd4bf" />
+            <Text className="text-teal-400 text-sm">Add task</Text>
+          </Pressable>
+        </View>
+        {projectTasks.length === 0
+          ? <Text className="text-gray-600 text-sm mb-4">No tasks yet</Text>
+          : projectTasks.map((t) => (
+              <View
                 key={t.id}
                 className="flex-row items-center gap-3 bg-gray-800 rounded-xl px-4 py-3 mb-2"
-                onPress={() => toggleTask(t.id, !t.done)}
               >
-                <Ionicons
-                  name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={20}
-                  color={t.done ? '#2dd4bf' : '#6b7280'}
-                />
-                <Text className={`flex-1 text-sm ${t.done ? 'text-gray-500 line-through' : 'text-white'}`} numberOfLines={1}>
-                  {t.title}
-                </Text>
-              </Pressable>
-            ))}
-          </>
-        )}
+                <Pressable onPress={() => toggleTask(t.id, !t.done)} hitSlop={8}>
+                  <Ionicons
+                    name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
+                    size={20}
+                    color={t.done ? '#2dd4bf' : '#6b7280'}
+                  />
+                </Pressable>
+                <View className="flex-1">
+                  <Text className={`text-sm ${t.done ? 'text-gray-500 line-through' : 'text-white'}`} numberOfLines={1}>
+                    {t.title}
+                  </Text>
+                  {t.due_date ? <Text className="text-gray-500 text-xs mt-0.5">{t.due_date}</Text> : null}
+                </View>
+                {t.priority ? (
+                  <Text className={`text-xs capitalize ${PRIORITY_COLOR[t.priority] ?? 'text-gray-400'}`}>
+                    {t.priority}
+                  </Text>
+                ) : null}
+                <Pressable onPress={() => setEditingTask(t)} hitSlop={8} className="p-1">
+                  <Ionicons name="pencil-outline" size={16} color="#6b7280" />
+                </Pressable>
+                <Pressable onPress={() => handleDeleteTask(t.id)} hitSlop={8} className="p-1">
+                  <Ionicons name="trash-outline" size={16} color="#6b7280" />
+                </Pressable>
+              </View>
+            ))
+        }
 
         <Text className="text-gray-400 text-sm font-medium mt-4 mb-3">Referenced Ideas</Text>
         {linkedIdeas.length === 0
@@ -250,6 +263,17 @@ export default function ProjectDetail() {
         plan={previewPlan}
         saving={saving}
         onConfirm={handleConfirmPlan}
+      />
+      <CreateTaskModal
+        visible={createTaskVisible}
+        onClose={() => setCreateTaskVisible(false)}
+        onCreate={createTask}
+      />
+      <EditTaskModal
+        task={editingTask}
+        visible={!!editingTask}
+        onClose={() => setEditingTask(null)}
+        onSave={updateTask}
       />
     </View>
   );
