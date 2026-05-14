@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
-import { Button } from './ui/Button';
 import { DatePicker } from './ui/DatePicker';
 import { toLocalDateString } from '../lib/date-utils';
 import type { Task } from '../types';
@@ -16,10 +15,11 @@ type Props = {
 };
 
 const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
-const priorityStyle: Record<Priority, string> = {
-  high:   'bg-red-900 border-red-700',
+
+const priorityActive: Record<Priority, string> = {
+  high: 'bg-red-900 border-red-700',
   medium: 'bg-yellow-900 border-yellow-700',
-  low:    'bg-leather-600 border-leather-500',
+  low: 'bg-leather-600 border-leather-500',
 };
 
 export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
@@ -52,47 +52,56 @@ export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={onClose} title="Edit Task">
-      <ScrollView style={{ flexShrink: 1 }} keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
-        <TextInput
-          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
-          placeholder="Title"
-          placeholderTextColor="#7a6050"
-          value={title}
-          onChangeText={setTitle}
-          maxLength={200}
-        />
-        <DatePicker
-          value={dueDate}
-          onChange={setDueDate}
-          mode="date"
-          placeholder="Due date (optional)"
-        />
-        <View className="flex-row gap-2 mb-3">
-          {PRIORITIES.map((p) => (
-            <Pressable
-              key={p}
-              className={`flex-1 py-2 rounded-xl border items-center ${priority === p ? priorityStyle[p] : 'bg-leather-800 border-leather-600'}`}
-              onPress={() => setPriority(priority === p ? null : p)}
-            >
-              <Text className="text-leather-50 text-sm capitalize">{p}</Text>
-            </Pressable>
-          ))}
-        </View>
-        <TextInput
-          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
-          placeholder="Notes (optional)"
-          placeholderTextColor="#7a6050"
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-          value={notes}
-          onChangeText={setNotes}
-        />
-      </ScrollView>
-      {error ? <Text className="text-red-400 text-sm mb-3">{error}</Text> : null}
-      <View className="mt-2 mb-2">
-        <Button label="Save changes" onPress={handleSave} loading={loading} />
+      <TextInput
+        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3 border border-leather-600"
+        placeholder="Title"
+        placeholderTextColor="#7a6050"
+        value={title}
+        onChangeText={setTitle}
+        maxLength={200}
+      />
+
+      <DatePicker value={dueDate} onChange={setDueDate} mode="date" placeholder="Due date (optional)" compact />
+
+      <View className="flex-row gap-2 mb-3">
+        {PRIORITIES.map((p) => (
+          <Pressable
+            key={p}
+            className={`flex-1 py-2.5 rounded-xl border items-center justify-center ${priority === p ? priorityActive[p] : 'bg-leather-800 border-leather-600'}`}
+            onPress={() => setPriority(priority === p ? null : p)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: priority === p }}
+          >
+            <Text className="text-leather-100 text-sm capitalize">{p}</Text>
+          </Pressable>
+        ))}
       </View>
+
+      <TextInput
+        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4 border border-leather-600"
+        placeholder="Notes (optional)"
+        placeholderTextColor="#7a6050"
+        multiline
+        numberOfLines={2}
+        textAlignVertical="top"
+        value={notes}
+        onChangeText={setNotes}
+        style={{ maxHeight: 72 }}
+      />
+
+      {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
+
+      <Pressable
+        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-leather-700' : 'bg-gold-500'}`}
+        onPress={handleSave}
+        disabled={loading || !title.trim()}
+        accessibilityRole="button"
+      >
+        {loading
+          ? <ActivityIndicator color="#f5e6c8" />
+          : <Text className="text-leather-50 font-bold text-base">Save Changes</Text>
+        }
+      </Pressable>
     </ModalSheet>
   );
 }

@@ -8,6 +8,7 @@ type Props = {
   onChange: (date: Date) => void;
   mode: 'date' | 'time';
   placeholder?: string;
+  compact?: boolean;
 };
 
 function formatDate(d: Date) {
@@ -31,7 +32,7 @@ function timeAt(hour: number) {
   return date;
 }
 
-export function DatePicker({ value, onChange, mode, placeholder }: Props) {
+export function DatePicker({ value, onChange, mode, placeholder, compact = false }: Props) {
   const [show, setShow] = useState(false);
   const [draftValue, setDraftValue] = useState<Date>(value ?? new Date());
   const display = value
@@ -66,7 +67,7 @@ export function DatePicker({ value, onChange, mode, placeholder }: Props) {
         <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={18} color="#d4a017" />
       </Pressable>
 
-      <View className="flex-row gap-2 mt-2">
+      {!compact && <View className="flex-row gap-2 mt-2">
         {mode === 'date' ? (
           <>
             <Pressable className="bg-leather-800 border border-leather-600 rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(startOfDay())}>
@@ -83,7 +84,7 @@ export function DatePicker({ value, onChange, mode, placeholder }: Props) {
             </Pressable>
           ))
         )}
-      </View>
+      </View>}
 
       {show && Platform.OS === 'ios' ? (
         <Modal transparent animationType="fade" visible={show} onRequestClose={() => setShow(false)}>
