@@ -2,7 +2,9 @@ import { useState } from 'react';
 import { Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
+import { AIButton } from './ui/AIButton';
 import { CategoryPicker } from './CategoryPicker';
+import { useAI } from '../hooks/use-ai';
 import type { GoalInsert } from '../types';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -21,15 +23,29 @@ const priorityStyle: Record<Priority, string> = {
 };
 
 export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
+  const { planGoal, planState } = useAI();
   const [title, setTitle] = useState('');
-  const [deadline, setDeadline] = useState('');
+  const [deadline, setDeadline] = useState(() => new Date().toISOString().slice(0, 10));
   const [priority, setPriority] = useState<Priority | null>(null);
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => { setTitle(''); setDeadline(''); setPriority(null); setCategoryId(null); setError(null); };
+  const reset = () => { setTitle(''); setDeadline(new Date().toISOString().slice(0, 10)); setPriority(null); setCategoryId(null); setError(null); };
   const handleClose = () => { reset(); onClose(); };
+
+  const handlePlanWithAI = async () => {
+    if (!title.trim()) { setError('Enter a goal title first'); return; }
+    setError(null);
+    const { data, error: planError } = await planGoal(title.trim());
+    if (data) {
+      setTitle(data.title);
+      setDeadline(data.deadline);
+      setPriority(data.priority);
+    } else if (planError) {
+      setError(planError);
+    }
+  };
 
   const handleCreate = async () => {
     if (!title.trim()) { setError('Title is required'); return; }
@@ -49,13 +65,23 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
     <ModalSheet visible={visible} onClose={handleClose} title="New Goal">
       <ScrollView keyboardShouldPersistTaps="handled" showsVerticalScrollIndicator={false}>
         <TextInput
-          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
+          className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-2"
           placeholder="Title"
           placeholderTextColor="#6b7280"
           value={title}
           onChangeText={setTitle}
           maxLength={200}
         />
+
+        <View className="mb-3">
+          <AIButton
+            label="Plan with AI"
+            glyph="✦"
+            loading={planState.status === 'loading'}
+            onPress={handlePlanWithAI}
+          />
+        </View>
+
         <TextInput
           className="bg-gray-800 text-white rounded-xl px-4 py-3 mb-3"
           placeholder="Deadline (YYYY-MM-DD, optional)"

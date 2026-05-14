@@ -41,7 +41,7 @@ export function GoalCard({ goal, onPress }: Props) {
         {goal.priority && <Badge label={goal.priority} color={priorityColor(goal.priority)} />}
         {goal.deadline && (
           <Badge
-            label={new Date(goal.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+            label={new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
             color={deadlineColor(goal.deadline)}
           />
         )}

@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
@@ -7,27 +7,38 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { useIdeaTags } from '../../../hooks/use-idea-tags';
 import { useTags } from '../../../hooks/use-tags';
 import { useGoals } from '../../../hooks/use-goals';
+import { useAI } from '../../../hooks/use-ai';
 import { CategoryPicker } from '../../../components/CategoryPicker';
 import { TagPicker } from '../../../components/TagPicker';
 import { GoalPickerModal } from '../../../components/GoalPickerModal';
+import { ModalSheet } from '../../../components/ui/ModalSheet';
+import { AIButton } from '../../../components/ui/AIButton';
 import { Tag } from '../../../components/ui/Tag';
 import type { Goal, Tag as TagType } from '../../../types';
+
+const EXPAND_SECTION_LABELS = {
+  questions: 'Questions to Explore',
+  angles: 'Different Angles',
+  related: 'Related Concepts',
+} as const;
 
 export default function IdeaDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { ideas, update, remove } = useIdeas();
+  const { ideas, loading, update, remove } = useIdeas();
   const { fetchTagsForIdea, addTag, removeTag } = useIdeaTags();
   const { tags: allTags, create: createTag } = useTags();
   const { goals: allGoals } = useGoals();
+  const { categorise, categoriseState, expandIdea, expandState, resetExpand } = useAI();
 
   const idea = ideas.find((i) => i.id === id);
 
-  const [title, setTitle] = useState(idea?.title ?? '');
-  const [description, setDescription] = useState(idea?.description ?? '');
-  const [categoryId, setCategoryId] = useState<string | null>(idea?.category_id ?? null);
+  const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
+  const [categoryId, setCategoryId] = useState<string | null>(null);
   const [ideaTags, setIdeaTags] = useState<TagType[]>([]);
   const [linkedGoals, setLinkedGoals] = useState<Goal[]>([]);
+  const [linkedProjects, setLinkedProjects] = useState<{ id: string; title: string }[]>([]);
   const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -37,12 +48,34 @@ export default function IdeaDetail() {
     setLinkedGoals(((data ?? []) as { goals: Goal }[]).map((r) => r.goals).filter(Boolean));
   };
 
+  const loadLinkedProjects = async () => {
+    const { data } = await supabase.from('project_ideas').select('projects(id, title)').eq('idea_id', id);
+    setLinkedProjects(((data ?? []) as { projects: { id: string; title: string } }[]).map((r) => r.projects).filter(Boolean));
+  };
+
   useEffect(() => {
     if (!id) return;
     fetchTagsForIdea(id).then(setIdeaTags);
     loadLinkedGoals();
+    loadLinkedProjects();
     update(id, { last_viewed_at: new Date().toISOString() });
   }, [id]);
+
+  useEffect(() => {
+    if (idea) {
+      setTitle(idea.title);
+      setDescription(idea.description ?? '');
+      setCategoryId(idea.category_id ?? null);
+    }
+  }, [idea?.id]);
+
+  if (loading && !idea) {
+    return (
+      <View className="flex-1 bg-gray-900 justify-center items-center">
+        <ActivityIndicator color="#2dd4bf" />
+      </View>
+    );
+  }
 
   if (!idea) {
     return (
@@ -81,6 +114,15 @@ export default function IdeaDetail() {
     await loadLinkedGoals();
   };
 
+  const handleSuggestCategory = async () => {
+    const { data } = await categorise(title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
+    if (data) Alert.alert('Suggested category', data.categoryName);
+  };
+
+  const handleExpand = () => {
+    expandIdea(title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
+  };
+
   return (
     <View className="flex-1 bg-gray-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
@@ -97,7 +139,7 @@ export default function IdeaDetail() {
         </View>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
         <TextInput
           className="text-white text-xl font-bold mb-3 bg-gray-800 rounded-xl px-4 py-3"
           value={title}
@@ -115,6 +157,27 @@ export default function IdeaDetail() {
           numberOfLines={6}
           textAlignVertical="top"
         />
+
+        <View className="flex-row gap-3 mb-5">
+          <AIButton
+            label="Suggest category"
+            icon="pricetag-outline"
+            loading={categoriseState.status === 'loading'}
+            onPress={handleSuggestCategory}
+            flex
+          />
+          <AIButton
+            label="Expand with AI"
+            icon="sparkles-outline"
+            loading={expandState.status === 'loading'}
+            onPress={handleExpand}
+            flex
+          />
+        </View>
+
+        {categoriseState.status === 'error' && (
+          <Text className="text-red-400 text-xs mb-3">{categoriseState.error}</Text>
+        )}
 
         <Text className="text-gray-400 text-sm font-medium mb-2">Category</Text>
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
@@ -142,7 +205,46 @@ export default function IdeaDetail() {
           <Ionicons name="add-circle-outline" size={18} color="#2dd4bf" />
           <Text className="text-teal-400 text-sm">Link goal</Text>
         </Pressable>
+
+        <Text className="text-gray-400 text-sm font-medium mb-2">Linked Projects</Text>
+        {linkedProjects.length === 0
+          ? <Text className="text-gray-600 text-sm mb-4">No projects linked</Text>
+          : linkedProjects.map((p) => (
+              <Pressable key={p.id} className="bg-gray-800 rounded-xl px-4 py-3 mb-2" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
+                <Text className="text-white" numberOfLines={1}>{p.title}</Text>
+              </Pressable>
+            ))
+        }
       </ScrollView>
+
+      <ModalSheet visible={expandState.status !== 'idle'} onClose={resetExpand} title="Expand with AI">
+        {expandState.status === 'loading' && (
+          <View className="items-center py-8">
+            <ActivityIndicator color="#2dd4bf" />
+            <Text className="text-gray-400 mt-3 text-sm">Thinking…</Text>
+          </View>
+        )}
+        {expandState.status === 'error' && (
+          <Text className="text-red-400 text-sm">{expandState.error}</Text>
+        )}
+        {expandState.status === 'success' && expandState.data && (
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {(Object.keys(EXPAND_SECTION_LABELS) as (keyof typeof EXPAND_SECTION_LABELS)[]).map((key) => (
+              <View key={key} className="mb-4">
+                <Text className="text-teal-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                  {EXPAND_SECTION_LABELS[key]}
+                </Text>
+                {expandState.data![key].map((item, i) => (
+                  <View key={i} className="flex-row gap-2 mb-1.5">
+                    <Text className="text-gray-500 text-sm">·</Text>
+                    <Text className="text-gray-200 text-sm flex-1">{item}</Text>
+                  </View>
+                ))}
+              </View>
+            ))}
+          </ScrollView>
+        )}
+      </ModalSheet>
 
       <TagPicker
         visible={tagPickerVisible}

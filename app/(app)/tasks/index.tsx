@@ -67,7 +67,6 @@ export default function TasksScreen() {
           <TaskItem
             task={item}
             onToggle={() => toggle(item.id, !item.done)}
-            onPress={() => {}}
           />
         )}
       />

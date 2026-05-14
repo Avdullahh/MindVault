@@ -22,14 +22,14 @@ const priorityStyle: Record<Priority, string> = {
 
 export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
   const [title, setTitle] = useState('');
-  const [dueDate, setDueDate] = useState('');
+  const [dueDate, setDueDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [priority, setPriority] = useState<Priority | null>(null);
   const [notes, setNotes] = useState('');
   const [categoryId, setCategoryId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
-  const reset = () => { setTitle(''); setDueDate(''); setPriority(null); setNotes(''); setCategoryId(null); setError(null); };
+  const reset = () => { setTitle(''); setDueDate(new Date().toISOString().slice(0, 10)); setPriority(null); setNotes(''); setCategoryId(null); setError(null); };
   const handleClose = () => { reset(); onClose(); };
 
   const handleCreate = async () => {

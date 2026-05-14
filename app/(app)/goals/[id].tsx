@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
@@ -14,7 +14,7 @@ import type { Idea } from '../../../types';
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { goals, refetch, remove } = useGoals();
+  const { goals, loading, refetch, remove } = useGoals();
   const { create: createMilestone, remove: removeMilestone } = useMilestones(refetch);
   const { create: createStep, toggle: toggleStep } = useActionSteps(refetch);
   const { ideas: allIdeas } = useIdeas();
@@ -31,6 +31,14 @@ export default function GoalDetail() {
   };
 
   useEffect(() => { if (id) loadLinkedIdeas(); }, [id]);
+
+  if (loading && !goal) {
+    return (
+      <View className="flex-1 bg-gray-900 justify-center items-center">
+        <ActivityIndicator color="#2dd4bf" />
+      </View>
+    );
+  }
 
   if (!goal) {
     return (
@@ -72,11 +80,11 @@ export default function GoalDetail() {
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
         <Text className="text-white text-xl font-bold mb-1">{goal.title}</Text>
         {goal.deadline && (
           <Text className="text-gray-400 text-sm mb-4">
-            Due {new Date(goal.deadline).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+            Due {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </Text>
         )}
 

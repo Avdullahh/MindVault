@@ -6,7 +6,6 @@ import type { Task } from '../types';
 type Props = {
   task: Task;
   onToggle: () => void;
-  onPress: () => void;
 };
 
 function priorityColor(p: string | null): 'red' | 'yellow' | 'gray' {
@@ -17,12 +16,12 @@ function priorityColor(p: string | null): 'red' | 'yellow' | 'gray' {
 
 function formatDue(date: string | null) {
   if (!date) return null;
-  return new Date(date + 'T00:00:00').toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+  return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 }
 
-export function TaskItem({ task, onToggle, onPress }: Props) {
+export function TaskItem({ task, onToggle }: Props) {
   return (
-    <Pressable className="flex-row items-center gap-3 py-3 border-b border-gray-800" onPress={onPress}>
+    <View className="flex-row items-center gap-3 py-3 border-b border-gray-800">
       <Pressable onPress={onToggle}>
         <Ionicons
           name={task.done ? 'checkmark-circle' : 'ellipse-outline'}
@@ -39,6 +38,6 @@ export function TaskItem({ task, onToggle, onPress }: Props) {
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>
       </View>
-    </Pressable>
+    </View>
   );
 }

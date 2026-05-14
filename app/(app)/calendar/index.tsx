@@ -1,7 +1,6 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import * as SecureStore from 'expo-secure-store';
 import { useCalendarEvents } from '../../../hooks/use-calendar-events';
 import { EventItem } from '../../../components/EventItem';
 import { CreateEventModal } from '../../../components/CreateEventModal';
@@ -18,34 +17,6 @@ type MonthGrid = {
   start: Date;
   end: Date;
 };
-
-const CALENDAR_PREFERENCE_KEY = 'mindvault.calendar-system';
-const FALLBACK_CALENDARS = ['gregory', 'islamic', 'islamic-umalqura'];
-const CALENDAR_LABELS: Record<string, string> = {
-  gregory: 'Gregorian',
-  islamic: 'Hijri',
-  'islamic-umalqura': 'Hijri Umm al-Qura',
-};
-
-function getSupportedCalendars() {
-  const supportedValuesOf = (Intl as unknown as { supportedValuesOf?: (key: string) => string[] }).supportedValuesOf;
-  const supported = supportedValuesOf?.('calendar') ?? FALLBACK_CALENDARS;
-  return supported.filter((calendar) => FALLBACK_CALENDARS.includes(calendar));
-}
-
-function getCalendarOptions(primaryCalendar: string) {
-  const calendars = new Set([primaryCalendar, 'gregory', ...getSupportedCalendars()]);
-  return Array.from(calendars);
-}
-
-function getCalendarLabel(calendar: string) {
-  return CALENDAR_LABELS[calendar] ?? calendar.replace(/-/g, ' ');
-}
-
-function getCalendarLocale(locale: string, calendar: string, latinDigits = false) {
-  const baseLocale = locale.split('-u-')[0];
-  return `${baseLocale}-u-ca-${calendar}${latinDigits ? '-nu-latn' : ''}`;
-}
 
 function toIsoDate(date: Date) {
   const year = date.getFullYear();
@@ -77,34 +48,29 @@ function getFirstDayOfWeek(locale: string) {
   return firstDay === 7 || firstDay === undefined ? 0 : firstDay;
 }
 
-function isSameMonthByParts(
-  partsA: Record<string, string>,
-  partsB: Record<string, string>,
-) {
-  return partsA.era === partsB.era && partsA.year === partsB.year && partsA.month === partsB.month;
-}
-
-function buildMonthGrid(selectedIsoDate: string, locale: string, calendar: string): MonthGrid {
+function buildMonthGrid(selectedIsoDate: string, locale: string): MonthGrid {
   const selectedDate = parseIsoDate(selectedIsoDate);
   const firstDayOfWeek = getFirstDayOfWeek(locale);
+  const calLocale = `${locale.split('-u-')[0]}-u-ca-gregory`;
 
-  // One shared formatter for all month-boundary comparisons in this build
-  const partsFormatter = new Intl.DateTimeFormat(getCalendarLocale(locale, calendar, true), {
+  const partsFormatter = new Intl.DateTimeFormat(calLocale, {
     era: 'short', year: 'numeric', month: 'numeric',
   });
   const getParts = (d: Date) => Object.fromEntries(partsFormatter.formatToParts(d).map((p) => [p.type, p.value]));
   const refParts = getParts(selectedDate);
-  const isSameMonth = (d: Date) => isSameMonthByParts(getParts(d), refParts);
+  const isSameMonth = (d: Date) => {
+    const p = getParts(d);
+    return p.era === refParts.era && p.year === refParts.year && p.month === refParts.month;
+  };
 
   let start = selectedDate;
   let end = selectedDate;
-
-  for (let i = 0; i < 45; i += 1) {
-    const previous = addDays(start, -1);
-    if (!isSameMonth(previous)) break;
-    start = previous;
+  for (let i = 0; i < 45; i++) {
+    const prev = addDays(start, -1);
+    if (!isSameMonth(prev)) break;
+    start = prev;
   }
-  for (let i = 0; i < 45; i += 1) {
+  for (let i = 0; i < 45; i++) {
     const next = addDays(end, 1);
     if (!isSameMonth(next)) break;
     end = next;
@@ -112,10 +78,9 @@ function buildMonthGrid(selectedIsoDate: string, locale: string, calendar: strin
 
   const startOffset = (start.getDay() - firstDayOfWeek + 7) % 7;
   const gridStart = addDays(start, -startOffset);
-  const dayFormatter = new Intl.DateTimeFormat(getCalendarLocale(locale, calendar), { day: 'numeric' });
+  const dayFormatter = new Intl.DateTimeFormat(calLocale, { day: 'numeric' });
   const days: CalendarDay[] = [];
   let cursor = gridStart;
-
   do {
     days.push({
       date: cursor,
@@ -129,9 +94,10 @@ function buildMonthGrid(selectedIsoDate: string, locale: string, calendar: strin
   return { days, start, end };
 }
 
-function getWeekdayLabels(locale: string, calendar: string) {
+function getWeekdayLabels(locale: string) {
   const firstDayOfWeek = getFirstDayOfWeek(locale);
-  const formatter = new Intl.DateTimeFormat(getCalendarLocale(locale, calendar), { weekday: 'short' });
+  const calLocale = `${locale.split('-u-')[0]}-u-ca-gregory`;
+  const formatter = new Intl.DateTimeFormat(calLocale, { weekday: 'short' });
   const sunday = new Date(2024, 0, 7, 12);
   return Array.from({ length: 7 }, (_, i) => formatter.format(addDays(sunday, firstDayOfWeek + i)));
 }
@@ -146,54 +112,31 @@ function getDayTextClass(selected: boolean, isToday: boolean, inCurrentMonth: bo
 export default function CalendarScreen() {
   const { eventsByDate, create } = useCalendarEvents();
 
-  const { locale, primaryCalendar } = useMemo(() => {
-    const opts = Intl.DateTimeFormat().resolvedOptions();
-    return { locale: opts.locale, primaryCalendar: opts.calendar ?? 'gregory' };
-  }, []);
-
-  const calendarOptions = useMemo(() => getCalendarOptions(primaryCalendar), [primaryCalendar]);
-  const [selectedCalendar, setSelectedCalendar] = useState(primaryCalendar);
+  const locale = useMemo(() => Intl.DateTimeFormat().resolvedOptions().locale, []);
   const [selectedDate, setSelectedDate] = useState(toIsoDate(new Date()));
   const [modalVisible, setModalVisible] = useState(false);
   const today = useMemo(() => new Date(), []);
 
-  useEffect(() => {
-    SecureStore.getItemAsync(CALENDAR_PREFERENCE_KEY).then((storedCalendar) => {
-      if (storedCalendar && calendarOptions.includes(storedCalendar)) {
-        setSelectedCalendar(storedCalendar);
-      }
-    });
-  }, [calendarOptions]);
-
-  const selectCalendar = (calendar: string) => {
-    setSelectedCalendar(calendar);
-    SecureStore.setItemAsync(CALENDAR_PREFERENCE_KEY, calendar);
-  };
-
   const { days: calendarDays, start: monthStart, end: monthEnd } = useMemo(
-    () => buildMonthGrid(selectedDate, locale, selectedCalendar),
-    [locale, selectedCalendar, selectedDate],
+    () => buildMonthGrid(selectedDate, locale),
+    [locale, selectedDate],
   );
 
-  const weekdayLabels = useMemo(
-    () => getWeekdayLabels(locale, selectedCalendar),
-    [locale, selectedCalendar],
-  );
+  const weekdayLabels = useMemo(() => getWeekdayLabels(locale), [locale]);
 
   const selectedDateObject = useMemo(() => parseIsoDate(selectedDate), [selectedDate]);
+  const calLocale = `${locale.split('-u-')[0]}-u-ca-gregory`;
 
   const monthLabel = useMemo(
-    () => new Intl.DateTimeFormat(getCalendarLocale(locale, selectedCalendar), {
-      month: 'long', year: 'numeric',
-    }).format(selectedDateObject),
-    [locale, selectedCalendar, selectedDateObject],
+    () => new Intl.DateTimeFormat(calLocale, { month: 'long', year: 'numeric' }).format(selectedDateObject),
+    [calLocale, selectedDateObject],
   );
 
   const selectedDateLabel = useMemo(
-    () => new Intl.DateTimeFormat(getCalendarLocale(locale, selectedCalendar), {
+    () => new Intl.DateTimeFormat(calLocale, {
       weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
     }).format(selectedDateObject),
-    [locale, selectedCalendar, selectedDateObject],
+    [calLocale, selectedDateObject],
   );
 
   const dayEvents = eventsByDate[selectedDate] ?? [];
@@ -202,25 +145,6 @@ export default function CalendarScreen() {
     <View className="flex-1 bg-gray-900">
       <View className="px-5 pt-14 pb-2">
         <Text className="text-2xl font-bold text-white">Calendar</Text>
-      </View>
-
-      <View className="px-5 pb-3">
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
-          {calendarOptions.map((calendar) => {
-            const active = calendar === selectedCalendar;
-            return (
-              <Pressable
-                key={calendar}
-                className={`px-3 py-2 rounded-full ${active ? 'bg-teal-600' : 'bg-gray-800'}`}
-                onPress={() => selectCalendar(calendar)}
-              >
-                <Text className={`text-sm font-medium ${active ? 'text-white' : 'text-gray-300'}`}>
-                  {getCalendarLabel(calendar)}
-                </Text>
-              </Pressable>
-            );
-          })}
-        </ScrollView>
       </View>
 
       <View className="px-5 py-3">
@@ -286,7 +210,7 @@ export default function CalendarScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}>
           {dayEvents.map((ev) => (
-            <EventItem key={ev.id} event={ev} onPress={() => {}} />
+            <EventItem key={ev.id} event={ev} />
           ))}
         </ScrollView>
       )}

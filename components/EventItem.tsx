@@ -3,7 +3,7 @@ import type { CalendarEvent } from '../types';
 
 type Props = {
   event: CalendarEvent;
-  onPress: () => void;
+  onPress?: () => void;
 };
 
 function fmt(iso: string) {
