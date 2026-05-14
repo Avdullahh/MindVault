@@ -33,7 +33,12 @@ function goalProgress(goal: GoalWithMilestones) {
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   return (
     <View className="flex-row items-center justify-between mb-3">
-      <Text className="text-leather-50 text-lg font-semibold">{title}</Text>
+      <Text
+        className="text-leather-300 text-xs font-semibold uppercase tracking-widest"
+        style={{ letterSpacing: 2 }}
+      >
+        {title}
+      </Text>
       {action && onPress ? (
         <Pressable className="min-h-11 px-2 -mr-2 items-center justify-center" onPress={onPress}>
           <Text className="text-gold-400 text-sm font-medium">{action}</Text>
@@ -123,7 +128,7 @@ export default function DashboardScreen() {
           <Text className="text-leather-50 font-medium flex-1" numberOfLines={1}>{goal.title}</Text>
           <Text className="text-leather-400 text-xs">{progress}%</Text>
         </View>
-        <View className="h-1.5 bg-leather-600 rounded-full overflow-hidden mt-3">
+        <View className="h-2 bg-leather-700 rounded-full overflow-hidden mt-3">
           <View className="h-full bg-gold-500" style={{ width: `${progress}%` }} />
         </View>
       </Pressable>
@@ -184,7 +189,7 @@ export default function DashboardScreen() {
             {forgottenIdeas.slice(0, 2).map((idea) => (
               <Pressable
                 key={idea.id}
-                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-gold-900 flex-row min-h-16 items-center justify-between"
+                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-gold-700 flex-row min-h-16 items-center justify-between"
                 onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
               >
                 <View className="flex-1 mr-3">
@@ -209,10 +214,10 @@ export default function DashboardScreen() {
           {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
         </View>
 
-        <View className="bg-leather-800 rounded-2xl p-4 border border-gold-900">
+        <View className="bg-leather-800 rounded-2xl p-4 border border-gold-700">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-leather-50 font-semibold">Morning brief</Text>
+              <Text className="text-leather-50 font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
               <Text className="text-leather-400 text-xs mt-1">Reads your calendar events and ideas vault, then surfaces a forgotten idea and today's agenda.</Text>
             </View>
             <AIButton

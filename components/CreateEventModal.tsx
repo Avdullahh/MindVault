@@ -92,8 +92,8 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
           accessibilityState={{ checked: !allDay }}
         >
           <Text className="text-leather-50">Set specific time</Text>
-          <View className={`w-12 h-6 rounded-full ${!allDay ? 'bg-gold-500' : 'bg-leather-500'} justify-center`}>
-            <View className={`w-5 h-5 bg-white rounded-full mx-0.5 ${!allDay ? 'self-end' : 'self-start'}`} />
+          <View className={`w-12 h-6 rounded-full ${!allDay ? 'bg-gold-500' : 'bg-leather-600'} justify-center`}>
+            <View className={`w-5 h-5 bg-leather-50 rounded-full mx-0.5 ${!allDay ? 'self-end' : 'self-start'}`} />
           </View>
         </Pressable>
         {!allDay && (

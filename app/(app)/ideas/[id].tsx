@@ -182,10 +182,10 @@ export default function IdeaDetail() {
           <Text className="text-red-400 text-xs mb-3">{categoriseState.error}</Text>
         )}
 
-        <Text className="text-leather-300 text-sm font-medium mb-2">Category</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Category</Text>
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
-        <Text className="text-leather-300 text-sm font-medium mt-4 mb-2">Tags</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-2">Tags</Text>
         <View className="flex-row flex-wrap mb-2">
           {ideaTags.map((t) => (
             <Tag key={t.id} label={t.name} onRemove={() => handleTagToggle(t.id)} />
@@ -195,9 +195,9 @@ export default function IdeaDetail() {
           <Text className="text-gold-400 text-sm">+ Add tag</Text>
         </Pressable>
 
-        <Text className="text-leather-300 text-sm font-medium mb-2">Linked Goals</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Linked Goals</Text>
         {linkedGoals.map((g) => (
-          <View key={g.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
+          <View key={g.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
             <Text className="text-leather-50 flex-1" numberOfLines={1}>{g.title}</Text>
             <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleGoalToggle(g.id)} accessibilityRole="button" accessibilityLabel={`Unlink ${g.title}`}>
               <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
@@ -209,11 +209,11 @@ export default function IdeaDetail() {
           <Text className="text-gold-400 text-sm">Link goal</Text>
         </Pressable>
 
-        <Text className="text-leather-300 text-sm font-medium mb-2">Linked Projects</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Linked Projects</Text>
         {linkedProjects.length === 0
           ? <Text className="text-leather-500 text-sm mb-4">No projects linked</Text>
           : linkedProjects.map((p) => (
-              <Pressable key={p.id} className="bg-leather-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
+              <Pressable key={p.id} className="bg-leather-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center border border-leather-600" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
                 <Text className="text-leather-50" numberOfLines={1}>{p.title}</Text>
               </Pressable>
             ))

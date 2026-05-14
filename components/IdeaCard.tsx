@@ -12,14 +12,14 @@ function formatDate(iso: string) {
 
 export function IdeaCard({ idea, onPress }: Props) {
   return (
-    <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3" onPress={onPress}>
+    <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3 border border-leather-600" onPress={onPress}>
       <Text className="text-leather-50 font-semibold text-base mb-1" numberOfLines={2}>
         {idea.title}
       </Text>
       {idea.description ? (
         <Text className="text-leather-300 text-sm mb-2" numberOfLines={2}>{idea.description}</Text>
       ) : null}
-      <Text className="text-leather-500 text-xs">{formatDate(idea.created_at)}</Text>
+      <Text className="text-leather-400 text-xs">{formatDate(idea.created_at)}</Text>
     </Pressable>
   );
 }

@@ -171,7 +171,7 @@ export default function ProjectDetail() {
           {aiError && <Text className="text-red-400 text-xs mt-2">{aiError}</Text>}
         </View>
 
-        <Text className="text-leather-300 text-sm font-medium mb-3">Goals</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Goals</Text>
         {projectGoals.length === 0
           ? <Text className="text-leather-500 text-sm mb-4">No goals yet — use Plan with AI to generate one</Text>
           : projectGoals.map((g) => (
@@ -191,7 +191,7 @@ export default function ProjectDetail() {
         }
 
         <View className="flex-row items-center justify-between mt-4 mb-3">
-          <Text className="text-leather-300 text-sm font-medium">Tasks</Text>
+          <Text className="text-leather-300 text-xs font-semibold uppercase">Tasks</Text>
           <Pressable onPress={() => setCreateTaskVisible(true)} className="flex-row items-center gap-1">
             <Ionicons name="add-circle-outline" size={18} color="#d4a017" />
             <Text className="text-gold-400 text-sm">Add task</Text>
@@ -232,7 +232,7 @@ export default function ProjectDetail() {
             ))
         }
 
-        <Text className="text-leather-300 text-sm font-medium mt-4 mb-3">Referenced Ideas</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Referenced Ideas</Text>
         {linkedIdeas.length === 0
           ? <Text className="text-leather-500 text-sm mb-4">No ideas linked yet</Text>
           : linkedIdeas.map((idea) => (

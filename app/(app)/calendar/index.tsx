@@ -157,7 +157,7 @@ export default function CalendarScreen() {
         >
           <Ionicons name="chevron-back" size={22} color="#d4a017" />
         </Pressable>
-        <Text className="text-leather-50 text-lg font-bold">{monthLabel}</Text>
+        <Text className="text-leather-50 text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{monthLabel}</Text>
         <Pressable
           className="w-11 h-11 items-center justify-center rounded-full bg-leather-800"
           onPress={() => setSelectedDate(toIsoDate(addDays(monthEnd, 1)))}
@@ -190,12 +190,12 @@ export default function CalendarScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
               >
-                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-gold-700' : 'bg-transparent'}`}>
+                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-gold-600' : 'bg-transparent'}`}>
                   <Text className={`text-base ${getDayTextClass(selected, isToday, day.inCurrentMonth)}`}>
                     {day.label}
                   </Text>
                   {hasEvents && (
-                    <View className={`w-1.5 h-1.5 rounded-full mt-0.5 ${selected ? 'bg-white' : 'bg-gold-400'}`} />
+                    <View className={`w-2 h-2 rounded-full mt-0.5 ${selected ? 'bg-leather-50' : 'bg-gold-400'}`} />
                   )}
                 </View>
               </Pressable>

@@ -99,7 +99,7 @@ export default function GoalDetail() {
           </Text>
         )}
 
-        <Text className="text-leather-300 text-sm font-medium mb-3">Milestones</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Milestones</Text>
         {goal.milestones
           .slice()
           .sort((a, b) => a.position - b.position)
@@ -140,7 +140,7 @@ export default function GoalDetail() {
 
         {linkedTasks.length > 0 && (
           <>
-            <Text className="text-leather-300 text-sm font-medium mt-4 mb-3">Tasks</Text>
+            <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Tasks</Text>
             {linkedTasks.map((t) => (
               <Pressable
                 key={t.id}
@@ -160,9 +160,9 @@ export default function GoalDetail() {
           </>
         )}
 
-        <Text className="text-leather-300 text-sm font-medium mt-4 mb-3">Linked Ideas</Text>
+        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Linked Ideas</Text>
         {linkedIdeas.map((idea) => (
-          <View key={idea.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between">
+          <View key={idea.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
             <Text className="text-leather-50 flex-1" numberOfLines={1}>{idea.title}</Text>
             <Pressable onPress={() => handleIdeaToggle(idea.id)}>
               <Ionicons name="close-circle-outline" size={18} color="#7a6050" />

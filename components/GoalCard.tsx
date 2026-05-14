@@ -34,7 +34,7 @@ export function GoalCard({ goal, onPress }: Props) {
   const pct = total > 0 ? done / total : 0;
 
   return (
-    <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3" onPress={onPress}>
+    <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3 border border-leather-600" onPress={onPress}>
       <Text className="text-leather-50 font-semibold text-base mb-2" numberOfLines={2}>{goal.title}</Text>
 
       <View className="flex-row gap-2 flex-wrap mb-3">
@@ -49,7 +49,7 @@ export function GoalCard({ goal, onPress }: Props) {
 
       {total > 0 && (
         <View>
-          <View className="h-1.5 bg-leather-600 rounded-full overflow-hidden">
+          <View className="h-2 bg-leather-700 rounded-full overflow-hidden">
             <View className="h-full bg-gold-500 rounded-full" style={{ width: `${Math.round(pct * 100)}%` }} />
           </View>
           <Text className="text-leather-400 text-xs mt-1">{done}/{total} steps done</Text>
