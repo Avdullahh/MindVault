@@ -31,7 +31,7 @@ export default function ProjectDetail() {
   const { projects, loading, remove } = useProjects();
   const { fetchIdeasForProject, linkIdea, unlinkIdea } = useProjectIdeas();
   const { ideas: allIdeas } = useIdeas();
-  const { goals: allGoals, refetch: refetchGoals } = useGoals();
+  const { goals: allGoals } = useGoals();
   const { tasks: projectTasks, create: createTask, update: updateTask, toggle: toggleTask, remove: removeTask } = useProjectTasks(id);
   const { planGoal, planState } = useAI();
 
@@ -94,35 +94,19 @@ export default function ProjectDetail() {
   };
 
   const handleConfirmPlan = async (checkedTasks: string[]) => {
-    if (!previewPlan) return;
+    if (!previewPlan || checkedTasks.length === 0) return;
     setSaving(true);
     let succeeded = false;
     try {
       const user_id = await getUserId().catch(() => null);
       if (!user_id) { setAiError('Not authenticated'); return; }
 
-      const { data: goalRow, error: goalErr } = await supabase
-        .from('goals')
-        .insert({ user_id, project_id: id, title: previewPlan.title, deadline: previewPlan.deadline, priority: previewPlan.priority })
-        .select('id')
-        .single();
-      if (goalErr || !goalRow) { setAiError(goalErr?.message ?? 'Failed to create goal'); return; }
+      const { error: tasksErr } = await supabase
+        .from('tasks')
+        .insert(checkedTasks.map((title) => ({ user_id, title, done: false, project_id: id })));
+      if (tasksErr) { setAiError(tasksErr.message); return; }
 
-      if (checkedTasks.length > 0) {
-        const { data: createdTasks, error: tasksErr } = await supabase
-          .from('tasks')
-          .insert(checkedTasks.map((title) => ({ user_id, title, done: false, project_id: id })))
-          .select('id');
-        if (tasksErr) { setAiError(tasksErr.message); return; }
-        if (createdTasks && createdTasks.length > 0) {
-          const links = createdTasks.map((t: { id: string }) => ({ task_id: t.id, goal_id: goalRow.id }));
-          const { error: linksErr } = await supabase.from('task_goals').insert(links);
-          if (linksErr) { setAiError(linksErr.message); return; }
-        }
-      }
-
-      await refetchGoals();
-      emitDataChange(['goals', 'tasks', 'projects']);
+      emitDataChange(['tasks', 'projects']);
       succeeded = true;
     } finally {
       setSaving(false);

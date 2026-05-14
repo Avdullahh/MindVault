@@ -101,7 +101,7 @@ Junction tables:
 All user-owned tables must enforce RLS with user isolation equivalent to `auth.uid() = user_id`. Do not weaken RLS for convenience.
 Foreign-key links between user-owned rows must also prove same-user ownership in RLS policies.
 Tasks are project-scoped in the product UI and database writes; do not add a global Tasks route or create tasks without `project_id`.
-The AI plan flow (`ai-plan-goal` edge function + `handleConfirmPlan` in `projects/[id].tsx`) creates exactly two things: one `goals` row (with `project_id`, `title`, `deadline`, `priority`) and `tasks` rows linked to that goal via `task_goals`. Milestones and action_steps are not created by the AI plan flow. Do not reintroduce milestone or action_step insertion into this flow.
+The AI plan flow (`ai-plan-goal` edge function + `handleConfirmPlan` in `projects/[id].tsx`) creates only `tasks` rows with `project_id` set to the current project. It does not create goals, milestones, action_steps, or any other row type. Do not reintroduce goal insertion or task_goals linking into this flow.
 
 ## Security And Secrets
 

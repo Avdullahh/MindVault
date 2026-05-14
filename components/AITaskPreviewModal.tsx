@@ -3,7 +3,6 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
-import { Badge } from './ui/Badge';
 import type { PlanResult } from '../hooks/use-ai';
 
 type Props = {
@@ -13,12 +12,6 @@ type Props = {
   saving: boolean;
   onConfirm: (checkedTasks: string[]) => Promise<void>;
 };
-
-function priorityColor(p: string): 'red' | 'yellow' | 'gray' {
-  if (p === 'high') return 'red';
-  if (p === 'medium') return 'yellow';
-  return 'gray';
-}
 
 export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }: Props) {
   const [checked, setChecked] = useState<Set<number>>(new Set());
@@ -54,14 +47,6 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <View className="bg-leather-800 rounded-xl px-4 py-3 mb-4">
-              <Text className="text-leather-50 font-semibold mb-1" numberOfLines={2}>{plan.title}</Text>
-              <View className="flex-row gap-2 flex-wrap">
-                <Badge label={plan.priority} color={priorityColor(plan.priority)} />
-                {plan.deadline ? <Badge label={plan.deadline} color="gray" /> : null}
-              </View>
-            </View>
-
             <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mb-2">
               Tasks to create ({checked.size} of {plan.tasks.length} selected)
             </Text>
