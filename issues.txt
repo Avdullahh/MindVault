@@ -39,7 +39,7 @@ Clarified:
 - Also update in-app branding: the login screen title/logo area should display the new MV shield+brain mark.
 
 ISSUE 5: UI centralisation across all views
-Status: Pending
+Status: Done
 Clarified:
 - Apply both: consistent equal left/right padding globally AND horizontal centering where appropriate.
 - Worst offenders: Home/Dashboard screen and all list screens (Ideas, Goals, Projects) — currently feel stretched and left-heavy.

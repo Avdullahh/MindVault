@@ -30,7 +30,7 @@ export default function ProjectsScreen() {
         <FlatList
           data={projects}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, width: '100%', maxWidth: 720, alignSelf: 'center' }}
           renderItem={({ item }) => (
             <ProjectCard project={item} onPress={() => router.push(`/(app)/projects/${item.id}`)} />
           )}

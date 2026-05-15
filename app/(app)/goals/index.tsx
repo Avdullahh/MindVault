@@ -30,7 +30,7 @@ export default function GoalsScreen() {
         <FlatList
           data={goals}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, width: '100%', maxWidth: 720, alignSelf: 'center' }}
           renderItem={({ item }) => (
             <GoalCard goal={item} onPress={() => router.push(`/(app)/goals/${item.id}`)} />
           )}

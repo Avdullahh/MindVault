@@ -29,7 +29,7 @@ export default function IdeasScreen() {
         </Pressable>
       </View>
 
-      <View className="px-5 mb-3">
+      <View className="px-5 mb-3 w-full max-w-3xl self-center">
         <TextInput
           className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3"
           placeholder="Search ideas..."
@@ -51,7 +51,7 @@ export default function IdeasScreen() {
         <FlatList
           data={filtered}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100 }}
+          contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, width: '100%', maxWidth: 720, alignSelf: 'center' }}
           renderItem={({ item }) => (
             <IdeaCard idea={item} onPress={() => router.push(`/(app)/ideas/${item.id}`)} />
           )}

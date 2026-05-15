@@ -149,15 +149,15 @@ export default function DashboardScreen() {
 
       <ScrollView
         refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#d4a017" />}
-        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120 }}
+        contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, width: '100%', maxWidth: 760, alignSelf: 'center' }}
         showsVerticalScrollIndicator={false}
       >
-        <View className="flex-row flex-wrap gap-3 mb-5">
+        <View className="flex-row flex-wrap justify-between mb-5">
           {metrics.map((metric) => (
             <Pressable
               key={metric.label}
               className="bg-leather-800 rounded-2xl p-4 border border-leather-600 min-h-28"
-              style={{ width: '47%' }}
+              style={{ width: '48%', marginBottom: 12 }}
               onPress={() => router.push(metric.route)}
               accessibilityRole="button"
             >
