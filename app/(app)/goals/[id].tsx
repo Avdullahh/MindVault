@@ -1,35 +1,32 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
-import { emitDataChange } from '../../../lib/data-events';
+import { emitDataChange, subscribeToDataChanges } from '../../../lib/data-events';
 import { useGoals } from '../../../hooks/use-goals';
-import { useMilestones } from '../../../hooks/use-milestones';
-import { useActionSteps } from '../../../hooks/use-action-steps';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useProjects } from '../../../hooks/use-projects';
-import { MilestoneItem } from '../../../components/MilestoneItem';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import type { Idea, Project, Task } from '../../../types';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { goals, loading, refetch, remove } = useGoals();
-  const { create: createMilestone, remove: removeMilestone } = useMilestones(refetch);
-  const { create: createStep, toggle: toggleStep } = useActionSteps(refetch);
+  const source = useRef(Symbol('goal-detail'));
+  const { goals, loading, remove } = useGoals();
   const { ideas: allIdeas } = useIdeas();
   const { projects: allProjects } = useProjects();
 
   const goal = goals.find((g) => g.id === id);
-  const [newMilestoneTitle, setNewMilestoneTitle] = useState('');
-  const [addingMilestone, setAddingMilestone] = useState(false);
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
+  const [availableProjectTasks, setAvailableProjectTasks] = useState<Task[]>([]);
   const [ideaPickerVisible, setIdeaPickerVisible] = useState(false);
   const [projectPickerVisible, setProjectPickerVisible] = useState(false);
+  const [taskPickerVisible, setTaskPickerVisible] = useState(false);
+  const [linkError, setLinkError] = useState<string | null>(null);
 
   const loadLinkedIdeas = async () => {
     const { data } = await supabase.from('goal_ideas').select('ideas(*)').eq('goal_id', id);
@@ -43,25 +40,46 @@ export default function GoalDetail() {
 
   const loadLinkedProjects = async () => {
     const { data } = await supabase.from('goal_projects').select('projects(*)').eq('goal_id', id);
-    setLinkedProjects(((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean));
+    const projects = ((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean);
+    setLinkedProjects(projects);
+    await loadAvailableProjectTasks(projects);
   };
 
-  const toggleTask = async (taskId: string, done: boolean) => {
-    await supabase.from('tasks').update({ done }).eq('id', taskId);
-    setLinkedTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, done } : t));
-    emitDataChange(['tasks', 'goals', 'projects']);
+  const loadAvailableProjectTasks = async (projects: Project[]) => {
+    if (projects.length === 0) { setAvailableProjectTasks([]); return; }
+    const projectIds = projects.map((p) => p.id);
+    const { data } = await supabase.from('tasks').select('*').in('project_id', projectIds).eq('done', false);
+    setAvailableProjectTasks(data ?? []);
+  };
+
+  const handleTaskToggle = async (taskId: string) => {
+    const linked = linkedTasks.some((t) => t.id === taskId);
+    const { error } = linked
+      ? await supabase.from('task_goals').delete().eq('goal_id', id).eq('task_id', taskId)
+      : await supabase.from('task_goals').insert({ goal_id: id, task_id: taskId });
+    if (error) { setLinkError(error.message); return; }
+    await loadLinkedTasks();
+    emitDataChange(['goals', 'tasks']);
   };
 
   const handleProjectToggle = async (projectId: string) => {
+    setLinkError(null);
     const linked = linkedProjects.some((p) => p.id === projectId);
-    if (linked) await supabase.from('goal_projects').delete().eq('goal_id', id).eq('project_id', projectId);
-    else await supabase.from('goal_projects').insert({ goal_id: id, project_id: projectId });
+    const { error } = linked
+      ? await supabase.from('goal_projects').delete().eq('goal_id', id).eq('project_id', projectId)
+      : await supabase.from('goal_projects').insert({ goal_id: id, project_id: projectId });
+    if (error) { setLinkError(error.message); return; }
+    setProjectPickerVisible(false);
     await loadLinkedProjects();
     emitDataChange(['goals', 'projects']);
   };
 
   useEffect(() => {
-    if (id) void Promise.all([loadLinkedIdeas(), loadLinkedTasks(), loadLinkedProjects()]);
+    if (!id) return;
+    void Promise.all([loadLinkedIdeas(), loadLinkedTasks(), loadLinkedProjects()]);
+    return subscribeToDataChanges('tasks', (src) => {
+      if (src !== source.current) void loadLinkedTasks();
+    });
   }, [id]);
 
   if (loading && !goal) {
@@ -80,15 +98,9 @@ export default function GoalDetail() {
     );
   }
 
-  const handleAddMilestone = async () => {
-    if (!newMilestoneTitle.trim()) return;
-    await createMilestone(id, newMilestoneTitle.trim(), goal.milestones.length);
-    setNewMilestoneTitle('');
-    setAddingMilestone(false);
-  };
 
   const handleDelete = () => {
-    Alert.alert('Delete goal', 'Deletes all milestones and action steps.', [
+    Alert.alert('Delete goal', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); router.back(); } },
     ]);
@@ -121,64 +133,27 @@ export default function GoalDetail() {
           </Text>
         )}
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Milestones</Text>
-        {goal.milestones
-          .slice()
-          .sort((a, b) => a.position - b.position)
-          .map((milestone) => (
-            <MilestoneItem
-              key={milestone.id}
-              milestone={milestone}
-              onToggleStep={(stepId, done) => toggleStep(stepId, done)}
-              onRemoveMilestone={() => removeMilestone(milestone.id)}
-              onAddStep={async (title) => { await createStep(milestone.id, title, milestone.action_steps.length); }}
-            />
-          ))}
-
-        {addingMilestone ? (
-          <View className="flex-row items-center gap-2 bg-leather-800 rounded-xl px-4 py-3 mb-3">
-            <TextInput
-              className="flex-1 text-leather-50"
-              placeholder="Milestone title..."
-              placeholderTextColor="#7a6050"
-              value={newMilestoneTitle}
-              onChangeText={setNewMilestoneTitle}
-              autoFocus
-              onSubmitEditing={handleAddMilestone}
-            />
-            <Pressable onPress={handleAddMilestone}>
-              <Ionicons name="checkmark" size={18} color="#d4a017" />
-            </Pressable>
-            <Pressable onPress={() => setAddingMilestone(false)}>
-              <Ionicons name="close" size={18} color="#7a6050" />
-            </Pressable>
-          </View>
-        ) : (
-          <Pressable className="flex-row items-center gap-2 py-3" onPress={() => setAddingMilestone(true)}>
-            <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
-            <Text className="text-gold-400">Add milestone</Text>
-          </Pressable>
-        )}
-
-        {linkedTasks.length > 0 && (
+        {linkedProjects.length > 0 && (
           <>
-            <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Tasks</Text>
-            {linkedTasks.map((t) => (
-              <Pressable
-                key={t.id}
-                className="flex-row items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2"
-                onPress={() => toggleTask(t.id, !t.done)}
-              >
-                <Ionicons
-                  name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
-                  size={20}
-                  color={t.done ? '#d4a017' : '#7a6050'}
-                />
-                <Text className={`flex-1 text-sm ${t.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
-                  {t.title}
-                </Text>
-              </Pressable>
-            ))}
+            <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Milestones</Text>
+            {linkedTasks.length === 0
+              ? <Text className="text-leather-500 text-sm mb-3">No milestones yet — link tasks from the project below</Text>
+              : linkedTasks.map((t) => (
+                  <View key={t.id} className="flex-row items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2">
+                    <View className={`w-2.5 h-2.5 rounded-full ${t.done ? 'bg-gold-500' : 'bg-leather-500'}`} />
+                    <Text className={`flex-1 text-sm ${t.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
+                      {t.title}
+                    </Text>
+                    <Pressable onPress={() => handleTaskToggle(t.id)} hitSlop={8}>
+                      <Ionicons name="close-circle-outline" size={16} color="#7a6050" />
+                    </Pressable>
+                  </View>
+                ))
+            }
+            <Pressable className="flex-row items-center gap-2 py-2 mb-4" onPress={() => setTaskPickerVisible(true)}>
+              <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
+              <Text className="text-gold-400">Link task from project</Text>
+            </Pressable>
           </>
         )}
 
@@ -197,6 +172,7 @@ export default function GoalDetail() {
         </Pressable>
 
         <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Linked Projects</Text>
+        {linkError && <Text className="text-red-400 text-xs mb-2">{linkError}</Text>}
         {linkedProjects.map((project) => (
           <View key={project.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
             <Text className="text-leather-50 flex-1" numberOfLines={1}>{project.title}</Text>
@@ -230,6 +206,16 @@ export default function GoalDetail() {
         onToggle={handleProjectToggle}
         searchPlaceholder="Search projects..."
         emptyMessage="No projects found"
+      />
+      <ItemPickerModal
+        visible={taskPickerVisible}
+        onClose={() => setTaskPickerVisible(false)}
+        title="Link Task"
+        items={availableProjectTasks}
+        selectedIds={linkedTasks.map((t) => t.id)}
+        onToggle={handleTaskToggle}
+        searchPlaceholder="Search tasks..."
+        emptyMessage="No tasks found in linked projects"
       />
     </View>
   );

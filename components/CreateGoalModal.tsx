@@ -1,8 +1,6 @@
 import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
 import { useState } from 'react';
 import { ModalSheet } from './ui/ModalSheet';
-import { AIButton } from './ui/AIButton';
-import { useAI } from '../hooks/use-ai';
 import type { GoalInsert } from '../types';
 
 type Priority = 'high' | 'medium' | 'low';
@@ -28,7 +26,6 @@ const priorityActive: Record<Priority, string> = {
 };
 
 export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
-  const { planGoal, planState } = useAI();
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -36,18 +33,6 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
 
   const reset = () => { setTitle(''); setPriority(null); setError(null); };
   const handleClose = () => { reset(); onClose(); };
-
-  const handlePlanWithAI = async () => {
-    if (!title.trim()) { setError('Enter a goal title first'); return; }
-    setError(null);
-    const { data, error: planError } = await planGoal(title.trim());
-    if (data) {
-      setTitle(data.title);
-      setPriority(data.priority);
-    } else if (planError) {
-      setError(planError);
-    }
-  };
 
   const handleCreate = async () => {
     if (!title.trim()) { setError('Give the goal a name'); return; }
@@ -74,15 +59,6 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
         maxLength={200}
         autoFocus
       />
-
-      <View className="mb-4">
-        <AIButton
-          label="Plan with AI"
-          loading={planState.status === 'loading'}
-          onPress={handlePlanWithAI}
-          hint="Refines title, sets priority, and generates milestones"
-        />
-      </View>
 
       <View className="flex-row gap-2 mb-5">
         {PRIORITIES.map((p) => (

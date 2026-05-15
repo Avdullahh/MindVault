@@ -268,6 +268,39 @@ export type Database = {
           },
         ]
       }
+      goal_projects: {
+        Row: {
+          added_at: string
+          goal_id: string
+          project_id: string
+        }
+        Insert: {
+          added_at?: string
+          goal_id: string
+          project_id: string
+        }
+        Update: {
+          added_at?: string
+          goal_id?: string
+          project_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "goal_projects_goal_id_fkey"
+            columns: ["goal_id"]
+            isOneToOne: false
+            referencedRelation: "goals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "goal_projects_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       goals: {
         Row: {
           category_id: string | null

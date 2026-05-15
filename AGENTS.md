@@ -85,13 +85,12 @@ Core tables:
 - `goals`
 - `calendar_events`
 - `tasks`
-- `milestones`
-- `action_steps`
 
 Junction tables:
 - `idea_tags`
 - `project_ideas`
 - `goal_ideas`
+- `goal_projects`
 - `task_ideas`
 - `task_goals`
 - `event_ideas`

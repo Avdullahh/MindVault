@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAI } from '../../hooks/use-ai';
 import { useCalendarEvents } from '../../hooks/use-calendar-events';
-import { useGoals, type GoalWithMilestones } from '../../hooks/use-goals';
+import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
@@ -22,12 +22,6 @@ type Metric = {
 function formatEventTime(event: CalendarEvent) {
   if (event.all_day) return 'All day';
   return new Date(event.start_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-}
-
-function goalProgress(goal: GoalWithMilestones) {
-  let done = 0, total = 0;
-  for (const m of goal.milestones) for (const s of m.action_steps) { total++; if (s.done) done++; }
-  return total > 0 ? Math.round((done / total) * 100) : 0;
 }
 
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
@@ -96,11 +90,6 @@ export default function DashboardScreen() {
     [goals],
   );
 
-  const goalProgressMap = useMemo(
-    () => Object.fromEntries(activeGoals.map((g) => [g.id, goalProgress(g)])),
-    [activeGoals],
-  );
-
   const metrics = useMemo<Metric[]>(
     () => [
       { label: 'Ideas', value: ideas.length, icon: 'bulb-outline', route: '/(app)/ideas' },
@@ -115,25 +104,21 @@ export default function DashboardScreen() {
     await Promise.all([refetchIdeas(), refetchGoals(), refetchProjects(), refetchEvents()]);
   };
 
-  const renderGoal = (goal: GoalWithMilestones) => {
-    const progress = goalProgressMap[goal.id] ?? 0;
-    return (
-      <Pressable
-        key={goal.id}
-        className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 min-h-16"
-        onPress={() => router.push(`/(app)/goals/${goal.id}`)}
-        accessibilityRole="button"
-      >
-        <View className="flex-row items-start justify-between gap-3">
-          <Text className="text-leather-50 font-medium flex-1" numberOfLines={1}>{goal.title}</Text>
-          <Text className="text-leather-400 text-xs">{progress}%</Text>
-        </View>
-        <View className="h-2 bg-leather-700 rounded-full overflow-hidden mt-3">
-          <View className="h-full bg-gold-500" style={{ width: `${progress}%` }} />
-        </View>
-      </Pressable>
-    );
-  };
+  const renderGoal = (goal: ReturnType<typeof useGoals>['goals'][number]) => (
+    <Pressable
+      key={goal.id}
+      className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 min-h-16"
+      onPress={() => router.push(`/(app)/goals/${goal.id}`)}
+      accessibilityRole="button"
+    >
+      <Text className="text-leather-50 font-medium" numberOfLines={1}>{goal.title}</Text>
+      {goal.deadline ? (
+        <Text className="text-leather-400 text-xs mt-1">
+          Due {new Date(goal.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+        </Text>
+      ) : null}
+    </Pressable>
+  );
 
   const renderEvent = (event: CalendarEvent) => (
     <Pressable

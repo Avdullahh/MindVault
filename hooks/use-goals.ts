@@ -2,15 +2,13 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
-import type { ActionStep, Goal, GoalInsert, Milestone } from '../types';
+import type { Goal, GoalInsert } from '../types';
 
-export type ActionStepRow = ActionStep;
-export type MilestoneWithSteps = Milestone & { action_steps: ActionStepRow[] };
-export type GoalWithMilestones = Goal & { milestones: MilestoneWithSteps[] };
+export type GoalWithMilestones = Goal;
 
 export function useGoals() {
   const source = useRef(Symbol('goals'));
-  const [goals, setGoals] = useState<GoalWithMilestones[]>([]);
+  const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -18,10 +16,10 @@ export function useGoals() {
     setLoading(true);
     const { data, error: err } = await supabase
       .from('goals')
-      .select('*, milestones(*, action_steps(*))')
+      .select('*')
       .order('created_at', { ascending: false });
     if (err) setError(err.message);
-    else setGoals((data ?? []) as GoalWithMilestones[]);
+    else setGoals(data ?? []);
     setLoading(false);
   };
 
