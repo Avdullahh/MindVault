@@ -65,7 +65,7 @@ Clarified:
 - Apply the fix wherever event times are rendered in the calendar views.
 
 ISSUE 8: Settings page includes personal information management
-Status: Pending
+Status: Done
 Clarified:
 - The settings page (from Issue 6) should also contain a "Personal Information" section with:
     - Display name (shown in morning brief greeting and other personalised areas)
