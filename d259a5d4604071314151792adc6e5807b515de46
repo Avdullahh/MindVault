@@ -1,0 +1,1 @@
+Settings screen: added Personal Information section with display name, email change, and avatar upload via expo-image-picker. Avatar stored in Supabase user_metadata; initials badge updates immediately. Added expo-image-picker dependency.
