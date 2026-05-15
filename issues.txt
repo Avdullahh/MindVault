@@ -76,7 +76,7 @@ Clarified:
 - All fields editable inline or via a sub-sheet.
 
 ISSUE 9: Research competitor apps and propose UI/UX improvements
-Status: Pending
+Status: Proposal ready
 Clarified:
 - Research focus: apps that mix second-brain and productivity — Notion, Obsidian, Roam Research, Things 3, Todoist, TickTick, Fantastical, Cron.
 - Goal: identify the most successful UI/UX patterns from these apps that MindVault is missing or doing worse.
