@@ -13,7 +13,7 @@ Clarified:
 - The junction table is for manual links only. The AI plan flow continues to write project_id directly.
 
 ISSUE 2: Project tasks selectable from a linked goal
-Status: Pending
+Status: Done
 Clarified:
 - On the goal detail screen, add a task picker that shows ONLY tasks where task.project_id matches one of the goal's linked projects (via goal_projects junction or project_id FK).
 - Selecting a task creates a task_goals row (task stays in its project, also appears on the goal).

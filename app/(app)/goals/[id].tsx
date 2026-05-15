@@ -46,9 +46,14 @@ export default function GoalDetail() {
   };
 
   const loadAvailableProjectTasks = async (projects: Project[]) => {
-    if (projects.length === 0) { setAvailableProjectTasks([]); return; }
-    const projectIds = projects.map((p) => p.id);
-    const { data } = await supabase.from('tasks').select('*').in('project_id', projectIds).eq('done', false);
+    const projectIds = Array.from(
+      new Set([
+        ...projects.map((p) => p.id),
+        ...(goal?.project_id ? [goal.project_id] : []),
+      ]),
+    );
+    if (projectIds.length === 0) { setAvailableProjectTasks([]); return; }
+    const { data } = await supabase.from('tasks').select('*').in('project_id', projectIds);
     setAvailableProjectTasks(data ?? []);
   };
 
@@ -80,7 +85,7 @@ export default function GoalDetail() {
     return subscribeToDataChanges('tasks', (src) => {
       if (src !== source.current) void loadLinkedTasks();
     });
-  }, [id]);
+  }, [id, goal?.project_id]);
 
   if (loading && !goal) {
     return (
