@@ -1,0 +1,1 @@
+Created context/theme-context.tsx with ThemeProvider exposing preference (light/dark/system), resolvedTheme, and setPreference. Preference stored in AsyncStorage and restored on boot; NativeWind setColorScheme kept in sync. Settings screen: added Theme section with Light/Dark/System chips. Root and app layouts wrapped in ThemeProvider.
