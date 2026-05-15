@@ -1,0 +1,1 @@
+Card borders: border-leather-600 added to all list cards. GoalCard: action-step progress bar. Dashboard: SectionHeader components with uppercase section labels. Settings: account stub and categories navigation. ModalSheet: gold separator line, tighter header padding. EmptyState: enlarged icon, improved text hierarchy.
