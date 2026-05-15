@@ -58,7 +58,7 @@ Clarified:
 - Theme choice is persisted in AsyncStorage (not sensitive, no need for SecureStore).
 
 ISSUE 7: Calendar event time overflows to two lines for double-digit hours
-Status: Pending
+Status: Done
 Clarified:
 - When an event time is 4 characters wide (e.g. '10:00PM'), the time string wraps onto a second line in the calendar day/week cell.
 - Fix: shorten the time format to prevent overflow. Suggested format: drop minutes when :00, use lowercase am/pm (e.g. '10am', '9:30pm'). Double-digit hours that still overflow should drop AM/PM entirely and show only the time.

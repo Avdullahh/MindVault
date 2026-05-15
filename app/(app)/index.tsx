@@ -21,7 +21,11 @@ type Metric = {
 
 function formatEventTime(event: CalendarEvent) {
   if (event.all_day) return 'All day';
-  return new Date(event.start_at).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  const d = new Date(event.start_at);
+  const hour = d.getHours() % 12 || 12;
+  const minutes = d.getMinutes();
+  const suffix = d.getHours() >= 12 ? 'pm' : 'am';
+  return minutes === 0 ? `${hour}${suffix}` : `${hour}:${String(minutes).padStart(2, '0')}${suffix}`;
 }
 
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
