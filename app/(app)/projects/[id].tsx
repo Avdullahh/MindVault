@@ -16,7 +16,7 @@ import { EditTaskModal } from '../../../components/EditTaskModal';
 import { AIButton } from '../../../components/ui/AIButton';
 import { emitDataChange } from '../../../lib/data-events';
 import { getUserId } from '../../../lib/get-user-id';
-import type { Idea, Task } from '../../../types';
+import type { Goal, Idea, Task } from '../../../types';
 import type { PlanResult } from '../../../hooks/use-ai';
 
 const PRIORITY_COLOR: Record<string, string> = {
@@ -36,10 +36,11 @@ export default function ProjectDetail() {
   const { planGoal, planState } = useAI();
 
   const project = projects.find((p) => p.id === id);
-  const projectGoals = allGoals.filter((g) => g.project_id === id);
 
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
+  const [linkedGoals, setLinkedGoals] = useState<Goal[]>([]);
   const [pickerVisible, setPickerVisible] = useState(false);
+  const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [createTaskVisible, setCreateTaskVisible] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [aiError, setAiError] = useState<string | null>(null);
@@ -47,10 +48,23 @@ export default function ProjectDetail() {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const directProjectGoals = allGoals.filter((g) => g.project_id === id);
+  const projectGoals = [
+    ...directProjectGoals,
+    ...linkedGoals.filter((goal) => !directProjectGoals.some((direct) => direct.id === goal.id)),
+  ];
+  const manuallyLinkableGoals = allGoals.filter((g) => g.project_id !== id);
+
   const loadLinkedIdeas = () => fetchIdeasForProject(id).then(setLinkedIdeas);
 
+  const loadLinkedGoals = async () => {
+    const { data } = await supabase.from('goal_projects').select('goals(*)').eq('project_id', id);
+    setLinkedGoals(((data ?? []) as { goals: Goal }[]).map((r) => r.goals).filter(Boolean));
+  };
+
   useEffect(() => {
-    if (id) loadLinkedIdeas();
+    if (!id) return;
+    void Promise.all([loadLinkedIdeas(), loadLinkedGoals()]);
   }, [id]);
 
   if (loading && !project) {
@@ -81,6 +95,14 @@ export default function ProjectDetail() {
     if (linked) await unlinkIdea(id, ideaId);
     else await linkIdea(id, ideaId);
     loadLinkedIdeas();
+  };
+
+  const handleGoalToggle = async (goalId: string) => {
+    const linked = linkedGoals.some((g) => g.id === goalId);
+    if (linked) await supabase.from('goal_projects').delete().eq('project_id', id).eq('goal_id', goalId);
+    else await supabase.from('goal_projects').insert({ project_id: id, goal_id: goalId });
+    await loadLinkedGoals();
+    emitDataChange(['goals', 'projects']);
   };
 
   const handlePlanWithAI = async () => {
@@ -145,7 +167,13 @@ export default function ProjectDetail() {
           {aiError && <Text className="text-red-400 text-xs mt-2">{aiError}</Text>}
         </View>
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Goals</Text>
+        <View className="flex-row items-center justify-between mb-3">
+          <Text className="text-leather-300 text-xs font-semibold uppercase">Goals</Text>
+          <Pressable onPress={() => setGoalPickerVisible(true)} className="flex-row items-center gap-1">
+            <Ionicons name="add-circle-outline" size={18} color="#d4a017" />
+            <Text className="text-gold-400 text-sm">Link goal</Text>
+          </Pressable>
+        </View>
         {projectGoals.length === 0
           ? <Text className="text-leather-500 text-sm mb-4">No goals yet — use Plan with AI to generate one</Text>
           : projectGoals.map((g) => (
@@ -233,6 +261,16 @@ export default function ProjectDetail() {
         onToggle={handleIdeaToggle}
         searchPlaceholder="Search ideas..."
         emptyMessage="No ideas found"
+      />
+      <ItemPickerModal
+        visible={goalPickerVisible}
+        onClose={() => setGoalPickerVisible(false)}
+        title="Link Goal"
+        items={manuallyLinkableGoals}
+        selectedIds={linkedGoals.map((g) => g.id)}
+        onToggle={handleGoalToggle}
+        searchPlaceholder="Search goals..."
+        emptyMessage="No goals available"
       />
       <AITaskPreviewModal
         visible={previewVisible}

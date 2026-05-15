@@ -21,7 +21,7 @@ Clarified:
 - Checking tasks off in the project drives the goal's visible completion progress.
 
 ISSUE 3: Projects should link to both ideas and goals
-Status: Pending
+Status: Done
 Clarified:
 - Project → Idea linking already exists and works (project_ideas junction + picker UI). No changes needed.
 - Project → Goal: add a goals picker section to the project detail screen, same toggle pattern as the ideas picker.
