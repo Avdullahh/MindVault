@@ -46,7 +46,7 @@ Clarified:
 - Fix: enforce a uniform horizontal padding (e.g. px-5 consistently), center cards/headings/buttons on the home screen, ensure lists don't appear flush-left.
 
 ISSUE 6: Light / Dark / System theme toggle + settings page
-Status: Pending
+Status: Done
 Clarified:
 - Remove the settings gear icon from the Ideas screen.
 - Add settings gear icon to the Home/Dashboard screen top-right corner ONLY. Settings is not accessible from any other screen.

@@ -2,6 +2,7 @@ import '../global.css';
 import { useEffect } from 'react';
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { AuthProvider, useAuth } from '../context/auth-context';
+import { ThemeProvider } from '../context/theme-context';
 
 function AuthGate() {
   const { session, loading } = useAuth();
@@ -23,9 +24,11 @@ function AuthGate() {
 
 export default function RootLayout() {
   return (
-    <AuthProvider>
-      <AuthGate />
-      <Stack screenOptions={{ headerShown: false }} />
-    </AuthProvider>
+    <ThemeProvider>
+      <AuthProvider>
+        <AuthGate />
+        <Stack screenOptions={{ headerShown: false }} />
+      </AuthProvider>
+    </ThemeProvider>
   );
 }

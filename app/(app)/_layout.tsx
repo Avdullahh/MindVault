@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { storage } from '../../lib/storage';
+import { useTheme } from '../../context/theme-context';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -17,6 +18,10 @@ function tabIcon(name: IoniconsName) {
 export default function AppLayout() {
   const [initialTab, setInitialTab] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
+  const { resolvedTheme } = useTheme();
+  const tabBarColors = resolvedTheme === 'light'
+    ? { backgroundColor: '#fffaf0', borderTopColor: '#e8d5a8', active: '#9a6e08', inactive: '#7a6050' }
+    : { backgroundColor: '#141009', borderTopColor: '#3d2b1a', active: '#d4a017', inactive: '#7a6050' };
 
   useEffect(() => {
     storage.getLastTab().then((saved) => {
@@ -40,9 +45,9 @@ export default function AppLayout() {
       }}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#141009', borderTopColor: '#3d2b1a' },
-        tabBarActiveTintColor: '#d4a017',
-        tabBarInactiveTintColor: '#7a6050',
+        tabBarStyle: { backgroundColor: tabBarColors.backgroundColor, borderTopColor: tabBarColors.borderTopColor },
+        tabBarActiveTintColor: tabBarColors.active,
+        tabBarInactiveTintColor: tabBarColors.inactive,
       }}
     >
       <Tabs.Screen

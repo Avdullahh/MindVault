@@ -22,11 +22,8 @@ export default function IdeasScreen() {
 
   return (
     <View className="flex-1 bg-leather-900">
-      <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
+      <View className="px-5 pt-14 pb-3">
         <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Ideas</Text>
-        <Pressable onPress={() => router.push('/(app)/settings')}>
-          <Ionicons name="settings-outline" size={22} color="#7a6050" />
-        </Pressable>
       </View>
 
       <View className="px-5 mb-3 w-full max-w-3xl self-center">
