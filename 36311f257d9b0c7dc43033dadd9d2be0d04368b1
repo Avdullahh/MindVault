@@ -1,0 +1,1 @@
+Project detail: added Goals section that merges goals with project_id matching the project (direct ownership) with goals linked via goal_projects junction table. Link Goal button opens ItemPickerModal filtered to goals not directly owned by the current project; unlink deletes the goal_projects row.
