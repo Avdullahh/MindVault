@@ -1,0 +1,1 @@
+EventItem: rewrote time formatting to use compact 12-hour am/pm style (9am, 10:30pm) rather than verbose locale strings. Dashboard upcoming-events card: displays end time below start time when both are present.
