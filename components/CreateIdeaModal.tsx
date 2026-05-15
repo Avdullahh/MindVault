@@ -39,7 +39,7 @@ export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
         className="text-leather-50 text-2xl mb-1"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="What's the idea?"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline
@@ -51,7 +51,7 @@ export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
         className="text-leather-300 text-base mb-6"
         style={{ minHeight: 72, textAlignVertical: 'top' }}
         placeholder="Expand on it... (optional)"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={description}
         onChangeText={setDescription}
         multiline

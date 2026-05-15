@@ -21,12 +21,16 @@ function priorityColor(p: string | null): 'red' | 'yellow' | 'gray' {
   return 'gray';
 }
 
+function priorityLabel(p: string): string {
+  return p.charAt(0).toUpperCase() + p.slice(1);
+}
+
 export function GoalCard({ goal, onPress }: Props) {
   return (
     <Pressable className="bg-leather-800 rounded-2xl p-4 mb-3 border border-leather-600" onPress={onPress}>
       <Text className="text-leather-50 font-semibold text-base mb-2" numberOfLines={2}>{goal.title}</Text>
       <View className="flex-row gap-2 flex-wrap">
-        {goal.priority && <Badge label={goal.priority} color={priorityColor(goal.priority)} />}
+        {goal.priority && <Badge label={priorityLabel(goal.priority)} color={priorityColor(goal.priority)} />}
         {goal.deadline && (
           <Badge
             label={new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}

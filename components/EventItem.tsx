@@ -29,11 +29,8 @@ export function EventItem({ event, onToggleDone, onEdit, onDelete }: Props) {
   const label = timeLabel(event);
 
   return (
-    <Pressable
+    <View
       className={`bg-leather-800 rounded-xl px-3 py-3 mb-2 flex-row items-center gap-3 border border-leather-600 min-h-16 ${event.done ? 'opacity-60' : ''}`}
-      onPress={() => onEdit(event)}
-      accessibilityRole="button"
-      accessibilityLabel={`Edit ${event.title}`}
     >
       <Pressable
         className="w-11 h-11 -ml-1 items-center justify-center"
@@ -47,21 +44,28 @@ export function EventItem({ event, onToggleDone, onEdit, onDelete }: Props) {
         </View>
       </Pressable>
 
-      {label ? (
-        <View className="w-14 shrink-0">
-          <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>{label}</Text>
-          {event.end_at && !event.all_day ? (
-            <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmt(event.end_at)}</Text>
-          ) : null}
-        </View>
-      ) : null}
+      <Pressable
+        className="flex-1 flex-row items-center gap-3 min-h-11"
+        onPress={() => onEdit(event)}
+        accessibilityRole="button"
+        accessibilityLabel={`Edit ${event.title}`}
+      >
+        {label ? (
+          <View className="w-14 shrink-0">
+            <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>{label}</Text>
+            {event.end_at && !event.all_day ? (
+              <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmt(event.end_at)}</Text>
+            ) : null}
+          </View>
+        ) : null}
 
-      <View className="flex-1">
-        <Text className={`font-medium ${event.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
-          {event.title}
-        </Text>
-        {event.notes ? <Text className="text-leather-300 text-sm mt-0.5" numberOfLines={1}>{event.notes}</Text> : null}
-      </View>
+        <View className="flex-1">
+          <Text className={`font-medium ${event.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
+            {event.title}
+          </Text>
+          {event.notes ? <Text className="text-leather-300 text-sm mt-0.5" numberOfLines={1}>{event.notes}</Text> : null}
+        </View>
+      </Pressable>
 
       <Pressable
         onPress={() =>
@@ -77,6 +81,6 @@ export function EventItem({ event, onToggleDone, onEdit, onDelete }: Props) {
       >
         <Ionicons name="trash-outline" size={18} color="#a89070" />
       </Pressable>
-    </Pressable>
+    </View>
   );
 }

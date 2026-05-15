@@ -1,14 +1,23 @@
 import 'react-native-url-polyfill/auto';
 import { createClient } from '@supabase/supabase-js';
 import * as SecureStore from 'expo-secure-store';
+import { Platform } from 'react-native';
 import type { Database } from '../types/database.generated';
 
 // expo-secure-store has a 2 KB per-key limit on iOS. Supabase session tokens
 // can exceed that, so we transparently chunk the value across numbered keys.
 const CHUNK_SIZE = 2000;
+const isWeb = Platform.OS === 'web';
+
+function getWebStorage() {
+  if (typeof localStorage === 'undefined') return null;
+  return localStorage;
+}
 
 const ChunkedSecureStore = {
   getItem: async (key: string) => {
+    if (isWeb) return getWebStorage()?.getItem(key) ?? null;
+
     const countStr = await SecureStore.getItemAsync(`${key}.count`);
     if (!countStr) return null;
     const count = parseInt(countStr, 10);
@@ -22,6 +31,11 @@ const ChunkedSecureStore = {
   },
 
   setItem: async (key: string, value: string) => {
+    if (isWeb) {
+      getWebStorage()?.setItem(key, value);
+      return;
+    }
+
     const chunks: string[] = [];
     for (let i = 0; i < value.length; i += CHUNK_SIZE) {
       chunks.push(value.slice(i, i + CHUNK_SIZE));
@@ -35,6 +49,11 @@ const ChunkedSecureStore = {
   },
 
   removeItem: async (key: string) => {
+    if (isWeb) {
+      getWebStorage()?.removeItem(key);
+      return;
+    }
+
     const countStr = await SecureStore.getItemAsync(`${key}.count`);
     if (!countStr) return;
     const count = parseInt(countStr, 10);

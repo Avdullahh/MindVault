@@ -30,6 +30,8 @@ function formatTime(d: Date) {
 }
 
 function modeFromEvent(e: CalendarEvent): EventMode {
+  // all_day flag is authoritative - a stray end_at on an all-day record is
+  // treated as legacy data and will be cleared (set to null) when the user saves.
   if (e.all_day) return 'allday';
   if (!e.end_at) return 'dateonly';
   return 'timed';
@@ -174,7 +176,7 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
         ))}
       </View>
 
-      {/* Start / end time chips — timed mode only */}
+      {/* Start / end time chips - timed mode only */}
       {mode === 'timed' && (
         <View className="flex-row gap-2 mb-3 items-center">
           <Pressable

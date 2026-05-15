@@ -20,9 +20,8 @@ type Metric = {
   route: string;
 };
 
-function formatEventTime(event: CalendarEvent) {
-  if (event.all_day) return 'All day';
-  const d = parseCalendarStoredDate(event.start_at);
+function fmtTime(iso: string) {
+  const d = parseCalendarStoredDate(iso);
   const h = d.getHours();
   const m = d.getMinutes();
   const suffix = h >= 12 ? 'pm' : 'am';
@@ -30,18 +29,31 @@ function formatEventTime(event: CalendarEvent) {
   return m === 0 ? `${hour}${suffix}` : `${hour}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
+function eventTimeLabel(event: CalendarEvent): string | null {
+  if (event.all_day) return 'All day';
+  if (!event.end_at) {
+    return parseCalendarStoredDate(event.start_at).toLocaleDateString(undefined, {
+      month: 'short',
+      day: 'numeric',
+    });
+  }
+  return fmtTime(event.start_at);
+}
+
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   return (
-    <View className="flex-row items-center justify-between mb-3">
+    <View className="h-9 flex-row items-center justify-between mb-2">
       <Text
-        className="text-leather-300 text-xs font-semibold uppercase tracking-widest"
-        style={{ letterSpacing: 2 }}
+        className="text-leather-300 text-xs font-semibold uppercase leading-4"
+        style={{ letterSpacing: 2, includeFontPadding: false }}
       >
         {title}
       </Text>
       {action && onPress ? (
-        <Pressable className="min-h-11 px-2 -mr-2 items-center justify-center" onPress={onPress}>
-          <Text className="text-gold-400 text-sm font-medium">{action}</Text>
+        <Pressable className="h-9 pl-4 items-center justify-center" onPress={onPress}>
+          <Text className="text-gold-400 text-sm font-medium leading-5" style={{ includeFontPadding: false }}>
+            {action}
+          </Text>
         </Pressable>
       ) : null}
     </View>
@@ -113,33 +125,45 @@ export default function DashboardScreen() {
   const renderGoal = (goal: ReturnType<typeof useGoals>['goals'][number]) => (
     <Pressable
       key={goal.id}
-      className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 min-h-16"
+      className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 min-h-16 justify-center"
       onPress={() => router.push(`/(app)/goals/${goal.id}`)}
       accessibilityRole="button"
     >
-      <Text className="text-leather-50 font-medium" numberOfLines={1}>{goal.title}</Text>
+      <Text className="text-leather-50 font-medium leading-5" style={{ includeFontPadding: false }} numberOfLines={1}>
+        {goal.title}
+      </Text>
       {goal.deadline ? (
-        <Text className="text-leather-400 text-xs mt-1">
+        <Text className="text-leather-400 text-xs leading-4 mt-1" style={{ includeFontPadding: false }}>
           Due {new Date(goal.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
         </Text>
       ) : null}
     </Pressable>
   );
 
-  const renderEvent = (event: CalendarEvent) => (
-    <Pressable
-      key={event.id}
-      className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 flex-row gap-3 min-h-16"
-      onPress={() => router.push('/(app)/calendar')}
-      accessibilityRole="button"
-    >
-      <Text className="text-gold-400 text-xs font-semibold w-16">{formatEventTime(event)}</Text>
-      <View className="flex-1">
-        <Text className="text-leather-50 font-medium" numberOfLines={1}>{event.title}</Text>
-        {event.notes ? <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{event.notes}</Text> : null}
-      </View>
-    </Pressable>
-  );
+  const renderEvent = (event: CalendarEvent) => {
+    const label = eventTimeLabel(event);
+    return (
+      <Pressable
+        key={event.id}
+        className="bg-leather-800 rounded-xl px-3 py-3 mb-2 border border-leather-600 flex-row items-center gap-3 min-h-16"
+        onPress={() => router.push('/(app)/calendar')}
+        accessibilityRole="button"
+      >
+        {label ? (
+          <View className="w-14 shrink-0">
+            <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>{label}</Text>
+            {event.end_at && !event.all_day ? (
+              <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmtTime(event.end_at)}</Text>
+            ) : null}
+          </View>
+        ) : null}
+        <View className="flex-1">
+          <Text className="text-leather-50 font-medium" numberOfLines={1}>{event.title}</Text>
+          {event.notes ? <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{event.notes}</Text> : null}
+        </View>
+      </Pressable>
+    );
+  };
 
   return (
     <View className="flex-1 bg-leather-900">
@@ -174,38 +198,7 @@ export default function DashboardScreen() {
           ))}
         </View>
 
-        {forgottenIdeas.length > 0 && (
-          <View className="mb-5">
-            <SectionHeader title="Revisit an Idea" />
-            {forgottenIdeas.slice(0, 2).map((idea) => (
-              <Pressable
-                key={idea.id}
-                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-gold-700 flex-row min-h-16 items-center justify-between"
-                onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
-              >
-                <View className="flex-1 mr-3">
-                  <Text className="text-leather-50 font-medium" numberOfLines={1}>{idea.title}</Text>
-                  {idea.description ? (
-                    <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{idea.description}</Text>
-                  ) : null}
-                </View>
-                <Text className="text-gold-400 text-xs font-semibold">Revisit</Text>
-              </Pressable>
-            ))}
-          </View>
-        )}
-
-        <SectionHeader title="Active Goals" action="View all" onPress={() => router.push('/(app)/goals')} />
-        <View className="mb-5">
-          {activeGoals.length > 0 ? activeGoals.map(renderGoal) : <EmptyCard text="No goals yet. Turn an idea into a goal to connect planning with action." />}
-        </View>
-
-        <SectionHeader title="Upcoming Events" action="Calendar" onPress={() => router.push('/(app)/calendar')} />
-        <View className="mb-6">
-          {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
-        </View>
-
-        <View className="bg-leather-800 rounded-2xl p-4 border border-gold-700">
+        <View className="bg-leather-800 rounded-2xl p-4 border border-gold-700 mb-5">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-leather-50 font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
@@ -242,6 +235,37 @@ export default function DashboardScreen() {
               ) : null}
             </View>
           ) : null}
+        </View>
+
+        {forgottenIdeas.length > 0 && (
+          <View className="mb-5">
+            <SectionHeader title="Revisit an Idea" />
+            {forgottenIdeas.slice(0, 2).map((idea) => (
+              <Pressable
+                key={idea.id}
+                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-gold-700 flex-row min-h-16 items-center justify-between"
+                onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
+              >
+                <View className="flex-1 mr-3">
+                  <Text className="text-leather-50 font-medium" numberOfLines={1}>{idea.title}</Text>
+                  {idea.description ? (
+                    <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{idea.description}</Text>
+                  ) : null}
+                </View>
+                <Text className="text-gold-400 text-xs font-semibold">Revisit</Text>
+              </Pressable>
+            ))}
+          </View>
+        )}
+
+        <View className="mb-5">
+          <SectionHeader title="Active Goals" action="View all" onPress={() => router.push('/(app)/goals')} />
+          {activeGoals.length > 0 ? activeGoals.map(renderGoal) : <EmptyCard text="No goals yet. Turn an idea into a goal to connect planning with action." />}
+        </View>
+
+        <View className="mb-6">
+          <SectionHeader title="Upcoming Events" action="Calendar" onPress={() => router.push('/(app)/calendar')} />
+          {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
         </View>
       </ScrollView>
     </View>

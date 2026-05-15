@@ -71,7 +71,7 @@ export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
         className="text-leather-50 text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="What are you working toward?"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline
@@ -92,7 +92,14 @@ export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
         ))}
       </View>
 
-      <Text className="text-leather-400 text-xs uppercase mb-2" style={{ letterSpacing: 1.5 }}>Deadline</Text>
+      <View className="flex-row items-center justify-between mb-2">
+        <Text className="text-leather-400 text-xs uppercase" style={{ letterSpacing: 1.5 }}>Deadline</Text>
+        {deadline ? (
+          <Pressable onPress={() => setDeadline(null)} hitSlop={8}>
+            <Text className="text-leather-400 text-xs">Clear</Text>
+          </Pressable>
+        ) : null}
+      </View>
       <DatePicker
         value={deadline}
         onChange={setDeadline}

@@ -139,7 +139,7 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         className="text-leather-50 text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="What's happening?"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline
@@ -215,7 +215,7 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         ))}
       </View>
 
-      {/* Start / end time chips — only when Set time is selected */}
+      {/* Start / end time chips - only when Set time is selected */}
       {mode === 'timed' && (
         <View className="flex-row gap-2 mb-3 items-center">
           <Pressable

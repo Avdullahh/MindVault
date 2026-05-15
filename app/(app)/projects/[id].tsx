@@ -26,6 +26,10 @@ const PRIORITY_COLOR: Record<string, string> = {
   low: 'text-leather-300',
 };
 
+function priorityLabel(priority: string) {
+  return priority.charAt(0).toUpperCase() + priority.slice(1);
+}
+
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
@@ -38,6 +42,7 @@ export default function ProjectDetail() {
   const { planGoal, planState } = useAI();
 
   const project = projects.find((p) => p.id === id);
+  const [editSnapshot, setEditSnapshot] = useState<typeof project>(undefined);
 
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedGoals, setLinkedGoals] = useState<Goal[]>([]);
@@ -49,6 +54,8 @@ export default function ProjectDetail() {
   const [previewPlan, setPreviewPlan] = useState<PlanResult | null>(null);
   const [previewVisible, setPreviewVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+
+  const exitToProjects = () => router.replace('/(app)/projects');
 
   const directProjectGoals = allGoals.filter((g) => g.project_id === id);
   const projectGoals = [
@@ -88,7 +95,7 @@ export default function ProjectDetail() {
   const handleDelete = () => {
     Alert.alert('Delete project', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); router.back(); } },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); exitToProjects(); } },
     ]);
   };
 
@@ -148,14 +155,14 @@ export default function ProjectDetail() {
   return (
     <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={exitToProjects} accessibilityRole="button" accessibilityLabel="Back to projects">
           <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
         <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => setEditVisible(true)}>
+          <Pressable onPress={() => { setEditSnapshot(project); setEditVisible(true); }} accessibilityRole="button" accessibilityLabel="Edit project">
             <Ionicons name="pencil-outline" size={20} color="#d4a017" />
           </Pressable>
-          <Pressable onPress={handleDelete}>
+          <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete project">
             <Ionicons name="trash-outline" size={20} color="#f87171" />
           </Pressable>
         </View>
@@ -182,7 +189,7 @@ export default function ProjectDetail() {
           </Pressable>
         </View>
         {projectGoals.length === 0
-          ? <Text className="text-leather-500 text-sm mb-4">No goals yet — use Plan with AI to generate one</Text>
+          ? <Text className="text-leather-500 text-sm mb-4">No goals yet - use Plan with AI to generate one</Text>
           : projectGoals.map((g) => (
               <Pressable
                 key={g.id}
@@ -192,7 +199,7 @@ export default function ProjectDetail() {
                 <Text className="text-leather-50 flex-1" numberOfLines={1}>{g.title}</Text>
                 {g.priority && (
                   <Text className={`text-xs ml-2 capitalize ${PRIORITY_COLOR[g.priority] ?? 'text-leather-300'}`}>
-                    {g.priority}
+                    {priorityLabel(g.priority)}
                   </Text>
                 )}
               </Pressable>
@@ -298,7 +305,7 @@ export default function ProjectDetail() {
         onSave={updateTask}
       />
       <EditProjectModal
-        project={project}
+        project={editSnapshot ?? null}
         visible={editVisible}
         onClose={() => setEditVisible(false)}
         onSave={update}

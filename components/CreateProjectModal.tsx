@@ -36,7 +36,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: Props) {
         className="text-leather-50 text-2xl mb-3"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="Project name"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline
@@ -48,7 +48,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: Props) {
         className="text-leather-300 text-base mb-6"
         style={{ minHeight: 56, textAlignVertical: 'top' }}
         placeholder="What's the mission? (optional)"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={mainGoal}
         onChangeText={setMainGoal}
         multiline

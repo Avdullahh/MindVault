@@ -1,4 +1,5 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { useEffect, useState } from 'react';
+import { Keyboard, Modal, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 
 type Props = {
   visible: boolean;
@@ -9,36 +10,56 @@ type Props = {
 
 export function ModalSheet({ visible, onClose, title, children }: Props) {
   const { height } = useWindowDimensions();
+  const [kbHeight, setKbHeight] = useState(0);
+
+  useEffect(() => {
+    if (!visible) { setKbHeight(0); return; }
+    const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+    const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+    const show = Keyboard.addListener(showEvent, (e) => setKbHeight(e.endCoordinates.height));
+    const hide = Keyboard.addListener(hideEvent, () => setKbHeight(0));
+    return () => { show.remove(); hide.remove(); };
+  }, [visible]);
+
+  // Available vertical space: full height minus keyboard, then cap at 90% of that
+  const PADDING = 20;
+  const maxCardHeight = (height - kbHeight - PADDING * 2) * 0.95;
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <Pressable
-          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
-          onPress={onClose}
-        >
-          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
-            <View
-              className="bg-leather-900 rounded-3xl border border-gold-800 overflow-hidden"
-              style={{ maxHeight: height * 0.82 }}
+      <Pressable
+        style={{
+          flex: 1,
+          backgroundColor: 'rgba(0,0,0,0.6)',
+          justifyContent: 'center',
+          alignItems: 'center',
+          paddingHorizontal: PADDING,
+          paddingTop: PADDING,
+          paddingBottom: kbHeight + PADDING,
+        }}
+        onPress={onClose}
+      >
+        <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
+          <View
+            className="bg-leather-900 rounded-3xl border border-gold-800 overflow-hidden"
+            style={{ maxHeight: maxCardHeight }}
+          >
+            <ScrollView
+              bounces={false}
+              keyboardShouldPersistTaps="handled"
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
             >
-              <ScrollView
-                bounces={false}
-                keyboardShouldPersistTaps="handled"
-                showsVerticalScrollIndicator={false}
-                contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
-              >
-                {title && (
-                  <Text className="text-xl font-bold text-leather-50 mb-4" style={{ fontFamily: 'Georgia' }}>
-                    {title}
-                  </Text>
-                )}
-                {children}
-              </ScrollView>
-            </View>
-          </Pressable>
+              {title && (
+                <Text className="text-xl font-bold text-leather-50 mb-4" style={{ fontFamily: 'Georgia' }}>
+                  {title}
+                </Text>
+              )}
+              {children}
+            </ScrollView>
+          </View>
         </Pressable>
-      </KeyboardAvoidingView>
+      </Pressable>
     </Modal>
   );
 }

@@ -52,7 +52,7 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
         className="text-leather-50 text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="What are you working toward?"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline

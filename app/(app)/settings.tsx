@@ -4,30 +4,20 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth-context';
-import { useTheme, type ThemePreference } from '../../context/theme-context';
 import { supabase } from '../../lib/supabase';
-
-const OPTIONS: { value: ThemePreference; label: string; description: string }[] = [
-  { value: 'light', label: 'Light', description: 'Off-white surfaces, dark-brown text, and gold accents.' },
-  { value: 'dark', label: 'Dark', description: 'The current leather and gold MindVault palette.' },
-  { value: 'system', label: 'System', description: 'Copy your phone appearance automatically.' },
-];
 
 export default function Settings() {
   const { session, signOut } = useAuth();
-  const { preference, resolvedTheme, setPreference } = useTheme();
   const router = useRouter();
 
-  const light = resolvedTheme === 'light';
   const email = session?.user.email ?? '';
   const metadata = session?.user.user_metadata ?? {};
   const avatarUrl = typeof metadata.avatar_url === 'string' ? metadata.avatar_url : null;
   const initials = email ? email.slice(0, 2).toUpperCase() : '??';
-  const screen = light ? 'bg-[#fffaf0]' : 'bg-leather-900';
-  const card = light ? 'bg-white border-[#e8d5a8]' : 'bg-leather-800 border-leather-600';
-  const title = light ? 'text-[#2a170c]' : 'text-leather-50';
-  const muted = light ? 'text-[#7a6050]' : 'text-leather-300';
-  const input = light ? 'bg-white text-[#2a170c] border-[#e8d5a8]' : 'bg-leather-800 text-leather-50 border-leather-600';
+  const card = 'bg-leather-800 border-leather-600';
+  const title = 'text-leather-50';
+  const muted = 'text-leather-300';
+  const input = 'bg-leather-800 text-leather-50 border-leather-600';
 
   const [displayName, setDisplayName] = useState('');
   const [nextEmail, setNextEmail] = useState('');
@@ -78,10 +68,10 @@ export default function Settings() {
   };
 
   return (
-    <View className={`flex-1 ${screen}`}>
+    <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center px-5 pt-14 pb-4">
         <Pressable
-          className={`w-11 h-11 items-center justify-center rounded-full mr-3 ${light ? 'bg-white' : 'bg-leather-800'}`}
+          className="w-11 h-11 items-center justify-center rounded-full mr-3 bg-leather-800"
           onPress={() => router.back()}
           accessibilityRole="button"
           accessibilityLabel="Go back"
@@ -94,7 +84,7 @@ export default function Settings() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
         <View className={`${card} rounded-2xl border p-5 mb-5`}>
           <View className="flex-row items-center gap-4">
-            <View className={`${light ? 'bg-[#f5e6c8]' : 'bg-leather-700'} w-14 h-14 rounded-full border border-gold-700 items-center justify-center`}>
+            <View className="bg-leather-700 w-14 h-14 rounded-full border border-gold-700 items-center justify-center">
               <Text className="text-gold-400 text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
             </View>
             <View className="flex-1">
@@ -102,28 +92,6 @@ export default function Settings() {
               <Text className={`${title} font-medium`} numberOfLines={1}>{email}</Text>
             </View>
           </View>
-        </View>
-
-        <Text className={`${muted} text-xs font-semibold uppercase mb-3`} style={{ letterSpacing: 1.5 }}>Theme</Text>
-        <View className={`${card} rounded-2xl border overflow-hidden mb-6`}>
-          {OPTIONS.map((option, index) => {
-            const selected = preference === option.value;
-            return (
-              <Pressable
-                key={option.value}
-                className={`flex-row items-center gap-3 px-4 py-4 ${index > 0 ? light ? 'border-t border-[#efe1c3]' : 'border-t border-leather-600' : ''}`}
-                onPress={() => setPreference(option.value)}
-                accessibilityRole="radio"
-                accessibilityState={{ checked: selected }}
-              >
-                <Ionicons name={selected ? 'radio-button-on' : 'radio-button-off'} size={22} color={selected ? '#d4a017' : '#7a6050'} />
-                <View className="flex-1">
-                  <Text className={`${title} font-semibold`}>{option.label}</Text>
-                  <Text className={`${muted} text-xs mt-1`}>{option.description}</Text>
-                </View>
-              </Pressable>
-            );
-          })}
         </View>
 
         <Text className={`${muted} text-xs font-semibold uppercase mb-3`} style={{ letterSpacing: 1.5 }}>Personal Information</Text>

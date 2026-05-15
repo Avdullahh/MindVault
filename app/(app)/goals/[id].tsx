@@ -21,6 +21,7 @@ export default function GoalDetail() {
   const { projects: allProjects } = useProjects();
 
   const goal = goals.find((g) => g.id === id);
+  const [editSnapshot, setEditSnapshot] = useState<typeof goal>(undefined);
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
@@ -29,6 +30,8 @@ export default function GoalDetail() {
   const [projectPickerVisible, setProjectPickerVisible] = useState(false);
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
+
+  const exitToGoals = () => router.replace('/(app)/goals');
 
   const loadLinkedIdeas = async () => {
     const { data } = await supabase.from('goal_ideas').select('ideas(*)').eq('goal_id', id);
@@ -109,7 +112,7 @@ export default function GoalDetail() {
   const handleDelete = () => {
     Alert.alert('Delete goal', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); router.back(); } },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); exitToGoals(); } },
     ]);
   };
 
@@ -124,14 +127,14 @@ export default function GoalDetail() {
   return (
     <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Pressable onPress={() => router.back()}>
+        <Pressable onPress={exitToGoals} accessibilityRole="button" accessibilityLabel="Back to goals">
           <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
         <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => setEditVisible(true)}>
+          <Pressable onPress={() => { setEditSnapshot(goal); setEditVisible(true); }} accessibilityRole="button" accessibilityLabel="Edit goal">
             <Ionicons name="pencil-outline" size={20} color="#d4a017" />
           </Pressable>
-          <Pressable onPress={handleDelete}>
+          <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete goal">
             <Ionicons name="trash-outline" size={20} color="#f87171" />
           </Pressable>
         </View>
@@ -149,7 +152,7 @@ export default function GoalDetail() {
           <>
             <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Milestones</Text>
             {linkedTasks.length === 0
-              ? <Text className="text-leather-500 text-sm mb-3">No milestones yet — link tasks from the project below</Text>
+              ? <Text className="text-leather-500 text-sm mb-3">No milestones yet - link tasks from the project below</Text>
               : linkedTasks.map((t) => (
                   <View key={t.id} className="flex-row items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2">
                     <View className={`w-2.5 h-2.5 rounded-full ${t.done ? 'bg-gold-500' : 'bg-leather-500'}`} />
@@ -230,7 +233,7 @@ export default function GoalDetail() {
         emptyMessage="No tasks found in linked projects"
       />
       <EditGoalModal
-        goal={goal}
+        goal={editSnapshot ?? null}
         visible={editVisible}
         onClose={() => setEditVisible(false)}
         onSave={update}

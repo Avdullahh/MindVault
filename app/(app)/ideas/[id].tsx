@@ -44,6 +44,8 @@ export default function IdeaDetail() {
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [saving, setSaving] = useState(false);
 
+  const exitToIdeas = () => router.replace('/(app)/ideas');
+
   const loadLinkedGoals = async () => {
     const { data } = await supabase.from('goal_ideas').select('goals(*)').eq('idea_id', id);
     setLinkedGoals(((data ?? []) as { goals: Goal }[]).map((r) => r.goals).filter(Boolean));
@@ -91,13 +93,13 @@ export default function IdeaDetail() {
     setSaving(true);
     await update(id, { title: title.trim(), description: description.trim() || null, category_id: categoryId });
     setSaving(false);
-    router.back();
+    exitToIdeas();
   };
 
   const handleDelete = () => {
     Alert.alert('Delete idea', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
-      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); router.back(); } },
+      { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); exitToIdeas(); } },
     ]);
   };
 
@@ -128,7 +130,7 @@ export default function IdeaDetail() {
   return (
     <View className="flex-1 bg-leather-900">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={() => router.back()} accessibilityRole="button" accessibilityLabel="Back">
+        <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={exitToIdeas} accessibilityRole="button" accessibilityLabel="Back">
           <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
         <View className="flex-row gap-2">

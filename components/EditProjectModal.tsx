@@ -46,7 +46,7 @@ export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
         className="text-leather-50 text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="Project name"
-        placeholderTextColor="#3d2b1a"
+        placeholderTextColor="#7a6050"
         value={title}
         onChangeText={setTitle}
         multiline
