@@ -1,5 +1,6 @@
 import { Alert, Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { parseCalendarStoredDate } from '../lib/date-utils';
 import type { CalendarEvent } from '../types';
 
 type Props = {
@@ -10,7 +11,7 @@ type Props = {
 };
 
 function fmt(iso: string) {
-  const d = new Date(iso);
+  const d = parseCalendarStoredDate(iso);
   const h = d.getHours();
   const m = d.getMinutes();
   const suffix = h >= 12 ? 'pm' : 'am';

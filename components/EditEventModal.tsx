@@ -3,7 +3,7 @@ import { ActivityIndicator, Modal, Platform, Pressable, Text, TextInput, View } 
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { ModalSheet } from './ui/ModalSheet';
-import { toLocalDateString, toLocalTimeString } from '../lib/date-utils';
+import { parseCalendarStoredDate, toLocalDateString, toLocalTimeString } from '../lib/date-utils';
 import type { CalendarEvent } from '../types';
 
 type Props = {
@@ -40,10 +40,10 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
     setNotes(event.notes ?? '');
     setAllDay(event.all_day);
     setError(null);
-    const start = new Date(event.start_at);
+    const start = parseCalendarStoredDate(event.start_at);
     setDate(new Date(start.getFullYear(), start.getMonth(), start.getDate()));
     setStartTime(start);
-    setEndTime(event.end_at ? new Date(event.end_at) : start);
+    setEndTime(event.end_at ? parseCalendarStoredDate(event.end_at) : start);
   }, [event, visible]);
 
   const openPicker = (target: 'date' | 'start' | 'end') => {

@@ -8,6 +8,7 @@ import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
+import { parseCalendarStoredDate } from '../../lib/date-utils';
 import type { CalendarEvent } from '../../types';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -21,11 +22,12 @@ type Metric = {
 
 function formatEventTime(event: CalendarEvent) {
   if (event.all_day) return 'All day';
-  const d = new Date(event.start_at);
-  const hour = d.getHours() % 12 || 12;
-  const minutes = d.getMinutes();
-  const suffix = d.getHours() >= 12 ? 'pm' : 'am';
-  return minutes === 0 ? `${hour}${suffix}` : `${hour}:${String(minutes).padStart(2, '0')}${suffix}`;
+  const d = parseCalendarStoredDate(event.start_at);
+  const h = d.getHours();
+  const m = d.getMinutes();
+  const suffix = h >= 12 ? 'pm' : 'am';
+  const hour = h % 12 || 12;
+  return m === 0 ? `${hour}${suffix}` : `${hour}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
@@ -71,8 +73,8 @@ export default function DashboardScreen() {
   const allUpcomingEvents = useMemo(
     () => events
       .filter((event) => {
-        if (event.end_at) return new Date(event.end_at).getTime() >= Date.now();
-        const endOfDay = new Date(event.start_at);
+        if (event.end_at) return parseCalendarStoredDate(event.end_at).getTime() >= Date.now();
+        const endOfDay = parseCalendarStoredDate(event.start_at);
         endOfDay.setHours(23, 59, 59, 999);
         return endOfDay.getTime() >= Date.now();
       })

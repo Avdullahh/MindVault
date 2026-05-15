@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
+import { parseCalendarStoredDate, toLocalDateString } from '../lib/date-utils';
 import type { CalendarEvent, CalendarEventInsert } from '../types';
 
 export function useCalendarEvents() {
@@ -69,7 +70,7 @@ export function useCalendarEvents() {
   const eventsByDate = useMemo(() => {
     const map: Record<string, CalendarEvent[]> = {};
     for (const ev of events) {
-      const key = ev.start_at.slice(0, 10);
+      const key = toLocalDateString(parseCalendarStoredDate(ev.start_at));
       if (!map[key]) map[key] = [];
       map[key].push(ev);
     }

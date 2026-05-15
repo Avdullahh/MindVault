@@ -77,6 +77,13 @@ Clarified:
 
 ISSUE 9: Research competitor apps and propose UI/UX improvements
 Status: Proposal ready
+
+ISSUE 10: Calendar events not displaying correctly (timezone bug)
+Status: Done
+Clarified:
+- Root cause: calendar_events.start_at/end_at are timestamptz. Events were written as naive local strings (no tz suffix). Supabase treated them as UTC and returned them with +00:00 appended. new Date(iso) then shifted times by the device UTC offset, and eventsByDate keyed events to the wrong local date near midnight.
+- Fix: added parseCalendarStoredDate(iso) in lib/date-utils.ts — strips trailing tz suffix so JS parses as local time, recovering the original wall-clock intent.
+- Applied in: EventItem fmt(), EditEventModal event initialization, useCalendarEvents eventsByDate key, index.tsx formatEventTime and upcoming events filter.
 Clarified:
 - Research focus: apps that mix second-brain and productivity — Notion, Obsidian, Roam Research, Things 3, Todoist, TickTick, Fantastical, Cron.
 - Goal: identify the most successful UI/UX patterns from these apps that MindVault is missing or doing worse.
