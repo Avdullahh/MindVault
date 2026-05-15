@@ -13,6 +13,7 @@ import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EditTaskModal } from '../../../components/EditTaskModal';
+import { EditProjectModal } from '../../../components/EditProjectModal';
 import { AIButton } from '../../../components/ui/AIButton';
 import { emitDataChange } from '../../../lib/data-events';
 import { getUserId } from '../../../lib/get-user-id';
@@ -28,7 +29,8 @@ const PRIORITY_COLOR: Record<string, string> = {
 export default function ProjectDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { projects, loading, remove } = useProjects();
+  const { projects, loading, remove, update } = useProjects();
+  const [editVisible, setEditVisible] = useState(false);
   const { fetchIdeasForProject, linkIdea, unlinkIdea } = useProjectIdeas();
   const { ideas: allIdeas } = useIdeas();
   const { goals: allGoals } = useGoals();
@@ -149,9 +151,14 @@ export default function ProjectDetail() {
         <Pressable onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
-        <Pressable onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color="#f87171" />
-        </Pressable>
+        <View className="flex-row items-center gap-4">
+          <Pressable onPress={() => setEditVisible(true)}>
+            <Ionicons name="pencil-outline" size={20} color="#d4a017" />
+          </Pressable>
+          <Pressable onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={20} color="#f87171" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
@@ -289,6 +296,12 @@ export default function ProjectDetail() {
         visible={!!editingTask}
         onClose={() => setEditingTask(null)}
         onSave={updateTask}
+      />
+      <EditProjectModal
+        project={project}
+        visible={editVisible}
+        onClose={() => setEditVisible(false)}
+        onSave={update}
       />
     </View>
   );

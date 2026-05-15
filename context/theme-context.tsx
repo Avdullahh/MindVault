@@ -1,4 +1,5 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useColorScheme as useNativeWindColorScheme } from 'nativewind';
 import { Appearance } from 'react-native';
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
@@ -21,11 +22,13 @@ function getSystemTheme(): ResolvedTheme {
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [preference, setPreferenceState] = useState<ThemePreference>('system');
   const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
+  const { setColorScheme } = useNativeWindColorScheme();
 
   useEffect(() => {
     AsyncStorage.getItem(THEME_KEY).then((stored) => {
       if (stored === 'light' || stored === 'dark' || stored === 'system') {
         setPreferenceState(stored);
+        setColorScheme(stored);
       }
     });
 
@@ -38,6 +41,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const setPreference = async (next: ThemePreference) => {
     setPreferenceState(next);
+    setColorScheme(next);
     await AsyncStorage.setItem(THEME_KEY, next);
   };
 

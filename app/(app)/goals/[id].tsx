@@ -8,13 +8,15 @@ import { useGoals } from '../../../hooks/use-goals';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useProjects } from '../../../hooks/use-projects';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
+import { EditGoalModal } from '../../../components/EditGoalModal';
 import type { Idea, Project, Task } from '../../../types';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const source = useRef(Symbol('goal-detail'));
-  const { goals, loading, remove } = useGoals();
+  const { goals, loading, remove, update } = useGoals();
+  const [editVisible, setEditVisible] = useState(false);
   const { ideas: allIdeas } = useIdeas();
   const { projects: allProjects } = useProjects();
 
@@ -125,9 +127,14 @@ export default function GoalDetail() {
         <Pressable onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={24} color="#d4a017" />
         </Pressable>
-        <Pressable onPress={handleDelete}>
-          <Ionicons name="trash-outline" size={20} color="#f87171" />
-        </Pressable>
+        <View className="flex-row items-center gap-4">
+          <Pressable onPress={() => setEditVisible(true)}>
+            <Ionicons name="pencil-outline" size={20} color="#d4a017" />
+          </Pressable>
+          <Pressable onPress={handleDelete}>
+            <Ionicons name="trash-outline" size={20} color="#f87171" />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
@@ -221,6 +228,12 @@ export default function GoalDetail() {
         onToggle={handleTaskToggle}
         searchPlaceholder="Search tasks..."
         emptyMessage="No tasks found in linked projects"
+      />
+      <EditGoalModal
+        goal={goal}
+        visible={editVisible}
+        onClose={() => setEditVisible(false)}
+        onSave={update}
       />
     </View>
   );

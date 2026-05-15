@@ -1,4 +1,4 @@
-import { KeyboardAvoidingView, Modal, Platform, Pressable, Text, View } from 'react-native';
+import { KeyboardAvoidingView, Modal, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 
 type Props = {
   visible: boolean;
@@ -8,19 +8,36 @@ type Props = {
 };
 
 export function ModalSheet({ visible, onClose, title, children }: Props) {
+  const { height } = useWindowDimensions();
+
   return (
-    <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable className="flex-1 bg-black/60" onPress={onClose} />
-      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
-        <View className="bg-leather-900 rounded-t-3xl px-6 pt-4 pb-10 border-t border-gold-800" style={{ maxHeight: '85%' }}>
-          <View className="w-12 h-1 bg-leather-400 rounded-full self-center mb-4" />
-          {title && (
-            <Text className="text-xl font-bold text-leather-50 mb-4" style={{ fontFamily: 'Georgia' }}>
-              {title}
-            </Text>
-          )}
-          {children}
-        </View>
+    <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
+        <Pressable
+          style={{ flex: 1, backgroundColor: 'rgba(0,0,0,0.6)', justifyContent: 'center', alignItems: 'center', padding: 20 }}
+          onPress={onClose}
+        >
+          <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
+            <View
+              className="bg-leather-900 rounded-3xl border border-gold-800 overflow-hidden"
+              style={{ maxHeight: height * 0.82 }}
+            >
+              <ScrollView
+                bounces={false}
+                keyboardShouldPersistTaps="handled"
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
+              >
+                {title && (
+                  <Text className="text-xl font-bold text-leather-50 mb-4" style={{ fontFamily: 'Georgia' }}>
+                    {title}
+                  </Text>
+                )}
+                {children}
+              </ScrollView>
+            </View>
+          </Pressable>
+        </Pressable>
       </KeyboardAvoidingView>
     </Modal>
   );

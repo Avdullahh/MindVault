@@ -132,6 +132,7 @@ Shared Edge Function utilities live in `supabase/functions/_shared/`. Reuse them
 - AI actions should feel optional, clearly labeled, and reversible when practical.
 - Empty states should help the user take the next meaningful action.
 - Preserve cross-linking flows when editing ideas, goals, tasks, projects, and events.
+- **No phantom space**: if a UI element has nothing to display, do not render it. Conditional rendering must use `{value ? <Component /> : null}` — never render an empty `<View>`, `<Text>`, or container just to hold potential space. This applies to wrapper Views too: if all children are conditional and may all be null, wrap the container in the same condition.
 
 ## Build Order
 

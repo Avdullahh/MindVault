@@ -19,7 +19,15 @@ function fmt(iso: string) {
   return m === 0 ? `${hour}${suffix}` : `${hour}:${String(m).padStart(2, '0')}${suffix}`;
 }
 
+function timeLabel(event: CalendarEvent): string | null {
+  if (event.all_day) return 'All day';
+  if (!event.end_at) return null;
+  return fmt(event.start_at);
+}
+
 export function EventItem({ event, onToggleDone, onEdit, onDelete }: Props) {
+  const label = timeLabel(event);
+
   return (
     <Pressable
       className={`bg-leather-800 rounded-xl px-3 py-3 mb-2 flex-row items-center gap-3 border border-leather-600 min-h-16 ${event.done ? 'opacity-60' : ''}`}
@@ -39,14 +47,14 @@ export function EventItem({ event, onToggleDone, onEdit, onDelete }: Props) {
         </View>
       </Pressable>
 
-      <View className="w-14 shrink-0">
-        <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>
-          {event.all_day ? 'All day' : fmt(event.start_at)}
-        </Text>
-        {event.end_at && !event.all_day ? (
-          <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmt(event.end_at)}</Text>
-        ) : null}
-      </View>
+      {label ? (
+        <View className="w-14 shrink-0">
+          <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>{label}</Text>
+          {event.end_at && !event.all_day ? (
+            <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmt(event.end_at)}</Text>
+          ) : null}
+        </View>
+      ) : null}
 
       <View className="flex-1">
         <Text className={`font-medium ${event.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
