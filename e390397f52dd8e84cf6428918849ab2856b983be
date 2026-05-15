@@ -1,0 +1,1 @@
+Goal detail: added Milestones section showing tasks from linked and directly-owned projects associated with this goal via task_goals. loadAvailableProjectTasks aggregates task lists from all linked project IDs plus goal.project_id. Link task from project button opens ItemPickerModal over those tasks.
