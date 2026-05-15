@@ -28,7 +28,7 @@ Clarified:
 - This uses the same goal_projects junction table introduced in Issue 1, linked from the project side.
 
 ISSUE 4: New app icon, in-app logo, and theme identity
-Status: Pending
+Status: Done
 Clarified:
 - Codex to recreate the icon from scratch as SVG/code using the attached reference image as the design guide.
   The mark is: MV letterform (shield shape with M at top, V at bottom), gold metallic finish, brain-maze with keyhole at centre.

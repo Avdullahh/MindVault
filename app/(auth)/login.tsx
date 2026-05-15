@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, TextInput } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
 import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
@@ -25,6 +25,11 @@ export default function Login() {
 
   return (
     <AuthFormContainer>
+      <Image
+        source={require('../../assets/icon.png')}
+        className="w-24 h-24 rounded-2xl mb-5 self-center"
+        accessibilityLabel="MindVault logo"
+      />
       <Text className="text-3xl font-bold text-gold-400 mb-2" style={{ fontFamily: 'Georgia' }}>MindVault</Text>
       <Text className="text-leather-300 text-sm leading-5 mb-8">Capture ideas, connect them to action, and come back to what matters.</Text>
 
