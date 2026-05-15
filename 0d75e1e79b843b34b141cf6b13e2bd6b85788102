@@ -1,0 +1,1 @@
+Applied maxWidth: 760 + alignSelf: 'center' to ScrollView/FlatList contentContainerStyle on dashboard, ideas, goals, and projects screens. Keeps content at a readable column width on iPad instead of stretching edge-to-edge.
