@@ -3,9 +3,9 @@ import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-nativ
 import { ModalSheet } from './ui/ModalSheet';
 import { DatePicker } from './ui/DatePicker';
 import { toLocalDateString } from '../lib/date-utils';
+import { useThemeColors } from '../context/ThemeContext';
 import type { Task } from '../types';
-
-type Priority = 'high' | 'medium' | 'low';
+import { PRIORITIES, priorityActive, type Priority } from '../lib/priority';
 
 type Props = {
   task: Task | null;
@@ -14,15 +14,8 @@ type Props = {
   onSave: (id: string, payload: Partial<Pick<Task, 'title' | 'due_date' | 'priority' | 'notes'>>) => Promise<string | null>;
 };
 
-const PRIORITIES: Priority[] = ['high', 'medium', 'low'];
-
-const priorityActive: Record<Priority, string> = {
-  high: 'bg-red-900 border-red-700',
-  medium: 'bg-yellow-900 border-yellow-700',
-  low: 'bg-leather-600 border-leather-500',
-};
-
 export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
+  const colors = useThemeColors();
   const [title, setTitle] = useState('');
   const [dueDate, setDueDate] = useState<Date | null>(null);
   const [priority, setPriority] = useState<Priority | null>(null);
@@ -53,9 +46,9 @@ export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
   return (
     <ModalSheet visible={visible} onClose={onClose} title="Edit Task">
       <TextInput
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3 border border-leather-600"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-3 border border-border"
         placeholder="Title"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         value={title}
         onChangeText={setTitle}
         maxLength={200}
@@ -67,20 +60,20 @@ export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
         {PRIORITIES.map((p) => (
           <Pressable
             key={p}
-            className={`flex-1 py-2.5 rounded-xl border items-center justify-center ${priority === p ? priorityActive[p] : 'bg-leather-800 border-leather-600'}`}
+            className={`flex-1 py-2.5 rounded-xl border items-center justify-center ${priority === p ? priorityActive[p] : 'bg-surface border-border'}`}
             onPress={() => setPriority(priority === p ? null : p)}
             accessibilityRole="button"
             accessibilityState={{ selected: priority === p }}
           >
-            <Text className="text-leather-100 text-sm capitalize">{p}</Text>
+            <Text className="text-foreground text-sm capitalize">{p}</Text>
           </Pressable>
         ))}
       </View>
 
       <TextInput
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4 border border-leather-600"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-4 border border-border"
         placeholder="Notes (optional)"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         multiline
         numberOfLines={2}
         textAlignVertical="top"
@@ -92,14 +85,14 @@ export function EditTaskModal({ task, visible, onClose, onSave }: Props) {
       {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
 
       <Pressable
-        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-leather-700' : 'bg-gold-500'}`}
+        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
         onPress={handleSave}
         disabled={loading || !title.trim()}
         accessibilityRole="button"
       >
         {loading
-          ? <ActivityIndicator color="#f5e6c8" />
-          : <Text className="text-leather-50 font-bold text-base">Save Changes</Text>
+          ? <ActivityIndicator color={colors.primary} />
+          : <Text className="text-foreground font-bold text-base">Save Changes</Text>
         }
       </Pressable>
     </ModalSheet>

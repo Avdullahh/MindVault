@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ActivityIndicator, Pressable, Text, TextInput } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
+import { useThemeColors } from '../context/ThemeContext';
 import type { Project, ProjectUpdate } from '../types';
 
 type Props = {
@@ -11,6 +12,7 @@ type Props = {
 };
 
 export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
+  const colors = useThemeColors();
   const [title, setTitle] = useState('');
   const [mainGoal, setMainGoal] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -38,15 +40,15 @@ export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
 
   return (
     <ModalSheet visible={visible} onClose={onClose}>
-      <Text className="text-leather-400 text-xs uppercase mb-4" style={{ letterSpacing: 2 }}>
+      <Text className="text-muted text-xs uppercase mb-4" style={{ letterSpacing: 2 }}>
         Edit Project
       </Text>
 
       <TextInput
-        className="text-leather-50 text-2xl mb-5"
+        className="text-foreground text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="Project name"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         value={title}
         onChangeText={setTitle}
         multiline
@@ -55,9 +57,9 @@ export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
       />
 
       <TextInput
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-5 border border-leather-600"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-5 border border-border"
         placeholder="Main goal or mission (optional)"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         multiline
         numberOfLines={3}
         textAlignVertical="top"
@@ -70,14 +72,14 @@ export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
       {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
 
       <Pressable
-        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-leather-700' : 'bg-gold-500'}`}
+        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
         onPress={handleSave}
         disabled={loading || !title.trim()}
         accessibilityRole="button"
       >
         {loading
-          ? <ActivityIndicator color="#f5e6c8" />
-          : <Text className="text-leather-50 font-bold text-base">Save Project</Text>
+          ? <ActivityIndicator color={colors.primary} />
+          : <Text className="text-foreground font-bold text-base">Save Project</Text>
         }
       </Pressable>
     </ModalSheet>

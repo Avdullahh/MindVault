@@ -3,10 +3,10 @@ import { Text, View } from 'react-native';
 type Color = 'teal' | 'gray' | 'red' | 'yellow';
 
 const colorMap: Record<Color, { bg: string; text: string }> = {
-  teal:   { bg: 'bg-gold-900',   text: 'text-gold-400'   },
-  gray:   { bg: 'bg-leather-600',   text: 'text-leather-200'   },
-  red:    { bg: 'bg-red-900',    text: 'text-red-300'    },
-  yellow: { bg: 'bg-yellow-900', text: 'text-yellow-300' },
+  teal:   { bg: 'bg-primary/20',   text: 'text-primary'      },
+  gray:   { bg: 'bg-surface-2',    text: 'text-foreground'   },
+  red:    { bg: 'bg-destructive/20', text: 'text-destructive' },
+  yellow: { bg: 'bg-yellow-900',   text: 'text-yellow-300'   },
 };
 
 type Props = {

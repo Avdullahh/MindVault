@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Platform, Pressable, Text, View } from 'react-native';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
+import { useTheme } from '../../context/ThemeContext';
 
 type Props = {
   value: Date | null;
@@ -33,6 +34,7 @@ function timeAt(hour: number) {
 }
 
 export function DatePicker({ value, onChange, mode, placeholder, compact = false }: Props) {
+  const { colors, colorScheme } = useTheme();
   const [show, setShow] = useState(false);
   const [draftValue, setDraftValue] = useState<Date>(value ?? new Date());
   const display = value
@@ -52,29 +54,29 @@ export function DatePicker({ value, onChange, mode, placeholder, compact = false
   return (
     <View className="mb-3">
       <Pressable
-        className="bg-leather-800 rounded-xl min-h-11 px-4 py-3 flex-row items-center justify-between border border-leather-600"
+        className="bg-surface rounded-xl min-h-11 px-4 py-3 flex-row items-center justify-between border border-border"
         onPress={openPicker}
         accessibilityRole="button"
       >
-        <Text className={value ? 'text-leather-50' : 'text-leather-400'}>{display}</Text>
-        <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={18} color="#d4a017" />
+        <Text className={value ? 'text-foreground' : 'text-muted'}>{display}</Text>
+        <Ionicons name={mode === 'date' ? 'calendar-outline' : 'time-outline'} size={18} color={colors.primary} />
       </Pressable>
 
       {!compact && (
         <View className="flex-row gap-2 mt-2">
           {mode === 'date' ? (
             <>
-              <Pressable className="bg-leather-800 border border-leather-600 rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(startOfDay())}>
-                <Text className="text-leather-200 text-xs">Today</Text>
+              <Pressable className="bg-surface border border-border rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(startOfDay())}>
+                <Text className="text-foreground text-xs">Today</Text>
               </Pressable>
-              <Pressable className="bg-leather-800 border border-leather-600 rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(startOfDay(1))}>
-                <Text className="text-leather-200 text-xs">Tomorrow</Text>
+              <Pressable className="bg-surface border border-border rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(startOfDay(1))}>
+                <Text className="text-foreground text-xs">Tomorrow</Text>
               </Pressable>
             </>
           ) : (
             [9, 12, 17].map((hour) => (
-              <Pressable key={hour} className="bg-leather-800 border border-leather-600 rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(timeAt(hour))}>
-                <Text className="text-leather-200 text-xs">{String(hour).padStart(2, '0')}:00</Text>
+              <Pressable key={hour} className="bg-surface border border-border rounded-lg min-h-11 px-3 py-2 items-center justify-center" onPress={() => onChange(timeAt(hour))}>
+                <Text className="text-foreground text-xs">{String(hour).padStart(2, '0')}:00</Text>
               </Pressable>
             ))
           )}
@@ -85,11 +87,11 @@ export function DatePicker({ value, onChange, mode, placeholder, compact = false
         <View className="mt-2">
           <View className="flex-row items-center justify-between mb-2">
             <Pressable className="min-h-11 px-2 justify-center" onPress={() => setShow(false)}>
-              <Text className="text-leather-300 font-medium">Cancel</Text>
+              <Text className="text-muted font-medium">Cancel</Text>
             </Pressable>
-            <Text className="text-leather-50 font-semibold">{mode === 'date' ? 'Choose date' : 'Choose time'}</Text>
+            <Text className="text-foreground font-semibold">{mode === 'date' ? 'Choose date' : 'Choose time'}</Text>
             <Pressable className="min-h-11 px-2 justify-center" onPress={confirmPicker}>
-              <Text className="text-gold-400 font-semibold">Done</Text>
+              <Text className="text-primary font-semibold">Done</Text>
             </Pressable>
           </View>
           <RNDateTimePicker
@@ -97,7 +99,7 @@ export function DatePicker({ value, onChange, mode, placeholder, compact = false
             mode={mode}
             display="spinner"
             onChange={(_, d) => { if (d) setDraftValue(d); }}
-            themeVariant="dark"
+            themeVariant={colorScheme}
             style={{ alignSelf: 'stretch' }}
           />
         </View>
@@ -109,7 +111,7 @@ export function DatePicker({ value, onChange, mode, placeholder, compact = false
           mode={mode}
           display="default"
           onChange={(_, d) => { if (d) onChange(d); setShow(false); }}
-          themeVariant="dark"
+          themeVariant={colorScheme}
         />
       )}
     </View>

@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, Text, TextInput } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
+import { useThemeColors } from '../context/ThemeContext';
 
 type Item = { id: string; title: string };
 
@@ -25,6 +26,7 @@ export function ItemPickerModal({
   searchPlaceholder = 'Search...',
   emptyMessage = 'No items found',
 }: Props) {
+  const colors = useThemeColors();
   const [query, setQuery] = useState('');
 
   const filtered = query.trim()
@@ -34,9 +36,9 @@ export function ItemPickerModal({
   return (
     <ModalSheet visible={visible} onClose={onClose} title={title}>
       <TextInput
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-3"
         placeholder={searchPlaceholder}
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         value={query}
         onChangeText={setQuery}
       />
@@ -46,14 +48,14 @@ export function ItemPickerModal({
         style={{ maxHeight: 350 }}
         renderItem={({ item }) => (
           <Pressable
-            className="py-3 px-2 border-b border-leather-800 flex-row items-center justify-between"
+            className="py-3 px-2 border-b border-border flex-row items-center justify-between"
             onPress={() => onToggle(item.id)}
           >
-            <Text className="text-leather-50 flex-1" numberOfLines={1}>{item.title}</Text>
-            {selectedIds.includes(item.id) && <Text className="text-gold-400">✓</Text>}
+            <Text className="text-foreground flex-1" numberOfLines={1}>{item.title}</Text>
+            {selectedIds.includes(item.id) && <Text className="text-primary">✓</Text>}
           </Pressable>
         )}
-        ListEmptyComponent={<Text className="text-leather-400 text-center py-4">{emptyMessage}</Text>}
+        ListEmptyComponent={<Text className="text-muted text-center py-4">{emptyMessage}</Text>}
       />
     </ModalSheet>
   );

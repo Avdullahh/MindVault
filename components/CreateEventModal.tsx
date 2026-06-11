@@ -4,6 +4,7 @@ import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { ModalSheet } from './ui/ModalSheet';
 import { toLocalDateString, toLocalTimeString } from '../lib/date-utils';
+import { useThemeColors } from '../context/ThemeContext';
 import type { CalendarEventInsert } from '../types';
 
 type EventMode = 'dateonly' | 'allday' | 'timed';
@@ -59,6 +60,7 @@ function formatTime(d: Date) {
 }
 
 export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Props) {
+  const colors = useThemeColors();
   const today = useMemo(() => startOfDay(), []);
   const tomorrow = useMemo(() => addDays(today, 1), [today]);
   const initialDate = useMemo(
@@ -131,15 +133,15 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
 
   return (
     <ModalSheet visible={visible} onClose={handleClose}>
-      <Text className="text-leather-400 text-xs uppercase mb-4" style={{ letterSpacing: 2 }}>
+      <Text className="text-muted text-xs uppercase mb-4" style={{ letterSpacing: 2 }}>
         New Event
       </Text>
 
       <TextInput
-        className="text-leather-50 text-2xl mb-5"
+        className="text-foreground text-2xl mb-5"
         style={{ fontFamily: 'Georgia', minHeight: 52 }}
         placeholder="What's happening?"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         value={title}
         onChangeText={setTitle}
         multiline
@@ -150,23 +152,23 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
       {/* Date chips */}
       <View className="flex-row gap-2 mb-3">
         <Pressable
-          className={`py-2 px-3 rounded-xl border items-center justify-center ${dateIsToday ? 'bg-gold-900 border-gold-700' : 'bg-leather-800 border-leather-600'}`}
+          className={`py-2 px-3 rounded-xl border items-center justify-center ${dateIsToday ? 'bg-surface-2 border-primary' : 'bg-surface border-border'}`}
           onPress={() => { setDate(today); setPickerTarget(null); }}
         >
-          <Text className={`text-sm ${dateIsToday ? 'text-gold-400' : 'text-leather-200'}`}>Today</Text>
+          <Text className={`text-sm ${dateIsToday ? 'text-primary' : 'text-foreground'}`}>Today</Text>
         </Pressable>
         <Pressable
-          className={`py-2 px-3 rounded-xl border items-center justify-center ${dateIsTomorrow ? 'bg-gold-900 border-gold-700' : 'bg-leather-800 border-leather-600'}`}
+          className={`py-2 px-3 rounded-xl border items-center justify-center ${dateIsTomorrow ? 'bg-surface-2 border-primary' : 'bg-surface border-border'}`}
           onPress={() => { setDate(tomorrow); setPickerTarget(null); }}
         >
-          <Text className={`text-sm ${dateIsTomorrow ? 'text-gold-400' : 'text-leather-200'}`}>Tomorrow</Text>
+          <Text className={`text-sm ${dateIsTomorrow ? 'text-primary' : 'text-foreground'}`}>Tomorrow</Text>
         </Pressable>
         <Pressable
-          className={`flex-1 py-2 px-3 rounded-xl border flex-row items-center justify-between ${!dateIsToday && !dateIsTomorrow ? 'bg-gold-900 border-gold-700' : 'bg-leather-800 border-leather-600'}`}
+          className={`flex-1 py-2 px-3 rounded-xl border flex-row items-center justify-between ${!dateIsToday && !dateIsTomorrow ? 'bg-surface-2 border-primary' : 'bg-surface border-border'}`}
           onPress={() => openPicker('date')}
         >
-          <Text className={`text-sm ${!dateIsToday && !dateIsTomorrow ? 'text-gold-400' : 'text-leather-400'}`}>{dateLabel}</Text>
-          <Ionicons name="calendar-outline" size={14} color={!dateIsToday && !dateIsTomorrow ? '#d4a017' : '#7a6050'} />
+          <Text className={`text-sm ${!dateIsToday && !dateIsTomorrow ? 'text-primary' : 'text-muted'}`}>{dateLabel}</Text>
+          <Ionicons name="calendar-outline" size={14} color={!dateIsToday && !dateIsTomorrow ? colors.primary : colors.muted} />
         </Pressable>
       </View>
 
@@ -175,11 +177,11 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         <View className="mb-3">
           <View className="flex-row items-center justify-between mb-2">
             <Pressable className="min-h-11 px-2 justify-center" onPress={() => setPickerTarget(null)}>
-              <Text className="text-leather-300 font-medium">Cancel</Text>
+              <Text className="text-muted font-medium">Cancel</Text>
             </Pressable>
-            <Text className="text-leather-50 font-semibold" style={{ fontFamily: 'Georgia' }}>Choose date</Text>
+            <Text className="text-foreground font-semibold" style={{ fontFamily: 'Georgia' }}>Choose date</Text>
             <Pressable className="min-h-11 px-2 justify-center" onPress={confirmPicker}>
-              <Text className="text-gold-400 font-semibold">Done</Text>
+              <Text className="text-primary font-semibold">Done</Text>
             </Pressable>
           </View>
           <RNDateTimePicker
@@ -207,10 +209,10 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         {MODES.map(({ value, label }) => (
           <Pressable
             key={value}
-            className={`flex-1 py-2.5 rounded-xl border items-center ${mode === value ? 'bg-gold-900 border-gold-700' : 'bg-leather-800 border-leather-600'}`}
+            className={`flex-1 py-2.5 rounded-xl border items-center ${mode === value ? 'bg-surface-2 border-primary' : 'bg-surface border-border'}`}
             onPress={() => { setMode(value); setPickerTarget(null); }}
           >
-            <Text className={`text-xs ${mode === value ? 'text-gold-400' : 'text-leather-200'}`}>{label}</Text>
+            <Text className={`text-xs ${mode === value ? 'text-primary' : 'text-foreground'}`}>{label}</Text>
           </Pressable>
         ))}
       </View>
@@ -219,19 +221,19 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
       {mode === 'timed' && (
         <View className="flex-row gap-2 mb-3 items-center">
           <Pressable
-            className="flex-1 py-2 px-3 rounded-xl border bg-leather-800 border-leather-600 flex-row items-center justify-between"
+            className="flex-1 py-2 px-3 rounded-xl border bg-surface border-border flex-row items-center justify-between"
             onPress={() => openPicker('start')}
           >
-            <Text className="text-leather-200 text-sm">{formatTime(startTime)}</Text>
-            <Ionicons name="time-outline" size={13} color="#7a6050" />
+            <Text className="text-foreground text-sm">{formatTime(startTime)}</Text>
+            <Ionicons name="time-outline" size={13} color={colors.muted} />
           </Pressable>
-          <Text className="text-leather-500 text-sm">→</Text>
+          <Text className="text-muted text-sm">→</Text>
           <Pressable
-            className="flex-1 py-2 px-3 rounded-xl border bg-leather-800 border-leather-600 flex-row items-center justify-between"
+            className="flex-1 py-2 px-3 rounded-xl border bg-surface border-border flex-row items-center justify-between"
             onPress={() => openPicker('end')}
           >
-            <Text className="text-leather-200 text-sm">{formatTime(endTime)}</Text>
-            <Ionicons name="time-outline" size={13} color="#7a6050" />
+            <Text className="text-foreground text-sm">{formatTime(endTime)}</Text>
+            <Ionicons name="time-outline" size={13} color={colors.muted} />
           </Pressable>
         </View>
       )}
@@ -241,11 +243,11 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
         <View className="mb-3">
           <View className="flex-row items-center justify-between mb-2">
             <Pressable className="min-h-11 px-2 justify-center" onPress={() => setPickerTarget(null)}>
-              <Text className="text-leather-300 font-medium">Cancel</Text>
+              <Text className="text-muted font-medium">Cancel</Text>
             </Pressable>
-            <Text className="text-leather-50 font-semibold" style={{ fontFamily: 'Georgia' }}>Choose time</Text>
+            <Text className="text-foreground font-semibold" style={{ fontFamily: 'Georgia' }}>Choose time</Text>
             <Pressable className="min-h-11 px-2 justify-center" onPress={confirmPicker}>
-              <Text className="text-gold-400 font-semibold">Done</Text>
+              <Text className="text-primary font-semibold">Done</Text>
             </Pressable>
           </View>
           <RNDateTimePicker
@@ -277,14 +279,14 @@ export function CreateEventModal({ visible, onClose, defaultDate, onCreate }: Pr
       {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
 
       <Pressable
-        className={`rounded-xl py-4 items-center mt-2 ${!title.trim() || loading ? 'bg-leather-700' : 'bg-gold-500'}`}
+        className={`rounded-xl py-4 items-center mt-2 ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
         onPress={handleCreate}
         disabled={loading || !title.trim()}
         accessibilityRole="button"
       >
         {loading
-          ? <ActivityIndicator color="#f5e6c8" />
-          : <Text className="text-leather-50 font-bold text-base">Create Event</Text>
+          ? <ActivityIndicator color={colors.primary} />
+          : <Text className="text-foreground font-bold text-base">Create Event</Text>
         }
       </Pressable>
     </ModalSheet>

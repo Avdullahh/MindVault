@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from './ui/Badge';
+import { useThemeColors } from '../context/ThemeContext';
 import type { TaskWithGoal } from '../hooks/use-tasks';
 
 type Props = {
@@ -20,22 +21,23 @@ function formatDue(date: string | null) {
 }
 
 export function TaskItem({ task, onToggle }: Props) {
+  const colors = useThemeColors();
   return (
-    <View className="flex-row items-center gap-3 py-3 border-b border-leather-800">
+    <View className="flex-row items-center gap-3 py-3 border-b border-border">
       <Pressable onPress={onToggle}>
         <Ionicons
           name={task.done ? 'checkmark-circle' : 'ellipse-outline'}
           size={24}
-          color={task.done ? '#d4a017' : '#7a6050'}
+          color={task.done ? colors.primary : colors.muted}
         />
       </Pressable>
       <View className="flex-1">
-        <Text className={`text-base ${task.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
+        <Text className={`text-base ${task.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
           {task.title}
         </Text>
         <View className="flex-row items-center gap-2 mt-1 flex-wrap">
-          {task.goalTitle && <Text className="text-leather-400 text-xs" numberOfLines={1}>Goal: {task.goalTitle}</Text>}
-          {task.due_date && <Text className="text-leather-400 text-xs">{formatDue(task.due_date)}</Text>}
+          {task.goalTitle && <Text className="text-muted text-xs" numberOfLines={1}>Goal: {task.goalTitle}</Text>}
+          {task.due_date && <Text className="text-muted text-xs">{formatDue(task.due_date)}</Text>}
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>
       </View>

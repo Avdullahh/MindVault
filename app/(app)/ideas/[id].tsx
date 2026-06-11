@@ -15,6 +15,7 @@ import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { ModalSheet } from '../../../components/ui/ModalSheet';
 import { AIButton } from '../../../components/ui/AIButton';
 import { Tag } from '../../../components/ui/Tag';
+import { useThemeColors } from '../../../context/ThemeContext';
 import type { Goal, Tag as TagType } from '../../../types';
 
 const EXPAND_SECTION_LABELS = {
@@ -26,6 +27,7 @@ const EXPAND_SECTION_LABELS = {
 export default function IdeaDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
+  const colors = useThemeColors();
   const { ideas, loading, update, remove } = useIdeas();
   const { fetchTagsForIdea, addTag, removeTag } = useIdeaTags();
   const { tags: allTags, create: createTag } = useTags();
@@ -74,16 +76,16 @@ export default function IdeaDetail() {
 
   if (loading && !idea) {
     return (
-      <View className="flex-1 bg-leather-900 justify-center items-center">
-        <ActivityIndicator color="#d4a017" />
+      <View className="flex-1 bg-background justify-center items-center">
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   if (!idea) {
     return (
-      <View className="flex-1 bg-leather-900 justify-center items-center">
-        <Text className="text-leather-300">Idea not found</Text>
+      <View className="flex-1 bg-background justify-center items-center">
+        <Text className="text-muted">Idea not found</Text>
       </View>
     );
   }
@@ -128,36 +130,36 @@ export default function IdeaDetail() {
   };
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
         <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={exitToIdeas} accessibilityRole="button" accessibilityLabel="Back">
-          <Ionicons name="chevron-back" size={24} color="#d4a017" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
         <View className="flex-row gap-2">
           <Pressable className="min-h-11 px-3 items-center justify-center" onPress={handleSave} disabled={saving || !title.trim()} accessibilityRole="button" accessibilityState={{ disabled: saving || !title.trim(), busy: saving }}>
-            <Text className={saving ? 'text-leather-400' : 'text-gold-400 font-semibold'}>Save</Text>
+            <Text className={saving ? 'text-muted' : 'text-primary font-semibold'}>Save</Text>
           </Pressable>
           <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete idea">
-            <Ionicons name="trash-outline" size={20} color="#f87171" />
+            <Ionicons name="trash-outline" size={20} color={colors.destructive} />
           </Pressable>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <TextInput
-          className="text-leather-50 text-xl font-bold mb-3 bg-leather-800 rounded-xl min-h-11 px-4 py-3"
+          className="text-foreground text-xl font-bold mb-3 bg-surface rounded-xl min-h-11 px-4 py-3"
           value={title}
           onChangeText={setTitle}
           placeholder="Title"
-          placeholderTextColor="#7a6050"
+          placeholderTextColor={colors.muted}
           returnKeyType="next"
         />
         <TextInput
-          className="text-leather-200 bg-leather-800 rounded-xl min-h-32 px-4 py-3 mb-4"
+          className="text-foreground bg-surface rounded-xl min-h-32 px-4 py-3 mb-4"
           value={description}
           onChangeText={setDescription}
           placeholder="Description"
-          placeholderTextColor="#7a6050"
+          placeholderTextColor={colors.muted}
           multiline
           numberOfLines={6}
           textAlignVertical="top"
@@ -183,42 +185,42 @@ export default function IdeaDetail() {
         </View>
 
         {categoriseState.status === 'error' && (
-          <Text className="text-red-400 text-xs mb-3">{categoriseState.error}</Text>
+          <Text className="text-destructive text-xs mb-3">{categoriseState.error}</Text>
         )}
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Category</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mb-2">Category</Text>
         <CategoryPicker value={categoryId} onChange={setCategoryId} />
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-2">Tags</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Tags</Text>
         <View className="flex-row flex-wrap mb-2">
           {ideaTags.map((t) => (
             <Tag key={t.id} label={t.name} onRemove={() => handleTagToggle(t.id)} />
           ))}
         </View>
         <Pressable className="self-start min-h-11 justify-center mb-6" onPress={() => setTagPickerVisible(true)}>
-          <Text className="text-gold-400 text-sm">+ Add tag</Text>
+          <Text className="text-primary text-sm">+ Add tag</Text>
         </Pressable>
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Linked Goals</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mb-2">Linked Goals</Text>
         {linkedGoals.map((g) => (
-          <View key={g.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
-            <Text className="text-leather-50 flex-1" numberOfLines={1}>{g.title}</Text>
+          <View key={g.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
+            <Text className="text-foreground flex-1" numberOfLines={1}>{g.title}</Text>
             <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleGoalToggle(g.id)} accessibilityRole="button" accessibilityLabel={`Unlink ${g.title}`}>
-              <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
+              <Ionicons name="close-circle-outline" size={18} color={colors.muted} />
             </Pressable>
           </View>
         ))}
         <Pressable className="flex-row min-h-11 items-center gap-2 mb-6" onPress={() => setGoalPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={18} color="#d4a017" />
-          <Text className="text-gold-400 text-sm">Link goal</Text>
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+          <Text className="text-primary text-sm">Link goal</Text>
         </Pressable>
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mb-2">Linked Projects</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mb-2">Linked Projects</Text>
         {linkedProjects.length === 0
-          ? <Text className="text-leather-500 text-sm mb-4">No projects linked</Text>
+          ? <Text className="text-muted text-sm mb-4">No projects linked</Text>
           : linkedProjects.map((p) => (
-              <Pressable key={p.id} className="bg-leather-800 rounded-xl min-h-11 px-4 py-3 mb-2 justify-center border border-leather-600" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
-                <Text className="text-leather-50" numberOfLines={1}>{p.title}</Text>
+              <Pressable key={p.id} className="bg-surface rounded-xl min-h-11 px-4 py-3 mb-2 justify-center border border-border" onPress={() => router.push(`/(app)/projects/${p.id}`)}>
+                <Text className="text-foreground" numberOfLines={1}>{p.title}</Text>
               </Pressable>
             ))
         }
@@ -227,24 +229,24 @@ export default function IdeaDetail() {
       <ModalSheet visible={expandState.status !== 'idle'} onClose={resetExpand} title="Expand with AI">
         {expandState.status === 'loading' && (
           <View className="items-center py-8">
-            <ActivityIndicator color="#d4a017" />
-            <Text className="text-leather-300 mt-3 text-sm">Thinking…</Text>
+            <ActivityIndicator color={colors.primary} />
+            <Text className="text-muted mt-3 text-sm">Thinking…</Text>
           </View>
         )}
         {expandState.status === 'error' && (
-          <Text className="text-red-400 text-sm">{expandState.error}</Text>
+          <Text className="text-destructive text-sm">{expandState.error}</Text>
         )}
         {expandState.status === 'success' && expandState.data && (
           <ScrollView showsVerticalScrollIndicator={false}>
             {(Object.keys(EXPAND_SECTION_LABELS) as (keyof typeof EXPAND_SECTION_LABELS)[]).map((key) => (
               <View key={key} className="mb-4">
-                <Text className="text-gold-400 text-xs font-semibold uppercase tracking-wider mb-2">
+                <Text className="text-primary text-xs font-semibold uppercase tracking-wider mb-2">
                   {EXPAND_SECTION_LABELS[key]}
                 </Text>
                 {expandState.data![key].map((item, i) => (
                   <View key={i} className="flex-row gap-2 mb-1.5">
-                    <Text className="text-leather-400 text-sm">·</Text>
-                    <Text className="text-leather-100 text-sm flex-1">{item}</Text>
+                    <Text className="text-muted text-sm">·</Text>
+                    <Text className="text-foreground text-sm flex-1">{item}</Text>
                   </View>
                 ))}
               </View>

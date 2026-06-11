@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { FlatList, Pressable, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
+import { useThemeColors } from '../context/ThemeContext';
 import type { Tag } from '../types';
 
 type Props = {
@@ -13,6 +14,7 @@ type Props = {
 };
 
 export function TagPicker({ visible, onClose, allTags, selectedIds, onToggle, onCreateTag }: Props) {
+  const colors = useThemeColors();
   const [newTagName, setNewTagName] = useState('');
   const [creating, setCreating] = useState(false);
 
@@ -29,18 +31,18 @@ export function TagPicker({ visible, onClose, allTags, selectedIds, onToggle, on
       {onCreateTag && (
         <View className="flex-row items-center mb-3 gap-2">
           <TextInput
-            className="flex-1 bg-leather-800 text-leather-50 rounded-xl px-4 py-3"
+            className="flex-1 bg-surface text-foreground rounded-xl px-4 py-3"
             placeholder="New tag name..."
-            placeholderTextColor="#7a6050"
+            placeholderTextColor={colors.muted}
             value={newTagName}
             onChangeText={setNewTagName}
           />
           <Pressable
-            className="bg-gold-500 rounded-xl px-4 py-3"
+            className="bg-primary rounded-xl px-4 py-3"
             onPress={handleCreate}
             disabled={creating || !newTagName.trim()}
           >
-            <Text className="text-leather-50 font-semibold">Add</Text>
+            <Text className="text-foreground font-semibold">Add</Text>
           </Pressable>
         </View>
       )}
@@ -50,14 +52,14 @@ export function TagPicker({ visible, onClose, allTags, selectedIds, onToggle, on
         style={{ maxHeight: 300 }}
         renderItem={({ item }) => (
           <Pressable
-            className="py-3 px-2 border-b border-leather-800 flex-row items-center justify-between"
+            className="py-3 px-2 border-b border-border flex-row items-center justify-between"
             onPress={() => onToggle(item.id)}
           >
-            <Text className="text-leather-50">{item.name}</Text>
-            {selectedIds.includes(item.id) && <Text className="text-gold-400">✓</Text>}
+            <Text className="text-foreground">{item.name}</Text>
+            {selectedIds.includes(item.id) && <Text className="text-primary">✓</Text>}
           </Pressable>
         )}
-        ListEmptyComponent={<Text className="text-leather-400 text-center py-4">No tags yet</Text>}
+        ListEmptyComponent={<Text className="text-muted text-center py-4">No tags yet</Text>}
       />
     </ModalSheet>
   );

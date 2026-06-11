@@ -1,3 +1,36 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* CSS variables below mirror theme/colors.ts (SINGLE SOURCE OF TRUTH).
+   Values are space-separated RGB triples for use with rgb(var(--token) / <alpha>).
+
+   NOTE: On native, authoritative light/dark switching is done via `vars()` in
+   context/ThemeContext.tsx — NativeWind does not apply `.dark`-scoped :root
+   variable overrides on native. The :root block below is a pre-mount fallback;
+   the `.dark:root` block applies on web. */
+@layer base {
+  :root {
+    --background: 255 255 255;
+    --surface: 242 242 247;
+    --surface-2: 255 255 255;
+    --foreground: 17 17 17;
+    --muted: 108 108 112;
+    --border: 198 198 200;
+    --primary: 184 134 11;
+    --primary-foreground: 26 26 26;
+    --destructive: 255 59 48;
+  }
+
+  .dark:root {
+    --background: 18 18 18;
+    --surface: 30 30 30;
+    --surface-2: 44 44 46;
+    --foreground: 245 245 245;
+    --muted: 174 174 178;
+    --border: 56 56 58;
+    --primary: 212 160 23;
+    --primary-foreground: 26 26 26;
+    --destructive: 255 69 58;
+  }
+}

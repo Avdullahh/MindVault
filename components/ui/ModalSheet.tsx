@@ -1,5 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Keyboard, Modal, Platform, Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
+import { vars } from 'nativewind';
+import { useTheme } from '../../context/ThemeContext';
+import { darkVars, lightVars } from '../../theme/colors';
 
 type Props = {
   visible: boolean;
@@ -11,6 +14,8 @@ type Props = {
 export function ModalSheet({ visible, onClose, title, children }: Props) {
   const { height } = useWindowDimensions();
   const [kbHeight, setKbHeight] = useState(0);
+  const { colorScheme } = useTheme();
+  const themeStyle = vars(colorScheme === 'dark' ? darkVars : lightVars);
 
   useEffect(() => {
     if (!visible) { setKbHeight(0); return; }
@@ -41,8 +46,8 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
       >
         <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
           <View
-            className="bg-leather-900 rounded-3xl border border-gold-800 overflow-hidden"
-            style={{ maxHeight: maxCardHeight }}
+            className="bg-background rounded-3xl border border-border overflow-hidden"
+            style={[{ maxHeight: maxCardHeight }, themeStyle]}
           >
             <ScrollView
               bounces={false}
@@ -51,7 +56,7 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
               contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
             >
               {title && (
-                <Text className="text-xl font-bold text-leather-50 mb-4" style={{ fontFamily: 'Georgia' }}>
+                <Text className="text-xl font-bold text-foreground mb-4" style={{ fontFamily: 'Georgia' }}>
                   {title}
                 </Text>
               )}

@@ -6,11 +6,13 @@ import { useProjects } from '../../../hooks/use-projects';
 import { ProjectCard } from '../../../components/ProjectCard';
 import { CreateProjectModal } from '../../../components/CreateProjectModal';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { useThemeColors } from '../../../context/ThemeContext';
 
 export default function ProjectsScreen() {
   const router = useRouter();
   const { projects, loading, create } = useProjects();
   const [modalVisible, setModalVisible] = useState(false);
+  const colors = useThemeColors();
 
   const [query, setQuery] = useState('');
   const filtered = query.trim()
@@ -21,16 +23,16 @@ export default function ProjectsScreen() {
     : projects;
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="px-5 pt-14 pb-3">
-        <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Projects</Text>
+        <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Projects</Text>
       </View>
 
       <View className="px-5 mb-3 w-full max-w-3xl self-center">
         <TextInput
-          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3"
+          className="bg-surface text-foreground rounded-xl px-4 py-3 border border-border"
           placeholder="Search projects..."
-          placeholderTextColor="#7a6050"
+          placeholderTextColor={colors.muted}
           value={query}
           onChangeText={setQuery}
         />
@@ -56,12 +58,12 @@ export default function ProjectsScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-primary rounded-full w-14 h-14 items-center justify-center shadow-lg border border-primary/40"
         onPress={() => setModalVisible(true)}
         accessibilityRole="button"
         accessibilityLabel="Start project"
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.primaryForeground} />
       </Pressable>
 
       <CreateProjectModal

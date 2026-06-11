@@ -4,6 +4,7 @@ import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { ModalSheet } from './ui/ModalSheet';
 import { parseCalendarStoredDate, toLocalDateString, toLocalTimeString } from '../lib/date-utils';
+import { useThemeColors } from '../context/ThemeContext';
 import type { CalendarEvent } from '../types';
 
 type EventMode = 'dateonly' | 'allday' | 'timed';
@@ -38,6 +39,7 @@ function modeFromEvent(e: CalendarEvent): EventMode {
 }
 
 export function EditEventModal({ event, visible, onClose, onSave }: Props) {
+  const colors = useThemeColors();
   const notesInputRef = useRef<TextInput>(null);
   const [title, setTitle] = useState('');
   const [date, setDate] = useState<Date>(new Date());
@@ -112,9 +114,9 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
   return (
     <ModalSheet visible={visible} onClose={onClose} title="Edit Event">
       <TextInput
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-3 border border-leather-600"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-3 border border-border"
         placeholder="Title"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         value={title}
         onChangeText={setTitle}
         maxLength={200}
@@ -124,11 +126,11 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
 
       {/* Date chip */}
       <Pressable
-        className="bg-leather-800 rounded-xl px-4 py-3 mb-3 border border-leather-600 flex-row items-center justify-between"
+        className="bg-surface rounded-xl px-4 py-3 mb-3 border border-border flex-row items-center justify-between"
         onPress={() => openPicker('date')}
       >
-        <Text className="text-leather-50">{formatDate(date)}</Text>
-        <Ionicons name="calendar-outline" size={16} color="#d4a017" />
+        <Text className="text-foreground">{formatDate(date)}</Text>
+        <Ionicons name="calendar-outline" size={16} color={colors.primary} />
       </Pressable>
 
       {/* Inline date picker */}
@@ -136,11 +138,11 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
         <View className="mb-3">
           <View className="flex-row items-center justify-between mb-2">
             <Pressable className="min-h-11 px-2 justify-center" onPress={() => setPickerTarget(null)}>
-              <Text className="text-leather-300 font-medium">Cancel</Text>
+              <Text className="text-muted font-medium">Cancel</Text>
             </Pressable>
-            <Text className="text-leather-50 font-semibold" style={{ fontFamily: 'Georgia' }}>Choose date</Text>
+            <Text className="text-foreground font-semibold" style={{ fontFamily: 'Georgia' }}>Choose date</Text>
             <Pressable className="min-h-11 px-2 justify-center" onPress={confirmPicker}>
-              <Text className="text-gold-400 font-semibold">Done</Text>
+              <Text className="text-primary font-semibold">Done</Text>
             </Pressable>
           </View>
           <RNDateTimePicker
@@ -168,10 +170,10 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
         {MODES.map(({ value, label }) => (
           <Pressable
             key={value}
-            className={`flex-1 py-2.5 rounded-xl border items-center ${mode === value ? 'bg-gold-900 border-gold-700' : 'bg-leather-800 border-leather-600'}`}
+            className={`flex-1 py-2.5 rounded-xl border items-center ${mode === value ? 'bg-surface-2 border-primary' : 'bg-surface border-border'}`}
             onPress={() => { setMode(value); setPickerTarget(null); }}
           >
-            <Text className={`text-xs ${mode === value ? 'text-gold-400' : 'text-leather-200'}`}>{label}</Text>
+            <Text className={`text-xs ${mode === value ? 'text-primary' : 'text-foreground'}`}>{label}</Text>
           </Pressable>
         ))}
       </View>
@@ -180,19 +182,19 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
       {mode === 'timed' && (
         <View className="flex-row gap-2 mb-3 items-center">
           <Pressable
-            className="flex-1 py-2.5 px-3 rounded-xl border bg-leather-800 border-leather-600 flex-row items-center justify-between"
+            className="flex-1 py-2.5 px-3 rounded-xl border bg-surface border-border flex-row items-center justify-between"
             onPress={() => openPicker('start')}
           >
-            <Text className="text-leather-200 text-sm">{formatTime(startTime)}</Text>
-            <Ionicons name="time-outline" size={13} color="#7a6050" />
+            <Text className="text-foreground text-sm">{formatTime(startTime)}</Text>
+            <Ionicons name="time-outline" size={13} color={colors.muted} />
           </Pressable>
-          <Text className="text-leather-500 text-sm">→</Text>
+          <Text className="text-muted text-sm">→</Text>
           <Pressable
-            className="flex-1 py-2.5 px-3 rounded-xl border bg-leather-800 border-leather-600 flex-row items-center justify-between"
+            className="flex-1 py-2.5 px-3 rounded-xl border bg-surface border-border flex-row items-center justify-between"
             onPress={() => openPicker('end')}
           >
-            <Text className="text-leather-200 text-sm">{formatTime(endTime)}</Text>
-            <Ionicons name="time-outline" size={13} color="#7a6050" />
+            <Text className="text-foreground text-sm">{formatTime(endTime)}</Text>
+            <Ionicons name="time-outline" size={13} color={colors.muted} />
           </Pressable>
         </View>
       )}
@@ -202,11 +204,11 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
         <View className="mb-3">
           <View className="flex-row items-center justify-between mb-2">
             <Pressable className="min-h-11 px-2 justify-center" onPress={() => setPickerTarget(null)}>
-              <Text className="text-leather-300 font-medium">Cancel</Text>
+              <Text className="text-muted font-medium">Cancel</Text>
             </Pressable>
-            <Text className="text-leather-50 font-semibold" style={{ fontFamily: 'Georgia' }}>Choose time</Text>
+            <Text className="text-foreground font-semibold" style={{ fontFamily: 'Georgia' }}>Choose time</Text>
             <Pressable className="min-h-11 px-2 justify-center" onPress={confirmPicker}>
-              <Text className="text-gold-400 font-semibold">Done</Text>
+              <Text className="text-primary font-semibold">Done</Text>
             </Pressable>
           </View>
           <RNDateTimePicker
@@ -237,9 +239,9 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
 
       <TextInput
         ref={notesInputRef}
-        className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3 mb-4 border border-leather-600"
+        className="bg-surface text-foreground rounded-xl px-4 py-3 mb-4 border border-border"
         placeholder="Notes (optional)"
-        placeholderTextColor="#7a6050"
+        placeholderTextColor={colors.muted}
         multiline
         numberOfLines={2}
         textAlignVertical="top"
@@ -251,14 +253,14 @@ export function EditEventModal({ event, visible, onClose, onSave }: Props) {
       {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
 
       <Pressable
-        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-leather-700' : 'bg-gold-500'}`}
+        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
         onPress={handleSave}
         disabled={loading || !title.trim()}
         accessibilityRole="button"
       >
         {loading
-          ? <ActivityIndicator color="#f5e6c8" />
-          : <Text className="text-leather-50 font-bold text-base">Save Changes</Text>
+          ? <ActivityIndicator color={colors.primary} />
+          : <Text className="text-foreground font-bold text-base">Save Changes</Text>
         }
       </Pressable>
     </ModalSheet>

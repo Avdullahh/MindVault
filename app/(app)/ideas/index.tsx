@@ -6,12 +6,14 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { IdeaCard } from '../../../components/IdeaCard';
 import { CreateIdeaModal } from '../../../components/CreateIdeaModal';
 import { EmptyState } from '../../../components/ui/EmptyState';
+import { useThemeColors } from '../../../context/ThemeContext';
 
 export default function IdeasScreen() {
   const router = useRouter();
   const { ideas, loading, create } = useIdeas();
   const [query, setQuery] = useState('');
   const [modalVisible, setModalVisible] = useState(false);
+  const colors = useThemeColors();
 
   const filtered = query.trim()
     ? ideas.filter((i) =>
@@ -21,16 +23,16 @@ export default function IdeasScreen() {
     : ideas;
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="px-5 pt-14 pb-3">
-        <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Ideas</Text>
+        <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Ideas</Text>
       </View>
 
       <View className="px-5 mb-3 w-full max-w-3xl self-center">
         <TextInput
-          className="bg-leather-800 text-leather-50 rounded-xl px-4 py-3"
+          className="bg-surface text-foreground rounded-xl px-4 py-3 border border-border"
           placeholder="Search ideas..."
-          placeholderTextColor="#7a6050"
+          placeholderTextColor={colors.muted}
           value={query}
           onChangeText={setQuery}
         />
@@ -56,12 +58,12 @@ export default function IdeasScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-primary rounded-full w-14 h-14 items-center justify-center shadow-lg border border-primary/40"
         onPress={() => setModalVisible(true)}
         accessibilityRole="button"
         accessibilityLabel="Capture idea"
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.primaryForeground} />
       </Pressable>
 
       <CreateIdeaModal

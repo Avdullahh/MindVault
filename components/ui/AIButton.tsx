@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, Text, Vibration, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useThemeColors } from '../../context/ThemeContext';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -27,6 +28,7 @@ export function AIButton({
   compact = false,
   hint,
 }: Props) {
+  const colors = useThemeColors();
   const [internalLoading, setInternalLoading] = useState(false);
   const busy = loading ?? internalLoading;
   const inactive = disabled || busy;
@@ -47,7 +49,7 @@ export function AIButton({
   return (
     <View className={flex ? 'flex-1' : ''}>
       <Pressable
-        className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-leather-600 bg-leather-800 opacity-60' : 'border-gold-700 bg-gold-900/40'}`}
+        className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-border bg-surface opacity-60' : 'border-primary bg-primary/20'}`}
         onPress={handlePress}
         disabled={inactive}
         accessibilityRole="button"
@@ -55,15 +57,15 @@ export function AIButton({
         hitSlop={compact ? 6 : undefined}
       >
         {busy ? (
-          <ActivityIndicator size="small" color="#d4a017" />
+          <ActivityIndicator size="small" color={colors.primary} />
         ) : glyph ? (
           <Text className="text-lg">{glyph}</Text>
         ) : (
-          <Ionicons name={icon} size={14} color="#d4a017" />
+          <Ionicons name={icon} size={14} color={colors.primary} />
         )}
-        <Text className="text-gold-400 text-sm font-medium">{label}</Text>
+        <Text className="text-primary text-sm font-medium">{label}</Text>
       </Pressable>
-      {hint ? <Text className="text-leather-400 text-xs text-center mt-1.5 px-1">{hint}</Text> : null}
+      {hint ? <Text className="text-muted text-xs text-center mt-1.5 px-1">{hint}</Text> : null}
     </View>
   );
 }

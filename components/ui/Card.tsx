@@ -6,7 +6,7 @@ type Props = ViewProps & {
 };
 
 export function Card({ onPress, children, className = '', ...rest }: Props) {
-  const base = `bg-leather-800 rounded-2xl p-4 ${className}`;
+  const base = `bg-surface rounded-2xl p-4 ${className}`;
 
   if (onPress) {
     return (

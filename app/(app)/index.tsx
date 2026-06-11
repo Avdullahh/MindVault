@@ -9,6 +9,7 @@ import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
 import { parseCalendarStoredDate } from '../../lib/date-utils';
+import { useThemeColors } from '../../context/ThemeContext';
 import type { CalendarEvent } from '../../types';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
@@ -44,14 +45,14 @@ function SectionHeader({ title, action, onPress }: { title: string; action?: str
   return (
     <View className="h-9 flex-row items-center justify-between mb-2">
       <Text
-        className="text-leather-300 text-xs font-semibold uppercase leading-4"
+        className="text-muted text-xs font-semibold uppercase leading-4"
         style={{ letterSpacing: 2, includeFontPadding: false }}
       >
         {title}
       </Text>
       {action && onPress ? (
         <Pressable className="h-9 pl-4 items-center justify-center" onPress={onPress}>
-          <Text className="text-gold-400 text-sm font-medium leading-5" style={{ includeFontPadding: false }}>
+          <Text className="text-primary text-sm font-medium leading-5" style={{ includeFontPadding: false }}>
             {action}
           </Text>
         </Pressable>
@@ -62,14 +63,15 @@ function SectionHeader({ title, action, onPress }: { title: string; action?: str
 
 function EmptyCard({ text }: { text: string }) {
   return (
-    <View className="bg-leather-800 rounded-2xl px-4 py-5 border border-leather-600">
-      <Text className="text-leather-400 text-sm">{text}</Text>
+    <View className="bg-surface rounded-2xl px-4 py-5 border border-border">
+      <Text className="text-muted text-sm">{text}</Text>
     </View>
   );
 }
 
 export default function DashboardScreen() {
   const router = useRouter();
+  const colors = useThemeColors();
   const { ideas, forgottenIdeas, loading: ideasLoading, refetch: refetchIdeas } = useIdeas();
   const { goals, loading: goalsLoading, refetch: refetchGoals } = useGoals();
   const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
@@ -125,15 +127,15 @@ export default function DashboardScreen() {
   const renderGoal = (goal: ReturnType<typeof useGoals>['goals'][number]) => (
     <Pressable
       key={goal.id}
-      className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-leather-600 min-h-16 justify-center"
+      className="bg-surface rounded-xl px-4 py-3 mb-2 border border-border min-h-16 justify-center"
       onPress={() => router.push(`/(app)/goals/${goal.id}`)}
       accessibilityRole="button"
     >
-      <Text className="text-leather-50 font-medium leading-5" style={{ includeFontPadding: false }} numberOfLines={1}>
+      <Text className="text-foreground font-medium leading-5" style={{ includeFontPadding: false }} numberOfLines={1}>
         {goal.title}
       </Text>
       {goal.deadline ? (
-        <Text className="text-leather-400 text-xs leading-4 mt-1" style={{ includeFontPadding: false }}>
+        <Text className="text-muted text-xs leading-4 mt-1" style={{ includeFontPadding: false }}>
           Due {new Date(goal.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
         </Text>
       ) : null}
@@ -145,40 +147,40 @@ export default function DashboardScreen() {
     return (
       <Pressable
         key={event.id}
-        className="bg-leather-800 rounded-xl px-3 py-3 mb-2 border border-leather-600 flex-row items-center gap-3 min-h-16"
+        className="bg-surface rounded-xl px-3 py-3 mb-2 border border-border flex-row items-center gap-3 min-h-16"
         onPress={() => router.push('/(app)/calendar')}
         accessibilityRole="button"
       >
         {label ? (
           <View className="w-14 shrink-0">
-            <Text className="text-gold-400 text-sm font-medium" numberOfLines={1}>{label}</Text>
+            <Text className="text-primary text-sm font-medium" numberOfLines={1}>{label}</Text>
             {event.end_at && !event.all_day ? (
-              <Text className="text-leather-400 text-xs" numberOfLines={1}>{fmtTime(event.end_at)}</Text>
+              <Text className="text-muted text-xs" numberOfLines={1}>{fmtTime(event.end_at)}</Text>
             ) : null}
           </View>
         ) : null}
         <View className="flex-1">
-          <Text className="text-leather-50 font-medium" numberOfLines={1}>{event.title}</Text>
-          {event.notes ? <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{event.notes}</Text> : null}
+          <Text className="text-foreground font-medium" numberOfLines={1}>{event.title}</Text>
+          {event.notes ? <Text className="text-muted text-xs mt-1" numberOfLines={1}>{event.notes}</Text> : null}
         </View>
       </Pressable>
     );
   };
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="flex-row items-start justify-between px-5 pt-14 pb-4">
         <View>
-          <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Home</Text>
-          <Text className="text-leather-400 text-sm mt-1">{dateLabel}</Text>
+          <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Home</Text>
+          <Text className="text-muted text-sm mt-1">{dateLabel}</Text>
         </View>
-        <Pressable className="w-11 h-11 rounded-full bg-leather-800 items-center justify-center" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
-          <Ionicons name="settings-outline" size={20} color="#7a6050" />
+        <Pressable className="w-11 h-11 rounded-full bg-surface items-center justify-center border border-border" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
+          <Ionicons name="settings-outline" size={20} color={colors.muted} />
         </Pressable>
       </View>
 
       <ScrollView
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor="#d4a017" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refresh} tintColor={colors.primary} />}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 120, width: '100%', maxWidth: 760, alignSelf: 'center' }}
         showsVerticalScrollIndicator={false}
       >
@@ -186,23 +188,23 @@ export default function DashboardScreen() {
           {metrics.map((metric) => (
             <Pressable
               key={metric.label}
-              className="bg-leather-800 rounded-2xl p-4 border border-leather-600 min-h-28"
+              className="bg-surface rounded-2xl p-4 border border-border min-h-28"
               style={{ width: '48%', marginBottom: 12 }}
               onPress={() => router.push(metric.route)}
               accessibilityRole="button"
             >
-              <Ionicons name={metric.icon} size={20} color="#d4a017" />
-              <Text className="text-leather-50 text-2xl font-bold mt-3">{metric.value}</Text>
-              <Text className="text-leather-400 text-xs mt-1">{metric.label}</Text>
+              <Ionicons name={metric.icon} size={20} color={colors.primary} />
+              <Text className="text-foreground text-2xl font-bold mt-3">{metric.value}</Text>
+              <Text className="text-muted text-xs mt-1">{metric.label}</Text>
             </Pressable>
           ))}
         </View>
 
-        <View className="bg-leather-800 rounded-2xl p-4 border border-gold-700 mb-5">
+        <View className="bg-surface rounded-2xl p-4 border border-primary mb-5">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-leather-50 font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
-              <Text className="text-leather-400 text-xs mt-1">Reads your calendar events and ideas vault, then surfaces a forgotten idea and today's agenda.</Text>
+              <Text className="text-foreground font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
+              <Text className="text-muted text-xs mt-1">Reads your calendar events and ideas vault, then surfaces a forgotten idea and today's agenda.</Text>
             </View>
             <AIButton
               label={briefState.status === 'success' ? 'Refresh' : 'Generate'}
@@ -213,24 +215,24 @@ export default function DashboardScreen() {
           </View>
           {briefState.status === 'loading' ? (
             <View className="flex-row items-center gap-2 mt-4">
-              <ActivityIndicator color="#d4a017" />
-              <Text className="text-leather-300 text-sm">Preparing brief...</Text>
+              <ActivityIndicator color={colors.primary} />
+              <Text className="text-muted text-sm">Preparing brief...</Text>
             </View>
           ) : null}
           {briefState.status === 'error' ? (
-            <Text className="text-red-400 text-sm mt-3">{briefState.error}</Text>
+            <Text className="text-destructive text-sm mt-3">{briefState.error}</Text>
           ) : null}
           {briefState.status === 'success' && briefState.data ? (
             <View className="mt-4">
-              <Text className="text-leather-100 text-sm leading-5">{briefState.data.greeting}</Text>
+              <Text className="text-foreground text-sm leading-5">{briefState.data.greeting}</Text>
               {briefState.data.resurface ? (
                 <Pressable
-                  className="bg-leather-900 rounded-xl p-3 mt-3 min-h-16"
+                  className="bg-background rounded-xl p-3 mt-3 min-h-16 border border-border"
                   onPress={() => router.push('/(app)/ideas')}
                 >
-                  <Text className="text-gold-400 text-xs font-semibold uppercase">Resurface</Text>
-                  <Text className="text-leather-50 font-medium mt-1" numberOfLines={1}>{briefState.data.resurface.title}</Text>
-                  <Text className="text-leather-400 text-xs mt-1" numberOfLines={2}>{briefState.data.resurface.description}</Text>
+                  <Text className="text-primary text-xs font-semibold uppercase">Resurface</Text>
+                  <Text className="text-foreground font-medium mt-1" numberOfLines={1}>{briefState.data.resurface.title}</Text>
+                  <Text className="text-muted text-xs mt-1" numberOfLines={2}>{briefState.data.resurface.description}</Text>
                 </Pressable>
               ) : null}
             </View>
@@ -243,16 +245,16 @@ export default function DashboardScreen() {
             {forgottenIdeas.slice(0, 2).map((idea) => (
               <Pressable
                 key={idea.id}
-                className="bg-leather-800 rounded-xl px-4 py-3 mb-2 border border-gold-700 flex-row min-h-16 items-center justify-between"
+                className="bg-surface rounded-xl px-4 py-3 mb-2 border border-primary flex-row min-h-16 items-center justify-between"
                 onPress={() => router.push(`/(app)/ideas/${idea.id}`)}
               >
                 <View className="flex-1 mr-3">
-                  <Text className="text-leather-50 font-medium" numberOfLines={1}>{idea.title}</Text>
+                  <Text className="text-foreground font-medium" numberOfLines={1}>{idea.title}</Text>
                   {idea.description ? (
-                    <Text className="text-leather-400 text-xs mt-1" numberOfLines={1}>{idea.description}</Text>
+                    <Text className="text-muted text-xs mt-1" numberOfLines={1}>{idea.description}</Text>
                   ) : null}
                 </View>
-                <Text className="text-gold-400 text-xs font-semibold">Revisit</Text>
+                <Text className="text-primary text-xs font-semibold">Revisit</Text>
               </Pressable>
             ))}
           </View>

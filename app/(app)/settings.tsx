@@ -4,20 +4,29 @@ import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth-context';
+import { useTheme, useThemeColors, type ThemeMode } from '../../context/ThemeContext';
 import { supabase } from '../../lib/supabase';
+
+const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
+  { mode: 'light', label: 'Light', icon: 'sunny-outline' },
+  { mode: 'dark', label: 'Dark', icon: 'moon-outline' },
+];
 
 export default function Settings() {
   const { session, signOut } = useAuth();
+  const { mode, setMode } = useTheme();
+  const colors = useThemeColors();
   const router = useRouter();
 
   const email = session?.user.email ?? '';
   const metadata = session?.user.user_metadata ?? {};
   const avatarUrl = typeof metadata.avatar_url === 'string' ? metadata.avatar_url : null;
   const initials = email ? email.slice(0, 2).toUpperCase() : '??';
-  const card = 'bg-leather-800 border-leather-600';
-  const title = 'text-leather-50';
-  const muted = 'text-leather-300';
-  const input = 'bg-leather-800 text-leather-50 border-leather-600';
+  const card = 'bg-surface border-border';
+  const title = 'text-foreground';
+  const muted = 'text-muted';
+  const input = 'bg-surface text-foreground border-border';
 
   const [displayName, setDisplayName] = useState('');
   const [nextEmail, setNextEmail] = useState('');
@@ -68,15 +77,15 @@ export default function Settings() {
   };
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="flex-row items-center px-5 pt-14 pb-4">
         <Pressable
-          className="w-11 h-11 items-center justify-center rounded-full mr-3 bg-leather-800"
+          className="w-11 h-11 items-center justify-center rounded-full mr-3 bg-surface"
           onPress={() => router.back()}
           accessibilityRole="button"
           accessibilityLabel="Go back"
         >
-          <Ionicons name="chevron-back" size={22} color="#d4a017" />
+          <Ionicons name="chevron-back" size={22} color={colors.primary} />
         </Pressable>
         <Text className={`text-2xl font-bold ${title}`} style={{ fontFamily: 'Georgia' }}>Settings</Text>
       </View>
@@ -84,8 +93,8 @@ export default function Settings() {
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
         <View className={`${card} rounded-2xl border p-5 mb-5`}>
           <View className="flex-row items-center gap-4">
-            <View className="bg-leather-700 w-14 h-14 rounded-full border border-gold-700 items-center justify-center">
-              <Text className="text-gold-400 text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
+            <View className="bg-surface-2 w-14 h-14 rounded-full border border-primary items-center justify-center">
+              <Text className="text-primary text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
             </View>
             <View className="flex-1">
               <Text className={`${muted} text-xs uppercase tracking-widest mb-0.5`} style={{ letterSpacing: 1.5 }}>Signed in as</Text>
@@ -98,7 +107,7 @@ export default function Settings() {
         <View className={`${card} rounded-2xl border p-5 mb-6`}>
           <View className="items-center mb-5">
             <Pressable
-              className="w-24 h-24 rounded-full bg-leather-700 border border-gold-700 items-center justify-center overflow-hidden"
+              className="w-24 h-24 rounded-full bg-surface-2 border border-primary items-center justify-center overflow-hidden"
               onPress={pickAvatar}
               accessibilityRole="button"
               accessibilityLabel="Select profile photo"
@@ -106,10 +115,10 @@ export default function Settings() {
               {avatar ? (
                 <Image source={{ uri: avatar }} className="w-24 h-24" />
               ) : (
-                <Text className="text-gold-400 text-2xl font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
+                <Text className="text-primary text-2xl font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
               )}
             </Pressable>
-            <Text className="text-gold-400 text-sm mt-2">Change profile photo</Text>
+            <Text className="text-primary text-sm mt-2">Change profile photo</Text>
           </View>
 
           <Text className={`${muted} text-xs font-semibold mb-2`}>Display name</Text>
@@ -118,7 +127,7 @@ export default function Settings() {
             value={displayName}
             onChangeText={setDisplayName}
             placeholder="Your name"
-            placeholderTextColor="#7a6050"
+            placeholderTextColor={colors.muted}
           />
 
           <Text className={`${muted} text-xs font-semibold mb-2`}>Email address</Text>
@@ -129,7 +138,7 @@ export default function Settings() {
             autoCapitalize="none"
             keyboardType="email-address"
             placeholder="you@example.com"
-            placeholderTextColor="#7a6050"
+            placeholderTextColor={colors.muted}
           />
 
           <Text className={`${muted} text-xs font-semibold mb-2`}>New password</Text>
@@ -139,23 +148,52 @@ export default function Settings() {
             onChangeText={setPassword}
             secureTextEntry
             placeholder="Leave blank to keep current password"
-            placeholderTextColor="#7a6050"
+            placeholderTextColor={colors.muted}
           />
 
           {profileMessage ? (
-            <Text className={`text-sm mb-4 ${profileMessage.includes('saved') || profileMessage.includes('Saved') ? 'text-gold-400' : 'text-red-400'}`}>
+            <Text className={`text-sm mb-4 ${profileMessage.includes('saved') || profileMessage.includes('Saved') ? 'text-primary' : 'text-destructive'}`}>
               {profileMessage}
             </Text>
           ) : null}
 
           <Pressable
-            className="bg-gold-500 rounded-xl py-3 items-center"
+            className="bg-primary rounded-xl py-3 items-center"
             onPress={savePersonalInfo}
             disabled={savingProfile}
             accessibilityRole="button"
           >
-            <Text className="text-leather-50 font-semibold">{savingProfile ? 'Saving...' : 'Save personal information'}</Text>
+            <Text className="text-foreground font-semibold">{savingProfile ? 'Saving...' : 'Save personal information'}</Text>
           </Pressable>
+        </View>
+
+        <Text className={`${muted} text-xs font-semibold uppercase mb-3`} style={{ letterSpacing: 1.5 }}>Appearance</Text>
+        <View className={`${card} rounded-2xl border p-2 mb-6`}>
+          {THEME_OPTIONS.map((option, index) => {
+            const active = mode === option.mode;
+            return (
+              <Pressable
+                key={option.mode}
+                className={`flex-row items-center px-3 py-3 rounded-xl ${active ? 'bg-primary' : ''} ${index > 0 ? 'mt-1' : ''}`}
+                onPress={() => setMode(option.mode)}
+                accessibilityRole="radio"
+                accessibilityState={{ selected: active }}
+                accessibilityLabel={`${option.label} theme`}
+              >
+                <Ionicons
+                  name={option.icon}
+                  size={20}
+                  color={active ? colors.primaryForeground : colors.muted}
+                />
+                <Text className={`flex-1 ml-3 font-medium ${active ? 'text-primary-foreground' : 'text-foreground'}`}>
+                  {option.label}
+                </Text>
+                {active ? (
+                  <Ionicons name="checkmark" size={20} color={colors.primaryForeground} />
+                ) : null}
+              </Pressable>
+            );
+          })}
         </View>
 
         <Pressable
@@ -163,8 +201,8 @@ export default function Settings() {
           onPress={signOut}
           accessibilityRole="button"
         >
-          <Text className="text-red-400 font-medium">Sign out</Text>
-          <Ionicons name="log-out-outline" size={20} color="#f87171" />
+          <Text className="text-destructive font-medium">Sign out</Text>
+          <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
         </Pressable>
       </ScrollView>
     </View>

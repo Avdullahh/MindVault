@@ -3,6 +3,7 @@ import { ActivityIndicator, Pressable, ScrollView, Text, View } from 'react-nati
 import { Ionicons } from '@expo/vector-icons';
 import { ModalSheet } from './ui/ModalSheet';
 import { Button } from './ui/Button';
+import { useThemeColors } from '../context/ThemeContext';
 import type { PlanResult } from '../hooks/use-ai';
 
 type Props = {
@@ -14,6 +15,7 @@ type Props = {
 };
 
 export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }: Props) {
+  const colors = useThemeColors();
   const [checked, setChecked] = useState<Set<number>>(new Set());
 
   useEffect(() => {
@@ -37,7 +39,7 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
     <ModalSheet visible={visible} onClose={onClose} title="AI Plan Preview">
       {!plan ? (
         <View className="items-center py-8">
-          <ActivityIndicator color="#d4a017" />
+          <ActivityIndicator color={colors.primary} />
         </View>
       ) : (
         <>
@@ -47,22 +49,22 @@ export function AITaskPreviewModal({ visible, onClose, plan, saving, onConfirm }
             keyboardShouldPersistTaps="handled"
             showsVerticalScrollIndicator={false}
           >
-            <Text className="text-leather-300 text-xs font-semibold uppercase tracking-wider mb-2">
+            <Text className="text-muted text-xs font-semibold uppercase tracking-wider mb-2">
               Tasks to create ({checked.size} of {plan.tasks.length} selected)
             </Text>
             {plan.tasks.map((task, i) => (
               <Pressable
                 key={i}
-                className="flex-row min-h-11 items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2"
+                className="flex-row min-h-11 items-center gap-3 bg-surface rounded-xl px-4 py-3 mb-2"
                 onPress={() => toggle(i)}
                 disabled={saving}
                 accessibilityRole="checkbox"
                 accessibilityState={{ checked: checked.has(i), disabled: saving }}
               >
-                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-gold-500 border-gold-500' : 'border-leather-500'}`}>
+                <View className={`w-6 h-6 rounded-full border-2 items-center justify-center ${checked.has(i) ? 'bg-primary border-primary' : 'border-border'}`}>
                   {checked.has(i) ? <Ionicons name="checkmark" size={12} color="#fff" /> : null}
                 </View>
-                <Text className="text-leather-50 text-sm flex-1">{task}</Text>
+                <Text className="text-foreground text-sm flex-1">{task}</Text>
               </Pressable>
             ))}
           </ScrollView>

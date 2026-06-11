@@ -9,6 +9,7 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { useProjects } from '../../../hooks/use-projects';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { EditGoalModal } from '../../../components/EditGoalModal';
+import { useThemeColors } from '../../../context/ThemeContext';
 import type { Idea, Project, Task } from '../../../types';
 
 export default function GoalDetail() {
@@ -19,6 +20,7 @@ export default function GoalDetail() {
   const [editVisible, setEditVisible] = useState(false);
   const { ideas: allIdeas } = useIdeas();
   const { projects: allProjects } = useProjects();
+  const colors = useThemeColors();
 
   const goal = goals.find((g) => g.id === id);
   const [editSnapshot, setEditSnapshot] = useState<typeof goal>(undefined);
@@ -94,16 +96,16 @@ export default function GoalDetail() {
 
   if (loading && !goal) {
     return (
-      <View className="flex-1 bg-leather-900 justify-center items-center">
-        <ActivityIndicator color="#d4a017" />
+      <View className="flex-1 bg-background justify-center items-center">
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
   if (!goal) {
     return (
-      <View className="flex-1 bg-leather-900 justify-center items-center">
-        <Text className="text-leather-300">Goal not found</Text>
+      <View className="flex-1 bg-background justify-center items-center">
+        <Text className="text-muted">Goal not found</Text>
       </View>
     );
   }
@@ -125,80 +127,80 @@ export default function GoalDetail() {
   };
 
   return (
-    <View className="flex-1 bg-leather-900">
+    <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
         <Pressable onPress={exitToGoals} accessibilityRole="button" accessibilityLabel="Back to goals">
-          <Ionicons name="chevron-back" size={24} color="#d4a017" />
+          <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
         <View className="flex-row items-center gap-4">
           <Pressable onPress={() => { setEditSnapshot(goal); setEditVisible(true); }} accessibilityRole="button" accessibilityLabel="Edit goal">
-            <Ionicons name="pencil-outline" size={20} color="#d4a017" />
+            <Ionicons name="pencil-outline" size={20} color={colors.primary} />
           </Pressable>
           <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete goal">
-            <Ionicons name="trash-outline" size={20} color="#f87171" />
+            <Ionicons name="trash-outline" size={20} color={colors.destructive} />
           </Pressable>
         </View>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-        <Text className="text-leather-50 text-xl font-bold mb-1" style={{ fontFamily: 'Georgia' }}>{goal.title}</Text>
+        <Text className="text-foreground text-xl font-bold mb-1" style={{ fontFamily: 'Georgia' }}>{goal.title}</Text>
         {goal.deadline && (
-          <Text className="text-leather-300 text-sm mb-4">
+          <Text className="text-muted text-sm mb-4">
             Due {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
           </Text>
         )}
 
         {linkedProjects.length > 0 && (
           <>
-            <Text className="text-leather-300 text-xs font-semibold uppercase mb-3">Milestones</Text>
+            <Text className="text-muted text-xs font-semibold uppercase mb-3">Milestones</Text>
             {linkedTasks.length === 0
-              ? <Text className="text-leather-500 text-sm mb-3">No milestones yet - link tasks from the project below</Text>
+              ? <Text className="text-muted text-sm mb-3">No milestones yet - link tasks from the project below</Text>
               : linkedTasks.map((t) => (
-                  <View key={t.id} className="flex-row items-center gap-3 bg-leather-800 rounded-xl px-4 py-3 mb-2">
-                    <View className={`w-2.5 h-2.5 rounded-full ${t.done ? 'bg-gold-500' : 'bg-leather-500'}`} />
-                    <Text className={`flex-1 text-sm ${t.done ? 'text-leather-400 line-through' : 'text-leather-50'}`} numberOfLines={1}>
+                  <View key={t.id} className="flex-row items-center gap-3 bg-surface rounded-xl px-4 py-3 mb-2">
+                    <View className={`w-2.5 h-2.5 rounded-full ${t.done ? 'bg-primary' : 'bg-surface-2'}`} />
+                    <Text className={`flex-1 text-sm ${t.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
                       {t.title}
                     </Text>
                     <Pressable onPress={() => handleTaskToggle(t.id)} hitSlop={8}>
-                      <Ionicons name="close-circle-outline" size={16} color="#7a6050" />
+                      <Ionicons name="close-circle-outline" size={16} color={colors.muted} />
                     </Pressable>
                   </View>
                 ))
             }
             <Pressable className="flex-row items-center gap-2 py-2 mb-4" onPress={() => setTaskPickerVisible(true)}>
-              <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
-              <Text className="text-gold-400">Link task from project</Text>
+              <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+              <Text className="text-primary">Link task from project</Text>
             </Pressable>
           </>
         )}
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Linked Ideas</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-3">Linked Ideas</Text>
         {linkedIdeas.map((idea) => (
-          <View key={idea.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
-            <Text className="text-leather-50 flex-1" numberOfLines={1}>{idea.title}</Text>
+          <View key={idea.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
+            <Text className="text-foreground flex-1" numberOfLines={1}>{idea.title}</Text>
             <Pressable onPress={() => handleIdeaToggle(idea.id)}>
-              <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
+              <Ionicons name="close-circle-outline" size={18} color={colors.muted} />
             </Pressable>
           </View>
         ))}
         <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setIdeaPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
-          <Text className="text-gold-400">Link idea</Text>
+          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+          <Text className="text-primary">Link idea</Text>
         </Pressable>
 
-        <Text className="text-leather-300 text-xs font-semibold uppercase mt-4 mb-3">Linked Projects</Text>
-        {linkError && <Text className="text-red-400 text-xs mb-2">{linkError}</Text>}
+        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-3">Linked Projects</Text>
+        {linkError && <Text className="text-destructive text-xs mb-2">{linkError}</Text>}
         {linkedProjects.map((project) => (
-          <View key={project.id} className="bg-leather-800 rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-leather-600">
-            <Text className="text-leather-50 flex-1" numberOfLines={1}>{project.title}</Text>
+          <View key={project.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
+            <Text className="text-foreground flex-1" numberOfLines={1}>{project.title}</Text>
             <Pressable onPress={() => handleProjectToggle(project.id)}>
-              <Ionicons name="close-circle-outline" size={18} color="#7a6050" />
+              <Ionicons name="close-circle-outline" size={18} color={colors.muted} />
             </Pressable>
           </View>
         ))}
         <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setProjectPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color="#d4a017" />
-          <Text className="text-gold-400">Link project</Text>
+          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
+          <Text className="text-primary">Link project</Text>
         </Pressable>
       </ScrollView>
 

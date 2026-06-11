@@ -4,7 +4,7 @@ import type { ReactNode } from 'react';
 export function AuthFormContainer({ children }: { children: ReactNode }) {
   return (
     <KeyboardAvoidingView
-      className="flex-1 bg-leather-900"
+      className="flex-1 bg-background"
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView

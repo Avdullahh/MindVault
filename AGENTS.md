@@ -2,6 +2,20 @@
 
 AGENTS.md is the operating manual for coding agents in this repository. Keep it specific, current, and short enough to be useful. When code, commands, schema, or folder ownership changes, update this file in the same change.
 
+## Mandatory Delegation Workflow (DevSquad)
+
+**The DevSquad workflow is mandatory at all times, with no exception.** Every task in this repository must be routed through DevSquad delegation before the lead agent does work directly.
+
+- Follow the routing in `.devsquad/config.json` on every task:
+  - Research → Gemini
+  - Bulk reading / codebase analysis → Gemini (1M context)
+  - Code generation / boilerplate → Codex
+  - Testing → Codex
+  - Synthesis and final integration → lead agent (self)
+- The lead agent does not personally do research, bulk file reading, or boilerplate generation. Delegate it, then synthesize and integrate the results.
+- This rule applies even to small or "quick" tasks. There is no exception for size, urgency, or convenience.
+- If a delegate (Gemini or Codex) is unavailable, state that explicitly before falling back to doing the work directly.
+
 ## Product Context
 
 MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, projects, and calendar events, and helps users turn thinking into action.

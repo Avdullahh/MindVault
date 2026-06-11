@@ -7,6 +7,7 @@ import { EventItem } from '../../../components/EventItem';
 import { CreateEventModal } from '../../../components/CreateEventModal';
 import { EditEventModal } from '../../../components/EditEventModal';
 import type { CalendarEvent } from '../../../types';
+import { useThemeColors } from '../../../context/ThemeContext';
 
 type CalendarDay = {
   date: Date;
@@ -106,15 +107,16 @@ function getWeekdayLabels(locale: string) {
 }
 
 function getDayTextClass(selected: boolean, isToday: boolean, inCurrentMonth: boolean) {
-  if (selected) return 'text-leather-50 font-semibold';
-  if (isToday) return 'text-gold-400 font-semibold';
-  if (inCurrentMonth) return 'text-leather-50';
-  return 'text-leather-500';
+  if (selected) return 'text-foreground font-semibold';
+  if (isToday) return 'text-primary font-semibold';
+  if (inCurrentMonth) return 'text-foreground';
+  return 'text-muted';
 }
 
 export default function CalendarScreen() {
   const { eventsByDate, loading, refetch, create, update, toggleDone, remove } = useCalendarEvents();
   const { isIPad, isLandscape, width } = useLayout();
+  const colors = useThemeColors();
 
   const locale = useMemo(() => Intl.DateTimeFormat().resolvedOptions().locale, []);
   const [selectedDate, setSelectedDate] = useState(toIsoDate(new Date()));
@@ -150,27 +152,27 @@ export default function CalendarScreen() {
     <>
       <View className="flex-row items-center justify-between mb-4">
         <Pressable
-          className="w-11 h-11 items-center justify-center rounded-full bg-leather-800"
+          className="w-11 h-11 items-center justify-center rounded-full bg-surface"
           onPress={() => setSelectedDate(toIsoDate(addDays(monthStart, -1)))}
           accessibilityRole="button"
           accessibilityLabel="Previous month"
         >
-          <Ionicons name="chevron-back" size={22} color="#d4a017" />
+          <Ionicons name="chevron-back" size={22} color={colors.primary} />
         </Pressable>
-        <Text className="text-leather-50 text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{monthLabel}</Text>
+        <Text className="text-foreground text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{monthLabel}</Text>
         <Pressable
-          className="w-11 h-11 items-center justify-center rounded-full bg-leather-800"
+          className="w-11 h-11 items-center justify-center rounded-full bg-surface"
           onPress={() => setSelectedDate(toIsoDate(addDays(monthEnd, 1)))}
           accessibilityRole="button"
           accessibilityLabel="Next month"
         >
-          <Ionicons name="chevron-forward" size={22} color="#d4a017" />
+          <Ionicons name="chevron-forward" size={22} color={colors.primary} />
         </Pressable>
       </View>
 
       <View className="flex-row mb-2">
         {weekdayLabels.map((label) => (
-          <Text key={label} className={`flex-1 text-center font-semibold text-leather-400 ${weekdayTextSize}`}>
+          <Text key={label} className={`flex-1 text-center font-semibold text-muted ${weekdayTextSize}`}>
             {label}
           </Text>
         ))}
@@ -190,12 +192,12 @@ export default function CalendarScreen() {
                 accessibilityRole="button"
                 accessibilityState={{ selected }}
               >
-                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-gold-600' : 'bg-transparent'}`}>
+                <View className={`w-9 h-9 rounded-full items-center justify-center ${selected ? 'bg-primary' : 'bg-transparent'}`}>
                   <Text className={`text-base ${getDayTextClass(selected, isToday, day.inCurrentMonth)}`}>
                     {day.label}
                   </Text>
                   {hasEvents && (
-                    <View className={`w-2 h-2 rounded-full mt-0.5 ${selected ? 'bg-leather-50' : 'bg-gold-400'}`} />
+                    <View className={`w-2 h-2 rounded-full mt-0.5 ${selected ? 'bg-primary-foreground' : 'bg-primary'}`} />
                   )}
                 </View>
               </Pressable>
@@ -209,18 +211,18 @@ export default function CalendarScreen() {
   const eventsList = (
     <>
       <View className="px-5 py-3">
-        <Text className="text-leather-50 font-semibold">{selectedDateLabel}</Text>
+        <Text className="text-foreground font-semibold">{selectedDateLabel}</Text>
       </View>
       <ScrollView
-        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor="#d4a017" />}
+        refreshControl={<RefreshControl refreshing={loading} onRefresh={refetch} tintColor={colors.primary} />}
         contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 100, flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         {dayEvents.length === 0 ? (
-          <View className="bg-leather-800 rounded-xl border border-leather-600 px-4 py-5">
-            <Text className="text-leather-50 font-medium">No events for this day</Text>
-            <Text className="text-leather-400 text-sm mt-1">Tap + to add one and connect it to your plan.</Text>
+          <View className="bg-surface rounded-xl border border-border px-4 py-5">
+            <Text className="text-foreground font-medium">No events for this day</Text>
+            <Text className="text-muted text-sm mt-1">Tap + to add one and connect it to your plan.</Text>
           </View>
         ) : (
           <>
@@ -244,9 +246,9 @@ export default function CalendarScreen() {
   return (
     <>
       {isIPad ? (
-        <View className="flex-1 flex-row bg-leather-900">
-          <View style={{ width: calendarWidth }} className="pt-14 px-4 border-r border-leather-800">
-            <Text className="text-2xl font-bold text-leather-50 mb-3" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
+        <View className="flex-1 flex-row bg-background">
+          <View style={{ width: calendarWidth }} className="pt-14 px-4 border-r border-border">
+            <Text className="text-2xl font-bold text-foreground mb-3" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
             {calendarGrid('text-sm')}
           </View>
           <View className="flex-1 pt-14">
@@ -254,9 +256,9 @@ export default function CalendarScreen() {
           </View>
         </View>
       ) : (
-        <View className="flex-1 bg-leather-900">
+        <View className="flex-1 bg-background">
           <View className="px-5 pt-14 pb-2">
-            <Text className="text-2xl font-bold text-leather-50" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
+            <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Calendar</Text>
           </View>
           <View className="px-5 py-3">
             {calendarGrid('text-xs')}
@@ -266,12 +268,12 @@ export default function CalendarScreen() {
       )}
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-gold-500 rounded-full w-14 h-14 items-center justify-center shadow-lg"
+        className="absolute bottom-24 right-6 bg-primary rounded-full w-14 h-14 items-center justify-center shadow-lg"
         onPress={() => setModalVisible(true)}
         accessibilityRole="button"
         accessibilityLabel="Create event"
       >
-        <Ionicons name="add" size={28} color="#fff" />
+        <Ionicons name="add" size={28} color={colors.primaryForeground} />
       </Pressable>
 
       <CreateEventModal

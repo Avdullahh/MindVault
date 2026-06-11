@@ -3,6 +3,7 @@ import { View } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { storage } from '../../lib/storage';
+import { useThemeColors } from '../../context/ThemeContext';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -15,6 +16,7 @@ function tabIcon(name: IoniconsName) {
 }
 
 export default function AppLayout() {
+  const colors = useThemeColors();
   const [initialTab, setInitialTab] = useState<string | undefined>(undefined);
   const [ready, setReady] = useState(false);
 
@@ -25,7 +27,7 @@ export default function AppLayout() {
     });
   }, []);
 
-  if (!ready) return <View className="flex-1 bg-leather-900" />;
+  if (!ready) return <View className="flex-1 bg-background" />;
 
   return (
     <Tabs
@@ -40,9 +42,9 @@ export default function AppLayout() {
       }}
       screenOptions={{
         headerShown: false,
-        tabBarStyle: { backgroundColor: '#141009', borderTopColor: '#3d2b1a' },
-        tabBarActiveTintColor: '#d4a017',
-        tabBarInactiveTintColor: '#7a6050',
+        tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
+        tabBarActiveTintColor: colors.primary,
+        tabBarInactiveTintColor: colors.muted,
       }}
     >
       <Tabs.Screen

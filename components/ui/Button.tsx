@@ -1,4 +1,5 @@
 import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { useThemeColors } from '../../context/ThemeContext';
 
 type Props = {
   label: string;
@@ -9,6 +10,7 @@ type Props = {
 };
 
 export function Button({ label, onPress, variant = 'primary', loading = false, disabled = false }: Props) {
+  const colors = useThemeColors();
   const isPrimary = variant === 'primary';
 
   return (
@@ -17,13 +19,14 @@ export function Button({ label, onPress, variant = 'primary', loading = false, d
       disabled={disabled || loading}
       className={[
         'rounded-xl min-h-11 px-4 py-3 items-center justify-center',
-        isPrimary ? 'bg-gold-500' : 'border border-gold-500',
+        'border border-primary',
+        isPrimary ? 'bg-primary' : '',
         disabled || loading ? 'opacity-50' : '',
       ].join(' ')}
     >
       {loading
-        ? <ActivityIndicator color={isPrimary ? '#fff' : '#d4a017'} />
-        : <Text className={['font-semibold text-base', isPrimary ? 'text-leather-50' : 'text-gold-400'].join(' ')}>{label}</Text>
+        ? <ActivityIndicator color={isPrimary ? colors.primaryForeground : colors.primary} />
+        : <Text className={['font-semibold text-base', isPrimary ? 'text-primary-foreground' : 'text-primary'].join(' ')}>{label}</Text>
       }
     </Pressable>
   );
