@@ -1,3 +1,8 @@
+-- Drop junction tables that FK into calendar_events
+DROP TABLE IF EXISTS public.event_ideas CASCADE;
+DROP TABLE IF EXISTS public.event_goals CASCADE;
+DROP TABLE IF EXISTS public.event_tasks CASCADE;
+
 -- Recreate own_tasks policy without calendar_event_id check
 DROP POLICY IF EXISTS "own_tasks" ON public.tasks;
 
@@ -39,6 +44,6 @@ CREATE POLICY "own_tasks" ON public.tasks FOR ALL USING (
   )
 );
 
--- Drop FK column and calendar_events table
+-- Drop FK column from tasks, then drop calendar_events (CASCADE drops its RLS policy)
 ALTER TABLE tasks DROP COLUMN IF EXISTS calendar_event_id;
-DROP TABLE IF EXISTS calendar_events;
+DROP TABLE IF EXISTS public.calendar_events CASCADE;
