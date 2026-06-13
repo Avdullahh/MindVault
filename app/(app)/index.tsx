@@ -3,14 +3,11 @@ import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAI } from '../../hooks/use-ai';
-import { useCalendarEvents } from '../../hooks/use-calendar-events';
 import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
-import { parseCalendarStoredDate } from '../../lib/date-utils';
 import { useThemeColors } from '../../context/ThemeContext';
-import type { CalendarEvent } from '../../types';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -20,26 +17,6 @@ type Metric = {
   icon: IoniconsName;
   route: string;
 };
-
-function fmtTime(iso: string) {
-  const d = parseCalendarStoredDate(iso);
-  const h = d.getHours();
-  const m = d.getMinutes();
-  const suffix = h >= 12 ? 'pm' : 'am';
-  const hour = h % 12 || 12;
-  return m === 0 ? `${hour}${suffix}` : `${hour}:${String(m).padStart(2, '0')}${suffix}`;
-}
-
-function eventTimeLabel(event: CalendarEvent): string | null {
-  if (event.all_day) return 'All day';
-  if (!event.end_at) {
-    return parseCalendarStoredDate(event.start_at).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-    });
-  }
-  return fmtTime(event.start_at);
-}
 
 function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
   return (
@@ -75,27 +52,13 @@ export default function DashboardScreen() {
   const { ideas, forgottenIdeas, loading: ideasLoading, refetch: refetchIdeas } = useIdeas();
   const { goals, loading: goalsLoading, refetch: refetchGoals } = useGoals();
   const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
-  const { events, loading: eventsLoading, refetch: refetchEvents } = useCalendarEvents();
   const { morningBrief, briefState } = useAI();
 
-  const loading = ideasLoading || goalsLoading || projectsLoading || eventsLoading;
+  const loading = ideasLoading || goalsLoading || projectsLoading;
   const dateLabel = useMemo(
     () => new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
     [],
   );
-
-  const allUpcomingEvents = useMemo(
-    () => events
-      .filter((event) => {
-        if (event.end_at) return parseCalendarStoredDate(event.end_at).getTime() >= Date.now();
-        const endOfDay = parseCalendarStoredDate(event.start_at);
-        endOfDay.setHours(23, 59, 59, 999);
-        return endOfDay.getTime() >= Date.now();
-      })
-      .sort((a, b) => a.start_at.localeCompare(b.start_at)),
-    [events],
-  );
-  const upcomingEvents = useMemo(() => allUpcomingEvents.slice(0, 3), [allUpcomingEvents]);
 
   const activeGoals = useMemo(
     () => goals
@@ -115,13 +78,12 @@ export default function DashboardScreen() {
       { label: 'Ideas', value: ideas.length, icon: 'bulb-outline', route: '/(app)/ideas' },
       { label: 'Goals', value: goals.length, icon: 'flag-outline', route: '/(app)/goals' },
       { label: 'Projects', value: projects.length, icon: 'folder-outline', route: '/(app)/projects' },
-      { label: 'Upcoming', value: allUpcomingEvents.length, icon: 'calendar-outline', route: '/(app)/calendar' },
     ],
-    [ideas.length, goals.length, projects.length, allUpcomingEvents.length],
+    [ideas.length, goals.length, projects.length],
   );
 
   const refresh = async () => {
-    await Promise.all([refetchIdeas(), refetchGoals(), refetchProjects(), refetchEvents()]);
+    await Promise.all([refetchIdeas(), refetchGoals(), refetchProjects()]);
   };
 
   const renderGoal = (goal: ReturnType<typeof useGoals>['goals'][number]) => (
@@ -141,31 +103,6 @@ export default function DashboardScreen() {
       ) : null}
     </Pressable>
   );
-
-  const renderEvent = (event: CalendarEvent) => {
-    const label = eventTimeLabel(event);
-    return (
-      <Pressable
-        key={event.id}
-        className="bg-surface rounded-xl px-3 py-3 mb-2 border border-border flex-row items-center gap-3 min-h-16"
-        onPress={() => router.push('/(app)/calendar')}
-        accessibilityRole="button"
-      >
-        {label ? (
-          <View className="w-14 shrink-0">
-            <Text className="text-primary text-sm font-medium" numberOfLines={1}>{label}</Text>
-            {event.end_at && !event.all_day ? (
-              <Text className="text-muted text-xs" numberOfLines={1}>{fmtTime(event.end_at)}</Text>
-            ) : null}
-          </View>
-        ) : null}
-        <View className="flex-1">
-          <Text className="text-foreground font-medium" numberOfLines={1}>{event.title}</Text>
-          {event.notes ? <Text className="text-muted text-xs mt-1" numberOfLines={1}>{event.notes}</Text> : null}
-        </View>
-      </Pressable>
-    );
-  };
 
   return (
     <View className="flex-1 bg-background">
@@ -204,7 +141,7 @@ export default function DashboardScreen() {
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
               <Text className="text-foreground font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
-              <Text className="text-muted text-xs mt-1">Reads your calendar events and ideas vault, then surfaces a forgotten idea and today's agenda.</Text>
+              <Text className="text-muted text-xs mt-1">Reads your ideas vault and surfaces a forgotten idea with an inspirational thought for the day.</Text>
             </View>
             <AIButton
               label={briefState.status === 'success' ? 'Refresh' : 'Generate'}
@@ -263,11 +200,6 @@ export default function DashboardScreen() {
         <View className="mb-5">
           <SectionHeader title="Active Goals" action="View all" onPress={() => router.push('/(app)/goals')} />
           {activeGoals.length > 0 ? activeGoals.map(renderGoal) : <EmptyCard text="No goals yet. Turn an idea into a goal to connect planning with action." />}
-        </View>
-
-        <View className="mb-6">
-          <SectionHeader title="Upcoming Events" action="Calendar" onPress={() => router.push('/(app)/calendar')} />
-          {upcomingEvents.length > 0 ? upcomingEvents.map(renderEvent) : <EmptyCard text="No upcoming events linked to your thinking yet." />}
         </View>
       </ScrollView>
     </View>
