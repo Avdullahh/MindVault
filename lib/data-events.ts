@@ -4,7 +4,6 @@ export type DataTopic =
   | 'ideas'
   | 'projects'
   | 'goals'
-  | 'calendar_events'
   | 'tasks';
 
 type DataListener = (source?: symbol) => void;

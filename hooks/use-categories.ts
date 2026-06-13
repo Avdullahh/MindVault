@@ -41,7 +41,7 @@ export function useCategories() {
     const { error: err } = await supabase.from('categories').delete().eq('id', id);
     if (err) return err.message;
     setCategories((prev) => prev.filter((c) => c.id !== id));
-    emitDataChange(['categories', 'ideas', 'projects', 'goals', 'calendar_events', 'tasks'], source.current);
+    emitDataChange(['categories', 'ideas', 'projects', 'goals', 'tasks'], source.current);
     return null;
   };
 
