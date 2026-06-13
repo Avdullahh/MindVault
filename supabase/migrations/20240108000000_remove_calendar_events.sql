@@ -1,5 +1,44 @@
--- Drop FK from tasks to calendar_events
-ALTER TABLE tasks DROP COLUMN IF EXISTS calendar_event_id;
+-- Recreate own_tasks policy without calendar_event_id check
+DROP POLICY IF EXISTS "own_tasks" ON public.tasks;
 
--- Drop calendar_events table (cascades RLS policies automatically)
+CREATE POLICY "own_tasks" ON public.tasks FOR ALL USING (
+  auth.uid() = user_id
+  AND (
+    category_id IS NULL
+    OR EXISTS (
+      SELECT 1 FROM public.categories
+      WHERE categories.id = tasks.category_id
+        AND categories.user_id = auth.uid()
+    )
+  )
+  AND (
+    project_id IS NULL
+    OR EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE projects.id = tasks.project_id
+        AND projects.user_id = auth.uid()
+    )
+  )
+) WITH CHECK (
+  auth.uid() = user_id
+  AND (
+    category_id IS NULL
+    OR EXISTS (
+      SELECT 1 FROM public.categories
+      WHERE categories.id = tasks.category_id
+        AND categories.user_id = auth.uid()
+    )
+  )
+  AND (
+    project_id IS NULL
+    OR EXISTS (
+      SELECT 1 FROM public.projects
+      WHERE projects.id = tasks.project_id
+        AND projects.user_id = auth.uid()
+    )
+  )
+);
+
+-- Drop FK column and calendar_events table
+ALTER TABLE tasks DROP COLUMN IF EXISTS calendar_event_id;
 DROP TABLE IF EXISTS calendar_events;
