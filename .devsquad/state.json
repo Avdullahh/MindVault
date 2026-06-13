@@ -1,0 +1,26 @@
+{
+  "version": 1,
+  "session": {
+    "started": "2026-06-13T07:53:14Z",
+    "zone": "green"
+  },
+  "cli": {
+    "gemini": {
+      "available": true,
+      "path": "/c/Users/avhaz/AppData/Roaming/npm/gemini"
+    },
+    "codex": {
+      "available": true,
+      "path": "/c/Users/avhaz/AppData/Roaming/npm/codex"
+    },
+    "claude": {
+      "available": true,
+      "path": "/c/Users/avhaz/.local/bin/claude"
+    }
+  },
+  "stats": {
+    "gemini_calls": 0,
+    "codex_calls": 0,
+    "self_calls": 0
+  }
+}
