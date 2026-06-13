@@ -18,6 +18,3 @@ export type Goal          = Database['public']['Tables']['goals']['Row'];
 export type TaskInsert        = Database['public']['Tables']['tasks']['Insert'];
 export type TaskUpdate        = Database['public']['Tables']['tasks']['Update'];
 export type Task          = Database['public']['Tables']['tasks']['Row'];
-export type CalendarEventInsert = Database['public']['Tables']['calendar_events']['Insert'];
-export type CalendarEventUpdate = Database['public']['Tables']['calendar_events']['Update'];
-export type CalendarEvent = Database['public']['Tables']['calendar_events']['Row'];
