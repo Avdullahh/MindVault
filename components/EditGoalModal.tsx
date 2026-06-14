@@ -59,8 +59,8 @@ export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
   return (
     <ModalSheet visible={visible} onClose={onClose} title="Edit Goal">
       <TextInput
-        className="bg-surface border border-border rounded-xl px-4 py-3 text-foreground text-2xl mb-5"
-        style={{ fontFamily: 'Georgia', minHeight: 52 }}
+        className="bg-surface border border-border rounded-xl px-4 py-3 text-foreground text-2xl mb-5 font-rounded"
+        style={{ minHeight: 52 }}
         placeholder="What are you working toward?"
         placeholderTextColor={colors.muted}
         value={title}

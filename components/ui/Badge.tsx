@@ -18,7 +18,7 @@ export function Badge({ label, color = 'gray' }: Props) {
   const { bg, text } = colorMap[color];
   return (
     <View className={`${bg} rounded-full px-3 py-1 self-start`}>
-      <Text className={`${text} text-xs font-medium`}>{label}</Text>
+      <Text className={`font-rounded ${text} text-xs font-medium`}>{label}</Text>
     </View>
   );
 }

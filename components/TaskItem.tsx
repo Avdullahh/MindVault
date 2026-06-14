@@ -32,12 +32,12 @@ export function TaskItem({ task, onToggle }: Props) {
         />
       </Pressable>
       <View className="flex-1">
-        <Text className={`text-base ${task.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
+        <Text className={`text-base font-rounded font-normal ${task.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
           {task.title}
         </Text>
         <View className="flex-row items-center gap-2 mt-1 flex-wrap">
-          {task.goalTitle && <Text className="text-muted text-xs" numberOfLines={1}>Goal: {task.goalTitle}</Text>}
-          {task.due_date && <Text className="text-muted text-xs">{formatDue(task.due_date)}</Text>}
+          {task.goalTitle && <Text className="text-muted text-xs font-rounded italic" numberOfLines={1}>Goal: {task.goalTitle}</Text>}
+          {task.due_date && <Text className="text-muted text-xs font-rounded italic">{formatDue(task.due_date)}</Text>}
           {task.priority && !task.done && <Badge label={task.priority} color={priorityColor(task.priority)} />}
         </View>
       </View>

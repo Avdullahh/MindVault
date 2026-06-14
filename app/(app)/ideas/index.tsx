@@ -25,7 +25,7 @@ export default function IdeasScreen() {
   return (
     <View className="flex-1 bg-background">
       <View className="px-5 pt-14 pb-3">
-        <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Ideas</Text>
+        <Text className="text-2xl font-bold text-foreground font-rounded">Ideas</Text>
       </View>
 
       <View className="px-5 mb-3 w-full max-w-3xl self-center">

@@ -19,8 +19,8 @@ export function EmptyState({ title, subtitle, actionLabel, onAction, icon = 'com
       <View className="w-16 h-16 rounded-full bg-surface border border-border items-center justify-center mb-4">
         <Ionicons name={icon} size={28} color={colors.primary} />
       </View>
-      <Text className="text-lg font-bold text-primary mb-2 text-center" style={{ fontFamily: 'Georgia' }}>{title}</Text>
-      {subtitle && <Text className="text-muted text-center text-sm leading-5 mb-6">{subtitle}</Text>}
+      <Text className="font-rounded text-lg font-bold text-primary mb-2 text-center">{title}</Text>
+      {subtitle && <Text className="font-rounded italic text-muted text-center text-sm leading-5 mb-6">{subtitle}</Text>}
       {actionLabel && onAction && (
         <Pressable className="bg-primary rounded-xl px-6 py-3 border border-primary" onPress={onAction}>
           <Text className="text-foreground font-semibold">{actionLabel}</Text>

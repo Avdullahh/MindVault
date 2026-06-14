@@ -45,8 +45,8 @@ export function EditProjectModal({ project, visible, onClose, onSave }: Props) {
       </Text>
 
       <TextInput
-        className="text-foreground text-2xl mb-5"
-        style={{ fontFamily: 'Georgia', minHeight: 52 }}
+        className="text-foreground text-2xl mb-5 font-rounded"
+        style={{ minHeight: 52 }}
         placeholder="Project name"
         placeholderTextColor={colors.muted}
         value={title}

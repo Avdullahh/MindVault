@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, Pressable, Text, TextInput } from 'react-native';
+import { Pressable, Text, TextInput, View } from 'react-native';
 import { ModalSheet } from './ui/ModalSheet';
 import { useThemeColors } from '../context/ThemeContext';
 
@@ -42,21 +42,21 @@ export function ItemPickerModal({
         value={query}
         onChangeText={setQuery}
       />
-      <FlatList
-        data={filtered}
-        keyExtractor={(i) => i.id}
-        style={{ maxHeight: 350 }}
-        renderItem={({ item }) => (
-          <Pressable
-            className="py-3 px-2 border-b border-border flex-row items-center justify-between"
-            onPress={() => onToggle(item.id)}
-          >
-            <Text className="text-foreground flex-1" numberOfLines={1}>{item.title}</Text>
-            {selectedIds.includes(item.id) && <Text className="text-primary">✓</Text>}
-          </Pressable>
-        )}
-        ListEmptyComponent={<Text className="text-muted text-center py-4">{emptyMessage}</Text>}
-      />
+      <View style={{ maxHeight: 350 }}>
+        {filtered.length === 0
+          ? <Text className="text-muted text-center py-4">{emptyMessage}</Text>
+          : filtered.map((item) => (
+              <Pressable
+                key={item.id}
+                className="py-3 px-2 border-b border-border flex-row items-center justify-between"
+                onPress={() => onToggle(item.id)}
+              >
+                <Text className="text-foreground flex-1" numberOfLines={1}>{item.title}</Text>
+                {selectedIds.includes(item.id) && <Text className="text-primary">✓</Text>}
+              </Pressable>
+            ))
+        }
+      </View>
     </ModalSheet>
   );
 }

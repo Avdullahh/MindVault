@@ -20,7 +20,7 @@ module.exports = {
         destructive: 'rgb(var(--destructive) / <alpha-value>)',
       },
       fontFamily: {
-        serif: ['Georgia', 'serif'],
+        rounded: ['SF Compact Rounded'],
       },
     },
   },

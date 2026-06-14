@@ -171,7 +171,7 @@ export default function ProjectDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        <Text className="text-foreground text-xl font-bold mb-2" style={{ fontFamily: 'Georgia' }}>{project.title}</Text>
+        <Text className="text-foreground text-xl font-bold mb-2 font-rounded">{project.title}</Text>
         {project.main_goal && <Text className="text-muted mb-5">{project.main_goal}</Text>}
 
         <View className="mb-5">

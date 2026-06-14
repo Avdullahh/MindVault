@@ -32,7 +32,7 @@ export default function Login() {
         className="w-24 h-24 rounded-2xl mb-5 self-center"
         accessibilityLabel="MindVault logo"
       />
-      <Text className="text-3xl font-bold text-primary mb-2" style={{ fontFamily: 'Georgia' }}>MindVault</Text>
+      <Text className="text-3xl font-bold text-primary mb-2 font-rounded">MindVault</Text>
       <Text className="text-muted text-sm leading-5 mb-8">Capture ideas, connect them to action, and come back to what matters.</Text>
 
       <TextInput

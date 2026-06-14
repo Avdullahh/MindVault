@@ -56,7 +56,7 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
               contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
             >
               {title && (
-                <Text className="text-xl font-bold text-foreground mb-4" style={{ fontFamily: 'Georgia' }}>
+                <Text className="font-rounded text-xl font-bold text-foreground mb-4">
                   {title}
                 </Text>
               )}

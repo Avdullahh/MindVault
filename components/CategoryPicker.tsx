@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FlatList, Pressable, Text } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useCategories } from '../hooks/use-categories';
 import { ModalSheet } from './ui/ModalSheet';
 
@@ -32,19 +32,18 @@ export function CategoryPicker({ value, onChange }: Props) {
       </Pressable>
 
       <ModalSheet visible={open} onClose={() => setOpen(false)} title="Select category">
-        <FlatList
-          data={items}
-          keyExtractor={(item) => item.id ?? '__none__'}
-          renderItem={({ item }) => (
+        <View>
+          {items.map((item) => (
             <Pressable
+              key={item.id ?? '__none__'}
               className="py-3 px-2 border-b border-border flex-row items-center justify-between"
               onPress={() => { onChange(item.id); setOpen(false); }}
             >
               <Text className="text-foreground">{item.name}</Text>
               {item.id === value && <Text className="text-primary">✓</Text>}
             </Pressable>
-          )}
-        />
+          ))}
+        </View>
       </ModalSheet>
     </>
   );

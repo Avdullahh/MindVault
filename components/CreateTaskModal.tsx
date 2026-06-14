@@ -37,8 +37,8 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
       </Text>
 
       <TextInput
-        className="text-foreground text-2xl mb-5"
-        style={{ fontFamily: 'Georgia', minHeight: 52 }}
+        className="text-foreground text-2xl mb-5 font-rounded"
+        style={{ minHeight: 52 }}
         placeholder="What needs doing?"
         placeholderTextColor={colors.muted}
         value={title}

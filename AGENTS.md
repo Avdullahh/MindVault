@@ -4,7 +4,7 @@ AGENTS.md is the operating manual for coding agents in this repository. Keep it 
 
 ## Mandatory Delegation Workflow (DevSquad)
 
-**The DevSquad workflow is mandatory at all times, with no exception.** Every task in this repository must be routed through DevSquad delegation before the lead agent does work directly.
+**The DevSquad workflow is mandatory at all times, with no exception.** Every task must be routed through DevSquad delegation before the lead agent does work directly.
 
 - Follow the routing in `.devsquad/config.json` on every task:
   - Research → Gemini
@@ -14,11 +14,12 @@ AGENTS.md is the operating manual for coding agents in this repository. Keep it 
   - Synthesis and final integration → lead agent (self)
 - The lead agent does not personally do research, bulk file reading, or boilerplate generation. Delegate it, then synthesize and integrate the results.
 - This rule applies even to small or "quick" tasks. There is no exception for size, urgency, or convenience.
-- If a delegate (Gemini or Codex) is unavailable, state that explicitly before falling back to doing the work directly.
+- If a delegate is unavailable, state that explicitly before falling back to doing the work directly.
 
 ## Product Context
 
-MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, projects, and calendar events, and helps users turn thinking into action.
+MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, and projects, and helps users turn thinking into action. 
+The idea is heavily inspired by Obsidian. The goal is to make a simpler, more user-friendly application for on-the-go usage but also deep enough for users who want to heavily lean on it to use it as a second brain.
 
 The app is not a generic notes app. Treat it as the connective layer between thinking and doing.
 
@@ -26,7 +27,7 @@ Core product rules:
 - AI is always opt-in and user-triggered. Never run AI automatically in the background.
 - Free tier includes capture, organization, and manual planning.
 - Pro tier gates AI expansion, goal planning, categorization, and morning brief features.
-- Ideas, goals, tasks, projects, and events should be meaningfully cross-linkable.
+- Ideas, goals, tasks, and projects should be meaningfully cross-linkable.
 - Prefer calm, focused UI over decorative or marketing-style screens.
 
 ## Tech Stack
@@ -97,7 +98,6 @@ Core tables:
 - `ideas`
 - `projects`
 - `goals`
-- `calendar_events`
 - `tasks`
 
 Junction tables:
@@ -107,9 +107,6 @@ Junction tables:
 - `goal_projects`
 - `task_ideas`
 - `task_goals`
-- `event_ideas`
-- `event_goals`
-- `event_tasks`
 
 All user-owned tables must enforce RLS with user isolation equivalent to `auth.uid() = user_id`. Do not weaken RLS for convenience.
 Foreign-key links between user-owned rows must also prove same-user ownership in RLS policies.
@@ -143,10 +140,10 @@ Shared Edge Function utilities live in `supabase/functions/_shared/`. Reuse them
 
 - Design for iPad first, then make phone layouts work cleanly.
 - Keep screens useful immediately; avoid landing-page or marketing copy inside the app.
-- Prefer dense, scannable organization for lists, calendars, tasks, and planning views.
+- Prefer dense, scannable organization for lists, tasks, and planning views.
 - AI actions should feel optional, clearly labeled, and reversible when practical.
 - Empty states should help the user take the next meaningful action.
-- Preserve cross-linking flows when editing ideas, goals, tasks, projects, and events.
+- Preserve cross-linking flows when editing ideas, goals, tasks, and projects.
 - For vertically centered list-card text, use container centering plus explicit line heights and `includeFontPadding: false` so React Native text does not sit slightly high.
 - **No phantom space**: if a UI element has nothing to display, do not render it. Conditional rendering must use `{value ? <Component /> : null}` — never render an empty `<View>`, `<Text>`, or container just to hold potential space. This applies to wrapper Views too: if all children are conditional and may all be null, wrap the container in the same condition.
 
@@ -157,10 +154,10 @@ When adding major product areas, follow this dependency order unless the user ex
 1. Foundation: schema, RLS, policies, generated types.
 2. Expo setup: NativeWind, Expo Router, Supabase client.
 3. Authentication: login, registration, Apple Sign In when implemented, session persistence, RLS validation.
-4. Core features: ideas, categories/tags, goals/milestones, projects, calendar, tasks, cross-linking UI.
+4. Core features: ideas, categories/tags, goals/milestones, projects, tasks, cross-linking UI.
 5. AI features: Edge Functions first, dashboard/function testing, then app integration.
 6. Subscriptions: RevenueCat, paywall, entitlement refresh, AI access removal without restart.
-7. Notifications and polish: daily brief scheduling, iPad optimization, animation polish, Apple Calendar sync toggle.
+7. Notifications and polish: daily brief scheduling, iPad optimization, animation polish.
 
 ## Change Workflow
 

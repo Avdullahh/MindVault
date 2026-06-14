@@ -26,7 +26,7 @@ export function Button({ label, onPress, variant = 'primary', loading = false, d
     >
       {loading
         ? <ActivityIndicator color={isPrimary ? colors.primaryForeground : colors.primary} />
-        : <Text className={['font-semibold text-base', isPrimary ? 'text-primary-foreground' : 'text-primary'].join(' ')}>{label}</Text>
+        : <Text className={['font-rounded font-semibold text-base', isPrimary ? 'text-primary-foreground' : 'text-primary'].join(' ')}>{label}</Text>
       }
     </Pressable>
   );

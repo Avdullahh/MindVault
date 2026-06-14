@@ -143,7 +143,7 @@ export default function GoalDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-        <Text className="text-foreground text-xl font-bold mb-1" style={{ fontFamily: 'Georgia' }}>{goal.title}</Text>
+        <Text className="text-foreground text-xl font-bold mb-1 font-rounded">{goal.title}</Text>
         {goal.deadline && (
           <Text className="text-muted text-sm mb-4">
             Due {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}

@@ -34,7 +34,7 @@ export default function Register() {
   if (success) {
     return (
       <View className="flex-1 bg-background justify-center px-6">
-        <Text className="text-2xl font-bold text-primary mb-4" style={{ fontFamily: 'Georgia' }}>Check your email</Text>
+        <Text className="text-2xl font-bold text-primary mb-4 font-rounded">Check your email</Text>
         <Text className="text-foreground mb-8">
           We sent a confirmation link to {email}. Open it to activate your account, then log in.
         </Text>
@@ -49,7 +49,7 @@ export default function Register() {
 
   return (
     <AuthFormContainer>
-      <Text className="text-3xl font-bold text-primary mb-8" style={{ fontFamily: 'Georgia' }}>Create account</Text>
+      <Text className="text-3xl font-bold text-primary mb-8 font-rounded">Create account</Text>
 
       <TextInput
         className="bg-surface text-foreground rounded-xl px-4 py-3 mb-4"

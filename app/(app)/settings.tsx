@@ -87,14 +87,14 @@ export default function Settings() {
         >
           <Ionicons name="chevron-back" size={22} color={colors.primary} />
         </Pressable>
-        <Text className={`text-2xl font-bold ${title}`} style={{ fontFamily: 'Georgia' }}>Settings</Text>
+        <Text className={`text-2xl font-bold font-rounded ${title}`}>Settings</Text>
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
         <View className={`${card} rounded-2xl border p-5 mb-5`}>
           <View className="flex-row items-center gap-4">
             <View className="bg-surface-2 w-14 h-14 rounded-full border border-primary items-center justify-center">
-              <Text className="text-primary text-lg font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
+              <Text className="text-primary text-lg font-bold font-rounded">{initials}</Text>
             </View>
             <View className="flex-1">
               <Text className={`${muted} text-xs uppercase tracking-widest mb-0.5`} style={{ letterSpacing: 1.5 }}>Signed in as</Text>
@@ -115,7 +115,7 @@ export default function Settings() {
               {avatar ? (
                 <Image source={{ uri: avatar }} className="w-24 h-24" />
               ) : (
-                <Text className="text-primary text-2xl font-bold" style={{ fontFamily: 'Georgia' }}>{initials}</Text>
+                <Text className="text-primary text-2xl font-bold font-rounded">{initials}</Text>
               )}
             </Pressable>
             <Text className="text-primary text-sm mt-2">Change profile photo</Text>

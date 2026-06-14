@@ -108,7 +108,7 @@ export default function DashboardScreen() {
     <View className="flex-1 bg-background">
       <View className="flex-row items-start justify-between px-5 pt-14 pb-4">
         <View>
-          <Text className="text-2xl font-bold text-foreground" style={{ fontFamily: 'Georgia' }}>Home</Text>
+          <Text className="text-2xl font-bold text-foreground font-rounded">Home</Text>
           <Text className="text-muted text-sm mt-1">{dateLabel}</Text>
         </View>
         <Pressable className="w-11 h-11 rounded-full bg-surface items-center justify-center border border-border" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
@@ -140,7 +140,7 @@ export default function DashboardScreen() {
         <View className="bg-surface rounded-2xl p-4 border border-primary mb-5">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-foreground font-bold" style={{ fontFamily: 'Georgia' }}>Morning Brief</Text>
+              <Text className="text-foreground font-bold font-rounded">Morning Brief</Text>
               <Text className="text-muted text-xs mt-1">Reads your ideas vault and surfaces a forgotten idea with an inspirational thought for the day.</Text>
             </View>
             <AIButton
