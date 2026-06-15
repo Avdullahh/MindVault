@@ -116,6 +116,7 @@ export default function ProjectDetail() {
       setError(err);
     } else {
       savedTitle.current = trimmed;
+      setTitle(trimmed);
       setError(null);
     }
   };
@@ -130,7 +131,7 @@ export default function ProjectDetail() {
       setMainGoal(previous);
       setError(err);
     } else {
-      savedMainGoal.current = mainGoal;
+      savedMainGoal.current = mainGoal.trim();
       setError(null);
     }
   };
