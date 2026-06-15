@@ -110,6 +110,7 @@ export default function IdeaDetail() {
       setError(err);
     } else {
       savedTitle.current = trimmed;
+      setTitle(trimmed);
       setError(null);
     }
   };
@@ -128,7 +129,7 @@ export default function IdeaDetail() {
       setDescription(previous);
       setError(err);
     } else {
-      savedDescription.current = description;
+      savedDescription.current = trimmed ?? '';
       setError(null);
     }
   };
@@ -138,8 +139,8 @@ export default function IdeaDetail() {
     const previous = savedCategoryId.current;
     setCategoryId(newCategoryId);
     const err = await update(id, {
-      title: title.trim(),
-      description: description.trim() || null,
+      title: savedTitle.current,
+      description: savedDescription.current.trim() || null,
       category_id: newCategoryId,
     });
     if (err) {
