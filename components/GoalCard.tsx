@@ -1,6 +1,7 @@
 import { Pressable, Text, View } from 'react-native';
 import { Badge } from './ui/Badge';
 import type { Goal } from '../types';
+import { formatShortDate } from '../lib/date-format';
 
 type Props = {
   goal: Goal;
@@ -33,7 +34,7 @@ export function GoalCard({ goal, onPress }: Props) {
         {goal.priority && <Badge label={priorityLabel(goal.priority)} color={priorityColor(goal.priority)} />}
         {goal.deadline && (
           <Badge
-            label={new Date(goal.deadline).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+            label={formatShortDate(new Date(goal.deadline))}
             color={deadlineColor(goal.deadline)}
           />
         )}

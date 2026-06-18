@@ -11,6 +11,7 @@ import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { EditGoalModal } from '../../../components/EditGoalModal';
 import { useThemeColors } from '../../../context/ThemeContext';
 import type { Idea, Project, Task } from '../../../types';
+import { formatDate } from '../../../lib/date-format';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -146,7 +147,7 @@ export default function GoalDetail() {
         <Text className="text-foreground text-xl font-bold mb-1 font-rounded">{goal.title}</Text>
         {goal.deadline && (
           <Text className="text-muted text-sm mb-4">
-            Due {new Date(goal.deadline).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}
+            Due {formatDate(new Date(goal.deadline))}
           </Text>
         )}
 

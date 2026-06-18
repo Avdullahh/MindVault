@@ -1,14 +1,12 @@
 import { Pressable, Text, View } from 'react-native';
 import type { Idea } from '../types';
+import { formatShortDate } from '../lib/date-format';
 
 type Props = {
   idea: Idea;
   onPress: () => void;
 };
 
-function formatDate(iso: string) {
-  return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-}
 
 export function IdeaCard({ idea, onPress }: Props) {
   return (
@@ -19,7 +17,7 @@ export function IdeaCard({ idea, onPress }: Props) {
       {idea.description ? (
         <Text className="text-muted text-sm mb-2 font-rounded italic" numberOfLines={2}>{idea.description}</Text>
       ) : null}
-      <Text className="text-muted text-xs font-rounded italic">{formatDate(idea.created_at)}</Text>
+      <Text className="text-muted text-xs font-rounded italic">{formatShortDate(new Date(idea.created_at))}</Text>
     </Pressable>
   );
 }

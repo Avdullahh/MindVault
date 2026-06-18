@@ -3,6 +3,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Badge } from './ui/Badge';
 import { useThemeColors } from '../context/ThemeContext';
 import type { TaskWithGoal } from '../hooks/use-tasks';
+import { formatShortMonthDay } from '../lib/date-format';
 
 type Props = {
   task: TaskWithGoal;
@@ -17,7 +18,7 @@ function priorityColor(p: string | null): 'red' | 'yellow' | 'gray' {
 
 function formatDue(date: string | null) {
   if (!date) return null;
-  return new Date(date + 'T00:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  return formatShortMonthDay(new Date(date + 'T00:00:00'));
 }
 
 export function TaskItem({ task, onToggle }: Props) {

@@ -8,6 +8,7 @@ import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
 import { useThemeColors } from '../../context/ThemeContext';
+import { formatWeekdayLong, formatShortDate } from '../../lib/date-format';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
@@ -56,7 +57,7 @@ export default function DashboardScreen() {
 
   const loading = ideasLoading || goalsLoading || projectsLoading;
   const dateLabel = useMemo(
-    () => new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' }),
+    () => formatWeekdayLong(new Date()),
     [],
   );
 
@@ -98,7 +99,7 @@ export default function DashboardScreen() {
       </Text>
       {goal.deadline ? (
         <Text className="text-muted text-xs leading-4 mt-1" style={{ includeFontPadding: false }}>
-          Due {new Date(goal.deadline).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}
+          Due {formatShortDate(new Date(goal.deadline))}
         </Text>
       ) : null}
     </Pressable>

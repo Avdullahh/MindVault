@@ -3,6 +3,7 @@ import { Platform, Pressable, Text, View } from 'react-native';
 import RNDateTimePicker from '@react-native-community/datetimepicker';
 import { Ionicons } from '@expo/vector-icons';
 import { useTheme } from '../../context/ThemeContext';
+import { formatDate, formatTime } from '../../lib/date-format';
 
 type Props = {
   value: Date | null;
@@ -11,14 +12,6 @@ type Props = {
   placeholder?: string;
   compact?: boolean;
 };
-
-function formatDate(d: Date) {
-  return d.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
-}
-
-function formatTime(d: Date) {
-  return d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: false });
-}
 
 function startOfDay(offset = 0) {
   const date = new Date();
