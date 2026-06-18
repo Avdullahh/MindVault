@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
@@ -8,23 +8,35 @@ import { useGoals } from '../../../hooks/use-goals';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useProjects } from '../../../hooks/use-projects';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
-import { EditGoalModal } from '../../../components/EditGoalModal';
+import { DatePicker } from '../../../components/ui/DatePicker';
 import { useThemeColors } from '../../../context/ThemeContext';
 import type { Idea, Project, Task } from '../../../types';
 import { formatDate } from '../../../lib/date-format';
+
+function toIsoDate(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const source = useRef(Symbol('goal-detail'));
   const { goals, loading, remove, update } = useGoals();
-  const [editVisible, setEditVisible] = useState(false);
   const { ideas: allIdeas } = useIdeas();
   const { projects: allProjects } = useProjects();
   const colors = useThemeColors();
 
   const goal = goals.find((g) => g.id === id);
-  const [editSnapshot, setEditSnapshot] = useState<typeof goal>(undefined);
+
+  const [title, setTitle] = useState('');
+  const [deadline, setDeadline] = useState<Date | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const savedTitle = useRef('');
+  const savedDeadline = useRef<Date | null>(null);
+
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
@@ -95,6 +107,16 @@ export default function GoalDetail() {
     });
   }, [id, goal?.project_id]);
 
+  useEffect(() => {
+    if (goal) {
+      setTitle(goal.title);
+      savedTitle.current = goal.title;
+      const parsed = goal.deadline ? new Date(goal.deadline) : null;
+      setDeadline(parsed);
+      savedDeadline.current = parsed;
+    }
+  }, [goal?.id]);
+
   if (loading && !goal) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
@@ -111,7 +133,6 @@ export default function GoalDetail() {
     );
   }
 
-
   const handleDelete = () => {
     Alert.alert('Delete goal', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
@@ -127,6 +148,36 @@ export default function GoalDetail() {
     emitDataChange(['goals', 'ideas']);
   };
 
+  const handleTitleBlur = async () => {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === savedTitle.current) return;
+    const previous = savedTitle.current;
+    const err = await update(id, { title: trimmed });
+    if (err) {
+      setTitle(previous);
+      setError(err);
+    } else {
+      savedTitle.current = trimmed;
+      setTitle(trimmed);
+      setError(null);
+    }
+  };
+
+  const handleDeadlineChange = async (newDeadline: Date | null) => {
+    const previous = savedDeadline.current;
+    setDeadline(newDeadline);
+    const err = await update(id, {
+      deadline: newDeadline ? toIsoDate(newDeadline) : null,
+    });
+    if (err) {
+      setDeadline(previous);
+      setError(err);
+    } else {
+      savedDeadline.current = newDeadline;
+      setError(null);
+    }
+  };
+
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
@@ -134,9 +185,6 @@ export default function GoalDetail() {
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
         <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => { setEditSnapshot(goal); setEditVisible(true); }} accessibilityRole="button" accessibilityLabel="Edit goal">
-            <Ionicons name="pencil-outline" size={20} color={colors.primary} />
-          </Pressable>
           <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete goal">
             <Ionicons name="trash-outline" size={20} color={colors.destructive} />
           </Pressable>
@@ -144,12 +192,24 @@ export default function GoalDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
-        <Text className="text-foreground text-xl font-bold mb-1 font-rounded">{goal.title}</Text>
-        {goal.deadline && (
-          <Text className="text-muted text-sm mb-4">
-            Due {formatDate(new Date(goal.deadline))}
-          </Text>
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          onBlur={handleTitleBlur}
+          className="text-2xl font-bold text-foreground font-rounded"
+          accessibilityLabel="Goal title"
+          returnKeyType="done"
+        />
+        {error && (
+          <Text className="text-destructive text-sm pt-1 pb-2">{error}</Text>
         )}
+        <DatePicker
+          value={deadline}
+          onChange={handleDeadlineChange}
+          mode="date"
+          placeholder="No deadline"
+          compact
+        />
 
         {linkedProjects.length > 0 && (
           <>
@@ -234,12 +294,6 @@ export default function GoalDetail() {
         onToggle={handleTaskToggle}
         searchPlaceholder="Search tasks..."
         emptyMessage="No tasks found in linked projects"
-      />
-      <EditGoalModal
-        goal={editSnapshot ?? null}
-        visible={editVisible}
-        onClose={() => setEditVisible(false)}
-        onSave={update}
       />
     </View>
   );

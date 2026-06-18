@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { ActivityIndicator, Alert, Pressable, ScrollView, Text, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
@@ -13,7 +13,6 @@ import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EditTaskModal } from '../../../components/EditTaskModal';
-import { EditProjectModal } from '../../../components/EditProjectModal';
 import { AIButton } from '../../../components/ui/AIButton';
 import { emitDataChange } from '../../../lib/data-events';
 import { getUserId } from '../../../lib/get-user-id';
@@ -36,7 +35,6 @@ export default function ProjectDetail() {
   const router = useRouter();
   const colors = useThemeColors();
   const { projects, loading, remove, update } = useProjects();
-  const [editVisible, setEditVisible] = useState(false);
   const { fetchIdeasForProject, linkIdea, unlinkIdea } = useProjectIdeas();
   const { ideas: allIdeas } = useIdeas();
   const { goals: allGoals } = useGoals();
@@ -44,7 +42,12 @@ export default function ProjectDetail() {
   const { planGoal, planState } = useAI();
 
   const project = projects.find((p) => p.id === id);
-  const [editSnapshot, setEditSnapshot] = useState<typeof project>(undefined);
+
+  const [title, setTitle] = useState('');
+  const [mainGoal, setMainGoal] = useState('');
+  const [error, setError] = useState<string | null>(null);
+  const savedTitle = useRef('');
+  const savedMainGoal = useRef('');
 
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
   const [linkedGoals, setLinkedGoals] = useState<Goal[]>([]);
@@ -78,6 +81,15 @@ export default function ProjectDetail() {
     void Promise.all([loadLinkedIdeas(), loadLinkedGoals()]);
   }, [id]);
 
+  useEffect(() => {
+    if (project) {
+      setTitle(project.title);
+      savedTitle.current = project.title;
+      setMainGoal(project.main_goal ?? '');
+      savedMainGoal.current = project.main_goal ?? '';
+    }
+  }, [project?.id]);
+
   if (loading && !project) {
     return (
       <View className="flex-1 bg-background justify-center items-center">
@@ -93,6 +105,36 @@ export default function ProjectDetail() {
       </View>
     );
   }
+
+  const handleTitleBlur = async () => {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === savedTitle.current) return;
+    const previous = savedTitle.current;
+    const err = await update(id, { title: trimmed });
+    if (err) {
+      setTitle(previous);
+      setError(err);
+    } else {
+      savedTitle.current = trimmed;
+      setTitle(trimmed);
+      setError(null);
+    }
+  };
+
+  const handleMainGoalBlur = async () => {
+    const trimmed = mainGoal.trim() || null;
+    const savedTrimmed = savedMainGoal.current.trim() || null;
+    if (trimmed === savedTrimmed) return;
+    const previous = savedMainGoal.current;
+    const err = await update(id, { main_goal: trimmed });
+    if (err) {
+      setMainGoal(previous);
+      setError(err);
+    } else {
+      savedMainGoal.current = mainGoal.trim();
+      setError(null);
+    }
+  };
 
   const handleDelete = () => {
     Alert.alert('Delete project', 'This cannot be undone.', [
@@ -161,9 +203,6 @@ export default function ProjectDetail() {
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
         <View className="flex-row items-center gap-4">
-          <Pressable onPress={() => { setEditSnapshot(project); setEditVisible(true); }} accessibilityRole="button" accessibilityLabel="Edit project">
-            <Ionicons name="pencil-outline" size={20} color={colors.primary} />
-          </Pressable>
           <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete project">
             <Ionicons name="trash-outline" size={20} color={colors.destructive} />
           </Pressable>
@@ -171,8 +210,27 @@ export default function ProjectDetail() {
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }}>
-        <Text className="text-foreground text-xl font-bold mb-2 font-rounded">{project.title}</Text>
-        {project.main_goal && <Text className="text-muted mb-5">{project.main_goal}</Text>}
+        <TextInput
+          value={title}
+          onChangeText={setTitle}
+          onBlur={handleTitleBlur}
+          className="text-2xl font-bold text-foreground font-rounded"
+          accessibilityLabel="Project title"
+          returnKeyType="done"
+        />
+        {error && (
+          <Text className="text-destructive text-sm pt-1 pb-2">{error}</Text>
+        )}
+        <TextInput
+          value={mainGoal}
+          onChangeText={setMainGoal}
+          onBlur={handleMainGoalBlur}
+          multiline
+          className="text-foreground"
+          placeholder="What is this project trying to achieve?"
+          placeholderTextColor={colors.muted}
+          accessibilityLabel="Project main goal"
+        />
 
         <View className="mb-5">
           <AIButton
@@ -305,12 +363,6 @@ export default function ProjectDetail() {
         visible={!!editingTask}
         onClose={() => setEditingTask(null)}
         onSave={updateTask}
-      />
-      <EditProjectModal
-        project={editSnapshot ?? null}
-        visible={editVisible}
-        onClose={() => setEditVisible(false)}
-        onSave={update}
       />
     </View>
   );

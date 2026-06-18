@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
@@ -44,7 +44,10 @@ export default function IdeaDetail() {
   const [linkedProjects, setLinkedProjects] = useState<{ id: string; title: string }[]>([]);
   const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
-  const [saving, setSaving] = useState(false);
+  const savedTitle = useRef('');
+  const savedDescription = useRef('');
+  const savedCategoryId = useRef<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const exitToIdeas = () => router.replace('/(app)/ideas');
 
@@ -71,6 +74,9 @@ export default function IdeaDetail() {
       setTitle(idea.title);
       setDescription(idea.description ?? '');
       setCategoryId(idea.category_id ?? null);
+      savedTitle.current = idea.title;
+      savedDescription.current = idea.description ?? '';
+      savedCategoryId.current = idea.category_id ?? null;
     }
   }, [idea?.id]);
 
@@ -90,12 +96,60 @@ export default function IdeaDetail() {
     );
   }
 
-  const handleSave = async () => {
-    if (!title.trim()) return;
-    setSaving(true);
-    await update(id, { title: title.trim(), description: description.trim() || null, category_id: categoryId });
-    setSaving(false);
-    exitToIdeas();
+  const handleTitleBlur = async () => {
+    const trimmed = title.trim();
+    if (!trimmed || trimmed === savedTitle.current) return;
+    const previous = savedTitle.current;
+    const err = await update(id, {
+      title: trimmed,
+      description: description.trim() || null,
+      category_id: categoryId,
+    });
+    if (err) {
+      setTitle(previous);
+      setError(err);
+    } else {
+      savedTitle.current = trimmed;
+      setTitle(trimmed);
+      setError(null);
+    }
+  };
+
+  const handleDescriptionBlur = async () => {
+    const trimmed = description.trim() || null;
+    const savedTrimmed = savedDescription.current.trim() || null;
+    if (trimmed === savedTrimmed) return;
+    const previous = savedDescription.current;
+    const err = await update(id, {
+      title: title.trim(),
+      description: trimmed,
+      category_id: categoryId,
+    });
+    if (err) {
+      setDescription(previous);
+      setError(err);
+    } else {
+      savedDescription.current = trimmed ?? '';
+      setError(null);
+    }
+  };
+
+  const handleCategoryChange = async (newCategoryId: string | null) => {
+    if (newCategoryId === savedCategoryId.current) return;
+    const previous = savedCategoryId.current;
+    setCategoryId(newCategoryId);
+    const err = await update(id, {
+      title: savedTitle.current,
+      description: savedDescription.current.trim() || null,
+      category_id: newCategoryId,
+    });
+    if (err) {
+      setCategoryId(previous);
+      setError(err);
+    } else {
+      savedCategoryId.current = newCategoryId;
+      setError(null);
+    }
   };
 
   const handleDelete = () => {
@@ -135,29 +189,29 @@ export default function IdeaDetail() {
         <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={exitToIdeas} accessibilityRole="button" accessibilityLabel="Back">
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
-        <View className="flex-row gap-2">
-          <Pressable className="min-h-11 px-3 items-center justify-center" onPress={handleSave} disabled={saving || !title.trim()} accessibilityRole="button" accessibilityState={{ disabled: saving || !title.trim(), busy: saving }}>
-            <Text className={saving ? 'text-muted' : 'text-primary font-semibold'}>Save</Text>
-          </Pressable>
-          <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete idea">
-            <Ionicons name="trash-outline" size={20} color={colors.destructive} />
-          </Pressable>
-        </View>
+        <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete idea">
+          <Ionicons name="trash-outline" size={20} color={colors.destructive} />
+        </Pressable>
       </View>
 
       <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <TextInput
-          className="text-foreground text-xl font-bold mb-3 bg-surface rounded-xl min-h-11 px-4 py-3"
+          className="text-foreground text-xl font-bold mb-1 bg-surface rounded-xl min-h-11 px-4 py-3"
           value={title}
           onChangeText={setTitle}
+          onBlur={handleTitleBlur}
           placeholder="Title"
           placeholderTextColor={colors.muted}
           returnKeyType="next"
         />
+        {error && (
+          <Text className="text-destructive text-sm px-1 pt-1">{error}</Text>
+        )}
         <TextInput
-          className="text-foreground bg-surface rounded-xl min-h-32 px-4 py-3 mb-4"
+          className="text-foreground bg-surface rounded-xl min-h-32 px-4 py-3 mb-4 mt-3"
           value={description}
           onChangeText={setDescription}
+          onBlur={handleDescriptionBlur}
           placeholder="Description"
           placeholderTextColor={colors.muted}
           multiline
@@ -189,7 +243,7 @@ export default function IdeaDetail() {
         )}
 
         <Text className="text-muted text-xs font-semibold uppercase mb-2">Category</Text>
-        <CategoryPicker value={categoryId} onChange={setCategoryId} />
+        <CategoryPicker value={categoryId} onChange={handleCategoryChange} />
 
         <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Tags</Text>
         <View className="flex-row flex-wrap mb-2">
