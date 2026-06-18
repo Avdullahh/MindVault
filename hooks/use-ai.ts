@@ -6,18 +6,14 @@ export type AIState<T> = { status: AIStatus; data: T | null; error: string | nul
 export type AIResult<T> = { data: T | null; error: string | null };
 
 async function callEdgeFunction<T>(name: string, body: object): Promise<T> {
-  const { data: { session } } = await supabase.auth.getSession();
-  if (!session) throw new Error('Not authenticated');
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) throw new Error('Not authenticated');
 
-  const { data, error } = await supabase.functions.invoke<T>(name, {
-    body,
-    headers: {
-      Authorization: `Bearer ${session.access_token}`,
-    },
-  });
+  const { data, error } = await supabase.functions.invoke<T>(name, { body });
   if (error) {
-    let message = error.message;
-    const context = (error as { context?: Response }).context;
+    const fnError = error as { message: string; context?: Response };
+    let message = fnError.message;
+    const context = fnError.context;
     if (context) {
       const payload = await context.clone().json().catch(() => null);
       if (payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string') {
