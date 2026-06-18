@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { View } from 'react-native';
+import { View, type ColorValue } from 'react-native';
 import { Tabs } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { storage } from '../../lib/storage';
@@ -10,7 +10,7 @@ type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 const VALID_TABS = ['index', 'ideas/index', 'goals/index', 'projects/index'];
 
 function tabIcon(name: IoniconsName) {
-  return ({ color, size }: { color: string; size: number }) => (
+  return ({ color, size }: { color: ColorValue; size: number }) => (
     <Ionicons name={name} size={size} color={color} />
   );
 }

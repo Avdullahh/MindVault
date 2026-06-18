@@ -32,7 +32,7 @@ Core product rules:
 
 ## Tech Stack
 
-- Expo 54, React Native 0.81, React 19, TypeScript strict mode
+- Expo 56, React Native 0.85, React 19, TypeScript strict mode
 - Expo Router for file-based navigation under `app/`
 - NativeWind and Tailwind for styling
 - Supabase for Postgres, Auth, RLS, generated types, and Edge Functions
