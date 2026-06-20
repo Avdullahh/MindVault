@@ -12,13 +12,7 @@ import { DatePicker } from '../../../components/ui/DatePicker';
 import { useThemeColors } from '../../../context/ThemeContext';
 import type { Idea, Project, Task } from '../../../types';
 import { formatDate } from '../../../lib/date-format';
-
-function toIsoDate(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
-}
+import { toLocalDateString } from '../../../lib/date-utils';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -167,7 +161,7 @@ export default function GoalDetail() {
     const previous = savedDeadline.current;
     setDeadline(newDeadline);
     const err = await update(id, {
-      deadline: newDeadline ? toIsoDate(newDeadline) : null,
+      deadline: newDeadline ? toLocalDateString(newDeadline) : null,
     });
     if (err) {
       setDeadline(previous);

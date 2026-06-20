@@ -131,7 +131,7 @@ export default function ProjectDetail() {
       setMainGoal(previous);
       setError(err);
     } else {
-      savedMainGoal.current = mainGoal.trim();
+      savedMainGoal.current = trimmed ?? '';
       setError(null);
     }
   };

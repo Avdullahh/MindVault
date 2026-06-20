@@ -100,11 +100,7 @@ export default function IdeaDetail() {
     const trimmed = title.trim();
     if (!trimmed || trimmed === savedTitle.current) return;
     const previous = savedTitle.current;
-    const err = await update(id, {
-      title: trimmed,
-      description: description.trim() || null,
-      category_id: categoryId,
-    });
+    const err = await update(id, { title: trimmed });
     if (err) {
       setTitle(previous);
       setError(err);
@@ -120,11 +116,7 @@ export default function IdeaDetail() {
     const savedTrimmed = savedDescription.current.trim() || null;
     if (trimmed === savedTrimmed) return;
     const previous = savedDescription.current;
-    const err = await update(id, {
-      title: title.trim(),
-      description: trimmed,
-      category_id: categoryId,
-    });
+    const err = await update(id, { description: trimmed });
     if (err) {
       setDescription(previous);
       setError(err);
@@ -138,11 +130,7 @@ export default function IdeaDetail() {
     if (newCategoryId === savedCategoryId.current) return;
     const previous = savedCategoryId.current;
     setCategoryId(newCategoryId);
-    const err = await update(id, {
-      title: savedTitle.current,
-      description: savedDescription.current.trim() || null,
-      category_id: newCategoryId,
-    });
+    const err = await update(id, { category_id: newCategoryId });
     if (err) {
       setCategoryId(previous);
       setError(err);
