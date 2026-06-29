@@ -12,31 +12,6 @@ export type Database = {
   __InternalSupabase: {
     PostgrestVersion: "14.5"
   }
-  graphql_public: {
-    Tables: {
-      [_ in never]: never
-    }
-    Views: {
-      [_ in never]: never
-    }
-    Functions: {
-      graphql: {
-        Args: {
-          extensions?: Json
-          operationName?: string
-          query?: string
-          variables?: Json
-        }
-        Returns: Json
-      }
-    }
-    Enums: {
-      [_ in never]: never
-    }
-    CompositeTypes: {
-      [_ in never]: never
-    }
-  }
   public: {
     Tables: {
       action_steps: {
@@ -74,56 +49,6 @@ export type Database = {
           },
         ]
       }
-      calendar_events: {
-        Row: {
-          all_day: boolean
-          apple_calendar_event_id: string | null
-          category_id: string | null
-          created_at: string
-          done: boolean
-          end_at: string | null
-          id: string
-          notes: string | null
-          start_at: string
-          title: string
-          user_id: string
-        }
-        Insert: {
-          all_day?: boolean
-          apple_calendar_event_id?: string | null
-          category_id?: string | null
-          created_at?: string
-          done?: boolean
-          end_at?: string | null
-          id?: string
-          notes?: string | null
-          start_at: string
-          title: string
-          user_id: string
-        }
-        Update: {
-          all_day?: boolean
-          apple_calendar_event_id?: string | null
-          category_id?: string | null
-          created_at?: string
-          done?: boolean
-          end_at?: string | null
-          id?: string
-          notes?: string | null
-          start_at?: string
-          title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "calendar_events_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       categories: {
         Row: {
           created_at: string
@@ -147,96 +72,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
-      }
-      event_goals: {
-        Row: {
-          event_id: string
-          goal_id: string
-        }
-        Insert: {
-          event_id: string
-          goal_id: string
-        }
-        Update: {
-          event_id?: string
-          goal_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_goals_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_goals_goal_id_fkey"
-            columns: ["goal_id"]
-            isOneToOne: false
-            referencedRelation: "goals"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      event_ideas: {
-        Row: {
-          event_id: string
-          idea_id: string
-        }
-        Insert: {
-          event_id: string
-          idea_id: string
-        }
-        Update: {
-          event_id?: string
-          idea_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_ideas_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_ideas_idea_id_fkey"
-            columns: ["idea_id"]
-            isOneToOne: false
-            referencedRelation: "ideas"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      event_tasks: {
-        Row: {
-          event_id: string
-          task_id: string
-        }
-        Insert: {
-          event_id: string
-          task_id: string
-        }
-        Update: {
-          event_id?: string
-          task_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "event_tasks_event_id_fkey"
-            columns: ["event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "event_tasks_task_id_fkey"
-            columns: ["task_id"]
-            isOneToOne: false
-            referencedRelation: "tasks"
-            referencedColumns: ["id"]
-          },
-        ]
       }
       goal_ideas: {
         Row: {
@@ -600,7 +435,6 @@ export type Database = {
       }
       tasks: {
         Row: {
-          calendar_event_id: string | null
           category_id: string | null
           created_at: string
           done: boolean
@@ -613,7 +447,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          calendar_event_id?: string | null
           category_id?: string | null
           created_at?: string
           done?: boolean
@@ -626,7 +459,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          calendar_event_id?: string | null
           category_id?: string | null
           created_at?: string
           done?: boolean
@@ -639,13 +471,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tasks_calendar_event_id_fkey"
-            columns: ["calendar_event_id"]
-            isOneToOne: false
-            referencedRelation: "calendar_events"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tasks_category_id_fkey"
             columns: ["category_id"]
@@ -796,9 +621,6 @@ export type CompositeTypes<
     : never
 
 export const Constants = {
-  graphql_public: {
-    Enums: {},
-  },
   public: {
     Enums: {},
   },
