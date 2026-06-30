@@ -7,19 +7,21 @@ AGENTS.md is the operating manual for coding agents in this repository. Keep it 
 **The DevSquad workflow is mandatory at all times, with no exception.** Every task must be routed through DevSquad delegation before the lead agent does work directly.
 
 - Follow the routing in `.devsquad/config.json` on every task:
-  - Research → Gemini
-  - Bulk reading / codebase analysis → Gemini (1M context)
-  - Code generation / boilerplate → Codex
-  - Testing → Codex
-  - Synthesis and final integration → lead agent (self)
+  - Research -> Gemini
+  - Bulk reading / codebase analysis -> Gemini
+  - Code generation / boilerplate -> Codex
+  - Testing -> Codex
+  - Synthesis and final integration -> lead agent (self)
 - The lead agent does not personally do research, bulk file reading, or boilerplate generation. Delegate it, then synthesize and integrate the results.
 - This rule applies even to small or "quick" tasks. There is no exception for size, urgency, or convenience.
 - If a delegate is unavailable, state that explicitly before falling back to doing the work directly.
+- `.devsquad/config.json` currently marks enforcement as advisory for tooling, but repository policy treats this workflow as mandatory.
 
 ## Product Context
 
-MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, and projects, and helps users turn thinking into action. 
-The idea is heavily inspired by Obsidian. The goal is to make a simpler, more user-friendly application for on-the-go usage but also deep enough for users who want to heavily lean on it to use it as a second brain.
+MindVault is an iPad-first iOS second-brain app. It captures ideas, connects them to goals, tasks, and projects, and helps users turn thinking into action.
+
+The app is heavily inspired by Obsidian. The goal is to make a simpler, more user-friendly app for on-the-go usage while staying deep enough for users who rely on it as a second brain.
 
 The app is not a generic notes app. Treat it as the connective layer between thinking and doing.
 
@@ -32,14 +34,14 @@ Core product rules:
 
 ## Tech Stack
 
-- Expo 56, React Native 0.85, React 19, TypeScript strict mode
+- Expo 56, React Native 0.85, React 19, TypeScript 6 strict mode
 - Expo Router for file-based navigation under `app/`
-- NativeWind and Tailwind for styling
+- NativeWind v4 and Tailwind CSS v3 for styling
 - Supabase for Postgres, Auth, RLS, generated types, and Edge Functions
 - Gemini only from Supabase Edge Functions, never from the client bundle
-- RevenueCat for subscriptions
 - Secure session storage via `expo-secure-store`
 - Package manager: npm, with `package-lock.json`
+- Planned subscription work uses RevenueCat, paywalls, and entitlement refresh. Do not describe it as installed until the dependency and integration exist.
 
 ## Commands
 
@@ -66,7 +68,9 @@ Supabase type generation depends on a linked project or project id. When schema 
 - `context/` - app-wide React context, including auth state
 - `hooks/` - data hooks and feature operations; Supabase queries live here
 - `lib/` - shared utilities and the single Supabase client
+- `theme/` - app theme tokens and shared visual constants
 - `types/` - generated database types and app-level type aliases
+- `docs/` - product notes, implementation plans, and design research
 - `supabase/migrations/` - database schema migrations
 - `supabase/functions/` - Edge Functions and shared Deno helpers
 
@@ -111,7 +115,7 @@ Junction tables:
 All user-owned tables must enforce RLS with user isolation equivalent to `auth.uid() = user_id`. Do not weaken RLS for convenience.
 Foreign-key links between user-owned rows must also prove same-user ownership in RLS policies.
 Tasks are project-scoped in the product UI and database writes; do not add a global Tasks route or create tasks without `project_id`.
-The AI plan flow (`ai-plan-goal` edge function + `handleConfirmPlan` in `projects/[id].tsx`) creates only `tasks` rows with `project_id` set to the current project. It does not create goals, milestones, action_steps, or any other row type. Do not reintroduce goal insertion or task_goals linking into this flow.
+The current app has authenticated routes for ideas, goals, projects, settings, login, and registration. There is no standalone global Tasks route.
 
 ## Security And Secrets
 
@@ -132,6 +136,8 @@ Current AI function pattern:
 4. Call Gemini server-side.
 5. Return a typed response.
 
+Current AI functions live under `supabase/functions/` and include categorization, idea expansion, morning brief, and goal planning flows.
+
 Never call Gemini from React Native code. Never add automatic AI categorization, expansion, planning, or brief generation without an explicit user action or scheduled feature requirement.
 
 Shared Edge Function utilities live in `supabase/functions/_shared/`. Reuse them instead of re-implementing auth, entitlement, Gemini, or response handling in each function.
@@ -145,7 +151,7 @@ Shared Edge Function utilities live in `supabase/functions/_shared/`. Reuse them
 - Empty states should help the user take the next meaningful action.
 - Preserve cross-linking flows when editing ideas, goals, tasks, and projects.
 - For vertically centered list-card text, use container centering plus explicit line heights and `includeFontPadding: false` so React Native text does not sit slightly high.
-- **No phantom space**: if a UI element has nothing to display, do not render it. Conditional rendering must use `{value ? <Component /> : null}` — never render an empty `<View>`, `<Text>`, or container just to hold potential space. This applies to wrapper Views too: if all children are conditional and may all be null, wrap the container in the same condition.
+- **No phantom space**: if a UI element has nothing to display, do not render it. Conditional rendering must use `{value ? <Component /> : null}` - never render an empty `<View>`, `<Text>`, or container just to hold potential space. This applies to wrapper Views too: if all children are conditional and may all be null, wrap the container in the same condition.
 
 ## Build Order
 
@@ -154,7 +160,7 @@ When adding major product areas, follow this dependency order unless the user ex
 1. Foundation: schema, RLS, policies, generated types.
 2. Expo setup: NativeWind, Expo Router, Supabase client.
 3. Authentication: login, registration, Apple Sign In when implemented, session persistence, RLS validation.
-4. Core features: ideas, categories/tags, goals/milestones, projects, tasks, cross-linking UI.
+4. Core features: ideas, categories/tags, goals, projects, tasks, cross-linking UI.
 5. AI features: Edge Functions first, dashboard/function testing, then app integration.
 6. Subscriptions: RevenueCat, paywall, entitlement refresh, AI access removal without restart.
 7. Notifications and polish: daily brief scheduling, iPad optimization, animation polish.
