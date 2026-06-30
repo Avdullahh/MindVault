@@ -3,21 +3,20 @@ import { ActivityIndicator, Alert, Pressable, ScrollView, Text, TextInput, View 
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
-import { emitDataChange, subscribeToDataChanges } from '../../../lib/data-events';
+import { emitDataChange } from '../../../lib/data-events';
 import { useGoals } from '../../../hooks/use-goals';
 import { useIdeas } from '../../../hooks/use-ideas';
 import { useProjects } from '../../../hooks/use-projects';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { DatePicker } from '../../../components/ui/DatePicker';
 import { useThemeColors } from '../../../context/ThemeContext';
-import type { Idea, Project, Task } from '../../../types';
+import type { Idea, Project } from '../../../types';
 import { formatDate } from '../../../lib/date-format';
 import { toLocalDateString } from '../../../lib/date-utils';
 
 export default function GoalDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const source = useRef(Symbol('goal-detail'));
   const { goals, loading, remove, update } = useGoals();
   const { ideas: allIdeas } = useIdeas();
   const { projects: allProjects } = useProjects();
@@ -32,12 +31,9 @@ export default function GoalDetail() {
   const savedDeadline = useRef<Date | null>(null);
 
   const [linkedIdeas, setLinkedIdeas] = useState<Idea[]>([]);
-  const [linkedTasks, setLinkedTasks] = useState<Task[]>([]);
   const [linkedProjects, setLinkedProjects] = useState<Project[]>([]);
-  const [availableProjectTasks, setAvailableProjectTasks] = useState<Task[]>([]);
   const [ideaPickerVisible, setIdeaPickerVisible] = useState(false);
   const [projectPickerVisible, setProjectPickerVisible] = useState(false);
-  const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const [linkError, setLinkError] = useState<string | null>(null);
 
   const exitToGoals = () => router.replace('/(app)/goals');
@@ -47,38 +43,9 @@ export default function GoalDetail() {
     setLinkedIdeas(((data ?? []) as { ideas: Idea }[]).map((r) => r.ideas).filter(Boolean));
   };
 
-  const loadLinkedTasks = async () => {
-    const { data } = await supabase.from('task_goals').select('tasks(*)').eq('goal_id', id);
-    setLinkedTasks(((data ?? []) as { tasks: Task }[]).map((r) => r.tasks).filter(Boolean));
-  };
-
   const loadLinkedProjects = async () => {
     const { data } = await supabase.from('goal_projects').select('projects(*)').eq('goal_id', id);
-    const projects = ((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean);
-    setLinkedProjects(projects);
-    await loadAvailableProjectTasks(projects);
-  };
-
-  const loadAvailableProjectTasks = async (projects: Project[]) => {
-    const projectIds = Array.from(
-      new Set([
-        ...projects.map((p) => p.id),
-        ...(goal?.project_id ? [goal.project_id] : []),
-      ]),
-    );
-    if (projectIds.length === 0) { setAvailableProjectTasks([]); return; }
-    const { data } = await supabase.from('tasks').select('*').in('project_id', projectIds);
-    setAvailableProjectTasks(data ?? []);
-  };
-
-  const handleTaskToggle = async (taskId: string) => {
-    const linked = linkedTasks.some((t) => t.id === taskId);
-    const { error } = linked
-      ? await supabase.from('task_goals').delete().eq('goal_id', id).eq('task_id', taskId)
-      : await supabase.from('task_goals').insert({ goal_id: id, task_id: taskId });
-    if (error) { setLinkError(error.message); return; }
-    await loadLinkedTasks();
-    emitDataChange(['goals', 'tasks']);
+    setLinkedProjects(((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean));
   };
 
   const handleProjectToggle = async (projectId: string) => {
@@ -95,11 +62,8 @@ export default function GoalDetail() {
 
   useEffect(() => {
     if (!id) return;
-    void Promise.all([loadLinkedIdeas(), loadLinkedTasks(), loadLinkedProjects()]);
-    return subscribeToDataChanges('tasks', (src) => {
-      if (src !== source.current) void loadLinkedTasks();
-    });
-  }, [id, goal?.project_id]);
+    void Promise.all([loadLinkedIdeas(), loadLinkedProjects()]);
+  }, [id]);
 
   useEffect(() => {
     if (goal) {
@@ -205,30 +169,6 @@ export default function GoalDetail() {
           compact
         />
 
-        {linkedProjects.length > 0 && (
-          <>
-            <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Milestones</Text>
-            {linkedTasks.length === 0
-              ? <Text className="text-muted text-sm mb-3">No milestones yet - link tasks from the project below</Text>
-              : linkedTasks.map((t) => (
-                  <View key={t.id} className="flex-row items-center gap-3 bg-surface rounded-xl px-4 py-3 mb-2">
-                    <View className={`w-2.5 h-2.5 rounded-full ${t.done ? 'bg-primary' : 'bg-surface-2'}`} />
-                    <Text className={`flex-1 text-sm ${t.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
-                      {t.title}
-                    </Text>
-                    <Pressable onPress={() => handleTaskToggle(t.id)} hitSlop={8}>
-                      <Ionicons name="close-circle-outline" size={16} color={colors.muted} />
-                    </Pressable>
-                  </View>
-                ))
-            }
-            <Pressable className="flex-row min-h-11 items-center gap-2" onPress={() => setTaskPickerVisible(true)}>
-              <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
-              <Text className="text-primary text-sm">Link task from project</Text>
-            </Pressable>
-          </>
-        )}
-
         <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Linked Ideas</Text>
         {linkedIdeas.map((idea) => (
           <View key={idea.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
@@ -278,16 +218,6 @@ export default function GoalDetail() {
         onToggle={handleProjectToggle}
         searchPlaceholder="Search projects..."
         emptyMessage="No projects found"
-      />
-      <ItemPickerModal
-        visible={taskPickerVisible}
-        onClose={() => setTaskPickerVisible(false)}
-        title="Link Task"
-        items={availableProjectTasks}
-        selectedIds={linkedTasks.map((t) => t.id)}
-        onToggle={handleTaskToggle}
-        searchPlaceholder="Search tasks..."
-        emptyMessage="No tasks found in linked projects"
       />
     </View>
   );

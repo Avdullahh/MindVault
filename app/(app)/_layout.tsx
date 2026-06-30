@@ -7,7 +7,7 @@ import { useThemeColors } from '../../context/ThemeContext';
 
 type IoniconsName = React.ComponentProps<typeof Ionicons>['name'];
 
-const VALID_TABS = ['index', 'ideas/index', 'goals/index', 'projects/index'];
+const VALID_TABS = ['index', 'ideas/index', 'goals/index', 'projects/index', 'mind-map'];
 
 function tabIcon(name: IoniconsName) {
   return ({ color, size }: { color: ColorValue; size: number }) => (
@@ -34,7 +34,7 @@ export default function AppLayout() {
       initialRouteName={initialTab}
       screenListeners={{
         tabPress: (e) => {
-          const routeName = e.target?.split('-')[0];
+          const routeName = VALID_TABS.find((tab) => e.target === tab || e.target?.startsWith(`${tab}-`));
           if (routeName && VALID_TABS.includes(routeName)) {
             storage.setLastTab(routeName);
           }
@@ -62,6 +62,10 @@ export default function AppLayout() {
       <Tabs.Screen
         name="projects/index"
         options={{ title: 'Projects', tabBarIcon: tabIcon('folder-outline') }}
+      />
+      <Tabs.Screen
+        name="mind-map"
+        options={{ title: 'Map', tabBarIcon: tabIcon('git-network-outline') }}
       />
       <Tabs.Screen name="ideas/[id]" options={{ href: null }} />
       <Tabs.Screen name="goals/[id]" options={{ href: null }} />

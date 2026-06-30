@@ -110,7 +110,6 @@ Junction tables:
 - `goal_ideas`
 - `goal_projects`
 - `task_ideas`
-- `task_goals`
 
 All user-owned tables must enforce RLS with user isolation equivalent to `auth.uid() = user_id`. Do not weaken RLS for convenience.
 Foreign-key links between user-owned rows must also prove same-user ownership in RLS policies.
