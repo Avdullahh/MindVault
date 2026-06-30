@@ -175,27 +175,27 @@ export default function GoalDetail() {
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
-        <Pressable onPress={exitToGoals} accessibilityRole="button" accessibilityLabel="Back to goals">
+        <Pressable className="w-11 h-11 -ml-2 items-center justify-center" onPress={exitToGoals} accessibilityRole="button" accessibilityLabel="Back to goals">
           <Ionicons name="chevron-back" size={24} color={colors.primary} />
         </Pressable>
-        <View className="flex-row items-center gap-4">
-          <Pressable onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete goal">
-            <Ionicons name="trash-outline" size={20} color={colors.destructive} />
-          </Pressable>
-        </View>
+        <Pressable className="w-11 h-11 items-center justify-center" onPress={handleDelete} accessibilityRole="button" accessibilityLabel="Delete goal">
+          <Ionicons name="trash-outline" size={20} color={colors.destructive} />
+        </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 60 }} keyboardShouldPersistTaps="handled">
+      <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 80 }} keyboardShouldPersistTaps="handled" keyboardDismissMode="interactive">
         <TextInput
           value={title}
           onChangeText={setTitle}
           onBlur={handleTitleBlur}
-          className="text-2xl font-bold text-foreground font-rounded"
+          className="text-foreground text-xl font-bold mb-3 bg-surface rounded-xl min-h-11 px-4 py-3"
+          placeholder="Title"
+          placeholderTextColor={colors.muted}
           accessibilityLabel="Goal title"
           returnKeyType="done"
         />
         {error && (
-          <Text className="text-destructive text-sm pt-1 pb-2">{error}</Text>
+          <Text className="text-destructive text-sm px-1 pt-1">{error}</Text>
         )}
         <DatePicker
           value={deadline}
@@ -207,7 +207,7 @@ export default function GoalDetail() {
 
         {linkedProjects.length > 0 && (
           <>
-            <Text className="text-muted text-xs font-semibold uppercase mb-3">Milestones</Text>
+            <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Milestones</Text>
             {linkedTasks.length === 0
               ? <Text className="text-muted text-sm mb-3">No milestones yet - link tasks from the project below</Text>
               : linkedTasks.map((t) => (
@@ -222,40 +222,40 @@ export default function GoalDetail() {
                   </View>
                 ))
             }
-            <Pressable className="flex-row items-center gap-2 py-2 mb-4" onPress={() => setTaskPickerVisible(true)}>
-              <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-              <Text className="text-primary">Link task from project</Text>
+            <Pressable className="flex-row min-h-11 items-center gap-2" onPress={() => setTaskPickerVisible(true)}>
+              <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+              <Text className="text-primary text-sm">Link task from project</Text>
             </Pressable>
           </>
         )}
 
-        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-3">Linked Ideas</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Linked Ideas</Text>
         {linkedIdeas.map((idea) => (
           <View key={idea.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
             <Text className="text-foreground flex-1" numberOfLines={1}>{idea.title}</Text>
-            <Pressable onPress={() => handleIdeaToggle(idea.id)}>
+            <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleIdeaToggle(idea.id)}>
               <Ionicons name="close-circle-outline" size={18} color={colors.muted} />
             </Pressable>
           </View>
         ))}
-        <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setIdeaPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-          <Text className="text-primary">Link idea</Text>
+        <Pressable className="flex-row min-h-11 items-center gap-2" onPress={() => setIdeaPickerVisible(true)}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+          <Text className="text-primary text-sm">Link idea</Text>
         </Pressable>
 
-        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-3">Linked Projects</Text>
+        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Linked Projects</Text>
         {linkError && <Text className="text-destructive text-xs mb-2">{linkError}</Text>}
         {linkedProjects.map((project) => (
           <View key={project.id} className="bg-surface rounded-xl px-4 py-3 mb-2 flex-row items-center justify-between border border-border">
             <Text className="text-foreground flex-1" numberOfLines={1}>{project.title}</Text>
-            <Pressable onPress={() => handleProjectToggle(project.id)}>
+            <Pressable className="w-11 h-11 -mr-3 items-center justify-center" onPress={() => handleProjectToggle(project.id)}>
               <Ionicons name="close-circle-outline" size={18} color={colors.muted} />
             </Pressable>
           </View>
         ))}
-        <Pressable className="flex-row items-center gap-2 py-2" onPress={() => setProjectPickerVisible(true)}>
-          <Ionicons name="add-circle-outline" size={20} color={colors.primary} />
-          <Text className="text-primary">Link project</Text>
+        <Pressable className="flex-row min-h-11 items-center gap-2" onPress={() => setProjectPickerVisible(true)}>
+          <Ionicons name="add-circle-outline" size={18} color={colors.primary} />
+          <Text className="text-primary text-sm">Link project</Text>
         </Pressable>
       </ScrollView>
 
