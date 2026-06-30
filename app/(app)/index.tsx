@@ -107,14 +107,14 @@ export default function DashboardScreen() {
 
   return (
     <View className="flex-1 bg-background">
-      <View className="flex-row items-start justify-between px-5 pt-14 pb-4">
-        <View>
-          <Text className="text-2xl font-bold text-foreground font-rounded">Home</Text>
-          <Text className="text-muted text-sm mt-1">{dateLabel}</Text>
+      <View className="bg-background px-5 pt-14 pb-4">
+        <View className="flex-row justify-end mb-3">
+          <Pressable className="w-9 h-9 rounded-full bg-surface items-center justify-center border border-border" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
+            <Ionicons name="settings-outline" size={16} color={colors.muted} />
+          </Pressable>
         </View>
-        <Pressable className="w-11 h-11 rounded-full bg-surface items-center justify-center border border-border" onPress={() => router.push('/(app)/settings')} accessibilityRole="button" accessibilityLabel="Settings">
-          <Ionicons name="settings-outline" size={20} color={colors.muted} />
-        </Pressable>
+        <Text className="text-2xl font-bold text-foreground font-rounded">Home</Text>
+        <Text className="text-muted text-sm mt-1">{dateLabel}</Text>
       </View>
 
       <ScrollView
