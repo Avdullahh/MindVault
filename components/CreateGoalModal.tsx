@@ -1,9 +1,8 @@
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { useState } from 'react';
-import { ModalSheet } from './ui/ModalSheet';
 import type { GoalInsert } from '../types';
-import { useThemeColors } from '../context/ThemeContext';
 import { PRIORITIES, PRIORITY_LABELS, priorityActive, type Priority } from '../lib/priority';
+import { EntityFormModal } from './ui/EntityFormModal';
 
 type Props = {
   visible: boolean;
@@ -12,7 +11,6 @@ type Props = {
 };
 
 export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
-  const colors = useThemeColors();
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -30,23 +28,20 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
   };
 
   return (
-    <ModalSheet visible={visible} onClose={handleClose}>
-      <Text className="text-muted text-xs uppercase mb-4" style={{ letterSpacing: 2 }}>
-        New Goal
-      </Text>
-
-      <TextInput
-        className="bg-surface border border-border rounded-xl px-4 py-3 text-foreground text-2xl mb-5 font-rounded"
-        style={{ minHeight: 52 }}
-        placeholder="What are you working toward?"
-        placeholderTextColor={colors.muted}
-        value={title}
-        onChangeText={setTitle}
-        multiline
-        maxLength={200}
-        autoFocus
-      />
-
+    <EntityFormModal
+      visible={visible}
+      onClose={handleClose}
+      eyebrow="New Goal"
+      titleValue={title}
+      onTitleChange={setTitle}
+      titlePlaceholder="What are you working toward?"
+      titleBottomClassName="mb-5"
+      error={error}
+      loading={loading}
+      submitLabel="Set Goal"
+      onSubmit={handleCreate}
+      canSubmit={Boolean(title.trim())}
+    >
       <View className="flex-row gap-2 mb-5">
         {PRIORITIES.map((p) => (
           <Pressable
@@ -60,20 +55,6 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
           </Pressable>
         ))}
       </View>
-
-      {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
-
-      <Pressable
-        className={`rounded-xl py-4 items-center ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
-        onPress={handleCreate}
-        disabled={loading || !title.trim()}
-        accessibilityRole="button"
-      >
-        {loading
-          ? <ActivityIndicator color={colors.primary} />
-          : <Text className="text-foreground font-bold text-base">Set Goal</Text>
-        }
-      </Pressable>
-    </ModalSheet>
+    </EntityFormModal>
   );
 }

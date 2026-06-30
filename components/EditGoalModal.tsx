@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { ActivityIndicator, Pressable, Text, TextInput, View } from 'react-native';
-import { ModalSheet } from './ui/ModalSheet';
+import { Pressable, Text, View } from 'react-native';
 import { DatePicker } from './ui/DatePicker';
-import { useThemeColors } from '../context/ThemeContext';
 import type { Goal, GoalUpdate } from '../types';
 import { PRIORITIES, PRIORITY_LABELS, priorityActive, type Priority } from '../lib/priority';
+import { EntityFormModal } from './ui/EntityFormModal';
 
 type Props = {
   goal: Goal | null;
@@ -27,7 +26,6 @@ function toIsoDate(d: Date): string {
 }
 
 export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
-  const colors = useThemeColors();
   const [title, setTitle] = useState('');
   const [priority, setPriority] = useState<Priority | null>(null);
   const [deadline, setDeadline] = useState<Date | null>(null);
@@ -57,19 +55,20 @@ export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
   };
 
   return (
-    <ModalSheet visible={visible} onClose={onClose} title="Edit Goal">
-      <TextInput
-        className="bg-surface border border-border rounded-xl px-4 py-3 text-foreground text-2xl mb-5 font-rounded"
-        style={{ minHeight: 52 }}
-        placeholder="What are you working toward?"
-        placeholderTextColor={colors.muted}
-        value={title}
-        onChangeText={setTitle}
-        multiline
-        maxLength={200}
-        autoFocus
-      />
-
+    <EntityFormModal
+      visible={visible}
+      onClose={onClose}
+      eyebrow="Edit Goal"
+      titleValue={title}
+      onTitleChange={setTitle}
+      titlePlaceholder="What are you working toward?"
+      titleBottomClassName="mb-5"
+      error={error}
+      loading={loading}
+      submitLabel="Save Goal"
+      onSubmit={handleSave}
+      canSubmit={Boolean(title.trim())}
+    >
       <Text className="text-muted text-xs uppercase mb-2" style={{ letterSpacing: 1.5 }}>Priority</Text>
       <View className="flex-row gap-2 mb-5">
         {PRIORITIES.map((p) => (
@@ -98,20 +97,6 @@ export function EditGoalModal({ goal, visible, onClose, onSave }: Props) {
         placeholder="No deadline"
         compact
       />
-
-      {error ? <Text className="text-red-400 text-xs mb-3">{error}</Text> : null}
-
-      <Pressable
-        className={`rounded-xl py-4 items-center mt-2 ${!title.trim() || loading ? 'bg-surface-2 border border-border' : 'bg-primary border border-primary'}`}
-        onPress={handleSave}
-        disabled={loading || !title.trim()}
-        accessibilityRole="button"
-      >
-        {loading
-          ? <ActivityIndicator color={colors.primary} />
-          : <Text className="text-foreground font-bold text-base">Save Goal</Text>
-        }
-      </Pressable>
-    </ModalSheet>
+    </EntityFormModal>
   );
 }

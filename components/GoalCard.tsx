@@ -1,7 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
 import { Badge } from './ui/Badge';
 import type { Goal } from '../types';
 import { formatShortDate } from '../lib/date-format';
+import { EntityCard } from './ui/EntityCard';
 
 type Props = {
   goal: Goal;
@@ -28,17 +28,20 @@ function priorityLabel(p: string): string {
 
 export function GoalCard({ goal, onPress }: Props) {
   return (
-    <Pressable className="bg-surface rounded-2xl p-4 mb-3 border border-border" onPress={onPress}>
-      <Text className="text-foreground font-normal font-rounded text-base mb-2" numberOfLines={2}>{goal.title}</Text>
-      <View className="flex-row gap-2 flex-wrap">
-        {goal.priority && <Badge label={priorityLabel(goal.priority)} color={priorityColor(goal.priority)} />}
-        {goal.deadline && (
-          <Badge
-            label={formatShortDate(new Date(goal.deadline))}
-            color={deadlineColor(goal.deadline)}
-          />
-        )}
-      </View>
-    </Pressable>
+    <EntityCard
+      title={goal.title}
+      onPress={onPress}
+      meta={
+        <>
+          {goal.priority ? <Badge label={priorityLabel(goal.priority)} color={priorityColor(goal.priority)} /> : null}
+          {goal.deadline ? (
+            <Badge
+              label={formatShortDate(new Date(goal.deadline))}
+              color={deadlineColor(goal.deadline)}
+            />
+          ) : null}
+        </>
+      }
+    />
   );
 }
