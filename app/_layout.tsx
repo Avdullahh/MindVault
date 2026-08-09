@@ -7,10 +7,14 @@ import {
   DarkTheme,
   DefaultTheme,
 } from 'expo-router';
+import * as SplashScreen from 'expo-splash-screen';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { StatusBar } from 'expo-status-bar';
 import { AuthProvider, useAuth } from '../context/auth-context';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { QueryProvider } from '../lib/query-client';
+
+void SplashScreen.preventAutoHideAsync();
 
 function AuthGate() {
   const { session, loading } = useAuth();
@@ -25,6 +29,7 @@ function AuthGate() {
     } else if (session && inAuthGroup) {
       router.replace('/(app)');
     }
+    void SplashScreen.hideAsync();
   }, [session, loading, segments]);
 
   return null;
@@ -42,8 +47,10 @@ function ThemedApp() {
     <NavigationThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
       <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} animated />
       <AuthProvider>
-        <AuthGate />
-        <Stack screenOptions={{ headerShown: false }} />
+        <QueryProvider>
+          <AuthGate />
+          <Stack screenOptions={{ headerShown: false }} />
+        </QueryProvider>
       </AuthProvider>
     </NavigationThemeProvider>
   );

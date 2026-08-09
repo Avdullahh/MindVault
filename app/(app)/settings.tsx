@@ -1,11 +1,10 @@
-import { Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
+import { ActivityIndicator, Image, Pressable, ScrollView, Text, TextInput, View } from 'react-native';
 import { useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth-context';
 import { useTheme, useThemeColors, type ThemeMode } from '../../context/ThemeContext';
-import { supabase } from '../../lib/supabase';
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
@@ -14,7 +13,7 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionico
 ];
 
 export default function Settings() {
-  const { session, signOut } = useAuth();
+  const { session, signOut, updateAccount } = useAuth();
   const { mode, setMode } = useTheme();
   const colors = useThemeColors();
   const router = useRouter();
@@ -33,7 +32,18 @@ export default function Settings() {
   const [password, setPassword] = useState('');
   const [avatar, setAvatar] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
+  const [signingOut, setSigningOut] = useState(false);
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
+  const [profileMessageType, setProfileMessageType] = useState<'success' | 'error'>('success');
+
+  const normalizedDisplayName = displayName.trim();
+  const normalizedEmail = nextEmail.trim();
+  const accountChanged =
+    normalizedDisplayName !== (typeof metadata.display_name === 'string' ? metadata.display_name : '') ||
+    normalizedEmail !== email ||
+    Boolean(password) ||
+    avatar !== avatarUrl;
+  const canSaveProfile = accountChanged && !savingProfile;
 
   useEffect(() => {
     setDisplayName(typeof metadata.display_name === 'string' ? metadata.display_name : '');
@@ -52,28 +62,48 @@ export default function Settings() {
   };
 
   const savePersonalInfo = async () => {
+    if (!accountChanged) return;
+    if (normalizedEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedEmail)) {
+      setProfileMessageType('error');
+      setProfileMessage('Enter a valid email address.');
+      return;
+    }
+    if (password && password.length < 8) {
+      setProfileMessageType('error');
+      setProfileMessage('Use at least 8 characters for your new password.');
+      return;
+    }
+
     setSavingProfile(true);
     setProfileMessage(null);
     try {
-      const metadataUpdate = {
-        display_name: displayName.trim() || null,
-        avatar_url: avatar,
-      };
-      const emailChanged = nextEmail.trim() && nextEmail.trim() !== email;
-      const { error } = await supabase.auth.updateUser({
-        data: metadataUpdate,
-        ...(emailChanged ? { email: nextEmail.trim() } : {}),
+      const emailChanged = normalizedEmail && normalizedEmail !== email;
+      const result = await updateAccount({
+        displayName: normalizedDisplayName || null,
+        avatarUrl: avatar,
+        ...(emailChanged ? { email: normalizedEmail } : {}),
         ...(password ? { password } : {}),
       });
-      if (error) {
-        setProfileMessage(error.message);
+      if (result.error) {
+        setProfileMessageType('error');
+        setProfileMessage(result.error);
         return;
       }
       setPassword('');
-      setProfileMessage(emailChanged ? 'Saved. Check your new email address to verify the change.' : 'Personal information saved.');
+      setProfileMessageType('success');
+      setProfileMessage(
+        result.emailChangePending
+          ? 'Saved. Check your new email address to verify the change.'
+          : 'Personal information saved.',
+      );
     } finally {
       setSavingProfile(false);
     }
+  };
+
+  const handleSignOut = async () => {
+    setSigningOut(true);
+    await signOut();
   };
 
   return (
@@ -128,6 +158,8 @@ export default function Settings() {
             onChangeText={setDisplayName}
             placeholder="Your name"
             placeholderTextColor={colors.muted}
+            autoComplete="name"
+            textContentType="name"
           />
 
           <Text className={`${muted} text-xs font-semibold mb-2`}>Email address</Text>
@@ -136,6 +168,8 @@ export default function Settings() {
             value={nextEmail}
             onChangeText={setNextEmail}
             autoCapitalize="none"
+            autoComplete="email"
+            textContentType="emailAddress"
             keyboardType="email-address"
             placeholder="you@example.com"
             placeholderTextColor={colors.muted}
@@ -146,24 +180,35 @@ export default function Settings() {
             className={`${input} rounded-xl border px-4 py-3 mb-4`}
             value={password}
             onChangeText={setPassword}
+            autoComplete="new-password"
+            textContentType="newPassword"
             secureTextEntry
             placeholder="Leave blank to keep current password"
             placeholderTextColor={colors.muted}
           />
 
           {profileMessage ? (
-            <Text className={`text-sm mb-4 ${profileMessage.includes('saved') || profileMessage.includes('Saved') ? 'text-primary' : 'text-destructive'}`}>
+            <Text
+              selectable
+              className={`text-sm mb-4 ${profileMessageType === 'success' ? 'text-primary' : 'text-destructive'}`}
+            >
               {profileMessage}
             </Text>
           ) : null}
 
           <Pressable
-            className="bg-primary rounded-xl py-3 items-center"
+            className={`rounded-xl py-3 items-center ${canSaveProfile ? 'bg-primary' : 'bg-surface-2 border border-border'}`}
             onPress={savePersonalInfo}
-            disabled={savingProfile}
+            disabled={!canSaveProfile}
             accessibilityRole="button"
           >
-            <Text className="text-foreground font-semibold">{savingProfile ? 'Saving...' : 'Save personal information'}</Text>
+            {savingProfile ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text className={`font-semibold ${canSaveProfile ? 'text-primary-foreground' : 'text-muted'}`}>
+                Save personal information
+              </Text>
+            )}
           </Pressable>
         </View>
 
@@ -196,13 +241,30 @@ export default function Settings() {
           })}
         </View>
 
+        {/* DEV-ONLY — remove with app/(app)/tokens.tsx in cleanup. */}
+        {__DEV__ ? (
+          <Pressable
+            className={`${card} rounded-xl py-4 px-5 items-center flex-row justify-between border mb-6`}
+            onPress={() => router.push('/(app)/tokens')}
+            accessibilityRole="button"
+          >
+            <Text className="text-foreground font-medium">Design tokens</Text>
+            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
+          </Pressable>
+        ) : null}
+
         <Pressable
           className={`${card} rounded-xl py-4 px-5 items-center flex-row justify-between border`}
-          onPress={signOut}
+          onPress={handleSignOut}
+          disabled={signingOut}
           accessibilityRole="button"
         >
-          <Text className="text-destructive font-medium">Sign out</Text>
-          <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
+          <Text className="text-destructive font-medium">{signingOut ? 'Signing out...' : 'Sign out'}</Text>
+          {signingOut ? (
+            <ActivityIndicator color={colors.destructive} />
+          ) : (
+            <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
+          )}
         </Pressable>
       </ScrollView>
     </View>

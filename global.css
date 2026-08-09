@@ -2,7 +2,12 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS variables below mirror theme/colors.ts (SINGLE SOURCE OF TRUTH).
+/* COLOUR ONLY. No other token category is ever added to this file.
+   Spacing, radius, typography, depth and motion live in tailwind.config.js as
+   static theme values — none of them differ between light and dark, so putting
+   them here would add a duplicated surface and a Modal-portal hazard for nothing.
+
+   CSS variables below mirror theme/colors.ts (SINGLE SOURCE OF TRUTH).
    Values are space-separated RGB triples for use with rgb(var(--token) / <alpha>).
 
    NOTE: On native, authoritative light/dark switching is done via `vars()` in

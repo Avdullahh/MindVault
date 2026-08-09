@@ -1,26 +1,31 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
 import type { Goal, GoalInsert } from '../types';
 
 export type GoalWithMilestones = Goal;
+const goalsQueryKey = ['goals'];
+
+async function fetchGoals(): Promise<Goal[]> {
+  const { data, error } = await supabase
+    .from('goals')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
 export function useGoals() {
   const source = useRef(Symbol('goals'));
-  const [goals, setGoals] = useState<Goal[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: goalsQueryKey, queryFn: fetchGoals });
+  const goals = query.data ?? [];
+  const error = query.error instanceof Error ? query.error.message : null;
 
-  const fetch = async () => {
-    setLoading(true);
-    const { data, error: err } = await supabase
-      .from('goals')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (err) setError(err.message);
-    else setGoals(data ?? []);
-    setLoading(false);
+  const refetch = async () => {
+    await query.refetch();
   };
 
   const create = async (
@@ -30,7 +35,7 @@ export function useGoals() {
     if (!user_id) return 'Not authenticated';
     const { error: err } = await supabase.from('goals').insert({ ...payload, user_id });
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: goalsQueryKey });
     emitDataChange(['goals', 'projects'], source.current);
     return null;
   };
@@ -41,7 +46,7 @@ export function useGoals() {
   ): Promise<string | null> => {
     const { error: err } = await supabase.from('goals').update(payload).eq('id', id);
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: goalsQueryKey });
     emitDataChange(['goals', 'projects'], source.current);
     return null;
   };
@@ -49,17 +54,18 @@ export function useGoals() {
   const remove = async (id: string): Promise<string | null> => {
     const { error: err } = await supabase.from('goals').delete().eq('id', id);
     if (err) return err.message;
-    setGoals((prev) => prev.filter((g) => g.id !== id));
+    queryClient.setQueryData<Goal[]>(goalsQueryKey, (prev) => prev?.filter((g) => g.id !== id) ?? []);
     emitDataChange(['goals', 'projects', 'tasks'], source.current);
     return null;
   };
 
   useEffect(() => {
-    fetch();
     return subscribeToDataChanges('goals', (eventSource) => {
-      if (eventSource !== source.current) fetch();
+      if (eventSource !== source.current) {
+        void queryClient.invalidateQueries({ queryKey: goalsQueryKey });
+      }
     });
-  }, []);
+  }, [queryClient]);
 
-  return { goals, loading, error, refetch: fetch, create, update, remove };
+  return { goals, loading: query.isLoading, error, refetch, create, update, remove };
 }

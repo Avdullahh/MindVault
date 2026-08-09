@@ -1,8 +1,8 @@
-import * as SecureStore from 'expo-secure-store';
 import { Platform } from 'react-native';
 
 const LAST_TAB_KEY = 'mindvault_last_tab';
 const isWeb = Platform.OS === 'web';
+const memoryStorage = new Map<string, string>();
 
 function getWebStorage() {
   if (typeof localStorage === 'undefined') return null;
@@ -10,15 +10,33 @@ function getWebStorage() {
 }
 
 export const storage = {
-  getLastTab: async () => {
+  getLastTab: () => {
     if (isWeb) return getWebStorage()?.getItem(LAST_TAB_KEY) ?? null;
-    return SecureStore.getItemAsync(LAST_TAB_KEY);
+    return memoryStorage.get(LAST_TAB_KEY) ?? null;
   },
-  setLastTab: async (name: string) => {
+  setLastTab: (name: string) => {
     if (isWeb) {
       getWebStorage()?.setItem(LAST_TAB_KEY, name);
       return;
     }
-    await SecureStore.setItemAsync(LAST_TAB_KEY, name);
+    memoryStorage.set(LAST_TAB_KEY, name);
+  },
+  getString: (key: string) => {
+    if (isWeb) return getWebStorage()?.getItem(key) ?? null;
+    return memoryStorage.get(key) ?? null;
+  },
+  setString: (key: string, value: string) => {
+    if (isWeb) {
+      getWebStorage()?.setItem(key, value);
+      return;
+    }
+    memoryStorage.set(key, value);
+  },
+  remove: (key: string) => {
+    if (isWeb) {
+      getWebStorage()?.removeItem(key);
+      return;
+    }
+    memoryStorage.delete(key);
   },
 };

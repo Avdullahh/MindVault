@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
@@ -7,30 +8,34 @@ import type { Idea, IdeaInsert } from '../types';
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
 type CreatePayload = Pick<IdeaInsert, 'title' | 'description' | 'category_id'>;
+const ideasQueryKey = ['ideas'];
+
+async function fetchIdeas(): Promise<Idea[]> {
+  const { data, error } = await supabase
+    .from('ideas')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
 
 export function useIdeas() {
   const source = useRef(Symbol('ideas'));
-  const [ideas, setIdeas] = useState<Idea[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: ideasQueryKey, queryFn: fetchIdeas });
+  const ideas = query.data ?? [];
+  const error = query.error instanceof Error ? query.error.message : null;
 
-  const fetch = async () => {
-    setLoading(true);
-    const { data, error: err } = await supabase
-      .from('ideas')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (err) setError(err.message);
-    else setIdeas(data ?? []);
-    setLoading(false);
+  const refetch = async () => {
+    await query.refetch();
   };
 
   const create = async (payload: CreatePayload): Promise<string | null> => {
-    const user_id = await getUserId().catch((e: Error) => { setError(e.message); return null; });
+    const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';
     const { error: err } = await supabase.from('ideas').insert({ ...payload, user_id });
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: ideasQueryKey });
     emitDataChange('ideas', source.current);
     return null;
   };
@@ -41,7 +46,7 @@ export function useIdeas() {
   ): Promise<string | null> => {
     const { error: err } = await supabase.from('ideas').update(payload).eq('id', id);
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: ideasQueryKey });
     emitDataChange('ideas', source.current);
     return null;
   };
@@ -49,17 +54,18 @@ export function useIdeas() {
   const remove = async (id: string): Promise<string | null> => {
     const { error: err } = await supabase.from('ideas').delete().eq('id', id);
     if (err) return err.message;
-    setIdeas((prev) => prev.filter((i) => i.id !== id));
+    queryClient.setQueryData<Idea[]>(ideasQueryKey, (prev) => prev?.filter((i) => i.id !== id) ?? []);
     emitDataChange(['ideas', 'projects', 'goals'], source.current);
     return null;
   };
 
   useEffect(() => {
-    fetch();
     return subscribeToDataChanges('ideas', (eventSource) => {
-      if (eventSource !== source.current) fetch();
+      if (eventSource !== source.current) {
+        void queryClient.invalidateQueries({ queryKey: ideasQueryKey });
+      }
     });
-  }, []);
+  }, [queryClient]);
 
   const forgottenIdeas = useMemo(() => {
     const cutoff = Date.now() - THIRTY_DAYS_MS;
@@ -70,5 +76,5 @@ export function useIdeas() {
     });
   }, [ideas]);
 
-  return { ideas, forgottenIdeas, loading, error, refetch: fetch, create, update, remove };
+  return { ideas, forgottenIdeas, loading: query.isLoading, error, refetch, create, update, remove };
 }

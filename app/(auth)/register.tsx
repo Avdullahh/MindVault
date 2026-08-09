@@ -6,7 +6,7 @@ import { useThemeColors } from '../../context/ThemeContext';
 import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 
 export default function Register() {
-  const { signUp } = useAuth();
+  const { signUp, signInWithOAuth } = useAuth();
   const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -31,12 +31,20 @@ export default function Register() {
     setLoading(false);
   };
 
+  const handleOAuth = async (provider: 'apple' | 'google') => {
+    setLoading(true);
+    setError(null);
+    const err = await signInWithOAuth(provider);
+    if (err) setError(err);
+    setLoading(false);
+  };
+
   if (success) {
     return (
       <View className="flex-1 bg-background justify-center px-6">
         <Text className="text-2xl font-bold text-primary mb-4 font-rounded">Check your email</Text>
         <Text className="text-foreground mb-8">
-          We sent a confirmation link to {email}. Open it to activate your account, then log in.
+          If your account needs confirmation, we sent a link to {email}. If confirmation is not required, MindVault will open automatically.
         </Text>
         <Link href="/(auth)/login" asChild>
           <Pressable className="bg-primary rounded-xl py-3 items-center">
@@ -56,6 +64,8 @@ export default function Register() {
         placeholder="Email"
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
+        autoComplete="email"
+        textContentType="emailAddress"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -64,12 +74,14 @@ export default function Register() {
         className="bg-surface text-foreground rounded-xl px-4 py-3 mb-4"
         placeholder="Password"
         placeholderTextColor={colors.muted}
+        autoComplete="new-password"
+        textContentType="newPassword"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      {error && <Text className="text-red-400 mb-4 text-sm">{error}</Text>}
+      {error ? <Text selectable className="text-destructive mb-4 text-sm">{error}</Text> : null}
 
       <Pressable
         className="bg-primary rounded-xl py-3 items-center mb-6"
@@ -77,10 +89,29 @@ export default function Register() {
         disabled={loading}
       >
         {loading
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={colors.primaryForeground} />
           : <Text className="text-foreground font-semibold text-base">Create account</Text>
         }
       </Pressable>
+
+      <View className="gap-3 mb-6">
+        <Pressable
+          className="bg-surface border border-border rounded-xl py-3 items-center"
+          onPress={() => handleOAuth('apple')}
+          disabled={loading}
+          accessibilityRole="button"
+        >
+          <Text className="text-foreground font-semibold text-base">Continue with Apple</Text>
+        </Pressable>
+        <Pressable
+          className="bg-surface border border-border rounded-xl py-3 items-center"
+          onPress={() => handleOAuth('google')}
+          disabled={loading}
+          accessibilityRole="button"
+        >
+          <Text className="text-foreground font-semibold text-base">Continue with Google</Text>
+        </Pressable>
+      </View>
 
       <Link href="/(auth)/login" asChild>
         <Pressable className="items-center">

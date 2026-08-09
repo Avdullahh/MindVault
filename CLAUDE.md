@@ -1,29 +1,9 @@
 # MindVault - Claude Instructions
 
-CLAUDE.md mirrors the repository-wide rules in [AGENTS.md](./AGENTS.md). Keep both files aligned when project commands, schema, folder ownership, or agent workflow changes.
+## Working Notes
 
-## Claude-Specific Notes
-
-- Read `AGENTS.md` first and treat it as the shared source of truth for all coding agents.
-- Follow the Mandatory Delegation Workflow (DevSquad) before direct work. Route research and bulk reading to Gemini, code generation and testing to Codex, and synthesis/final integration to the lead agent.
-- If a DevSquad delegate is unavailable from the current Claude environment, state that clearly before falling back to direct work.
-- Do not use Claude-specific behavior to bypass repository rules, RLS requirements, Supabase Edge Function boundaries, or the opt-in AI product rule.
+- Do not bypass repository rules, RLS requirements, Supabase Edge Function boundaries, or the opt-in AI product rule.
 - Keep responses and edits concise, scoped, and consistent with the calm iPad-first product direction.
-
-## Mandatory Delegation Workflow (DevSquad)
-
-**The DevSquad workflow is mandatory at all times, with no exception.** Every task must be routed through DevSquad delegation before the lead agent does work directly.
-
-- Follow the routing in `.devsquad/config.json` on every task:
-  - Research -> Gemini
-  - Bulk reading / codebase analysis -> Gemini
-  - Code generation / boilerplate -> Codex
-  - Testing -> Codex
-  - Synthesis and final integration -> lead agent (self)
-- The lead agent does not personally do research, bulk file reading, or boilerplate generation. Delegate it, then synthesize and integrate the results.
-- This rule applies even to small or "quick" tasks. There is no exception for size, urgency, or convenience.
-- If a delegate is unavailable, state that explicitly before falling back to doing the work directly.
-- `.devsquad/config.json` currently marks enforcement as advisory for tooling, but repository policy treats this workflow as mandatory.
 
 ## Product Context
 
@@ -46,6 +26,9 @@ Core product rules:
 - Expo Router for file-based navigation under `app/`
 - NativeWind v4 and Tailwind CSS v3 for styling
 - Supabase for Postgres, Auth, RLS, generated types, and Edge Functions
+- TanStack React Query v5 is the client data layer; `@tanstack/react-query-persist-client` persists the cache
+- `d3-force` powers the ideas/projects/goals mind-map graph
+- `react-native-reanimated` v4 (with `react-native-worklets`) for animation
 - Gemini only from Supabase Edge Functions, never from the client bundle
 - Secure session storage via `expo-secure-store`
 - Package manager: npm, with `package-lock.json`
@@ -60,6 +43,7 @@ Use the commands that exist in `package.json` unless you add and document new sc
 - Run iOS target: `npm run ios`
 - Run Android target: `npm run android`
 - Run web target: `npm run web`
+- Reset local caches / reinstall for a clean start: `npm run fresh` (runs `scripts/fresh-start.js`)
 - Type-check app code: `npx tsc --noEmit`
 
 There are currently no lint or test scripts in `package.json`. Do not claim lint/tests passed unless you added the scripts or ran an equivalent command explicitly.
@@ -92,6 +76,24 @@ Supabase type generation depends on a linked project or project id. When schema 
 - Put app-friendly type aliases in `types/index.ts`.
 - Keep shared UI primitives in `components/ui/`; do not duplicate button, card, badge, tag, modal, or date picker behavior in feature files.
 - Use existing local patterns before introducing new abstractions.
+
+## Design Tokens
+
+- **Colour is the only theme-reactive token category.** It flows `theme/colors.ts` (hex source of truth) → `buildVars()` → `vars()` injected on the root View in `context/ThemeContext.tsx`. `global.css` mirrors the same values as a web/pre-mount fallback.
+- **Everything else — spacing, radius, typography, depth, motion — lives in `tailwind.config.js` as static theme values.** Never add a non-colour token to `global.css` or to the `vars()` payload: none of it differs between light and dark, so it would add a duplicated surface and a Modal-portal hazard for nothing.
+- Spacing uses Tailwind's default scale unchanged. `metro.config.js` sets `inlineRem: 16`, so `p-4` is 16pt on device. Do not override `theme.spacing` with px values — that would make `inlineRem` a no-op for padding/margin while still rescaling font line-heights and maxWidth.
+- Use the named radii (`rounded-field/control/card/sheet/pill`) and max-widths (`max-w-sheet/prose/content/wide`) rather than raw numeric or `rounded-2xl`-style classes.
+- **`shadow-*` cannot switch between themes** — it's a static theme value. Light-mode depth uses `shadow-e1/e2/e3`; dark-mode depth uses `surface` → `surface-2` plus a hairline border. Both live inside the `Card` primitive; screens should not reach for `shadow-*` directly.
+- Top insets use `pt-safe-offset-*` (NativeWind's safe-area utilities, backed by the already-mounted `SafeAreaProvider`). Never hardcode a top padding. ⚠️ `*-safe` utilities ride the same `VariableContext` as `vars()`, which does not survive RN's `Modal` — treat them as unavailable inside modals.
+
+## Data Layer (React Query)
+
+- Reads flow through TanStack React Query. Each feature hook (`use-ideas`, `use-goals`, `use-projects`) wraps `useQuery` with a stable query key (e.g. `['ideas']`) and a `fetch*` function that calls Supabase.
+- Mutations (`create`/`update`/`remove`) run the Supabase write, then either `invalidateQueries` or `setQueryData` on the affected key. Follow the existing pattern; do not add ad-hoc `useState` caches in screens.
+- `lib/data-events.ts` is a cross-hook pub/sub bus so a write in one feature invalidates related queries in others. Each hook holds a `useRef(Symbol())` source id, emits `emitDataChange(keys, source)` after a write, and subscribes via `subscribeToDataChanges` — ignoring events it emitted itself. When a mutation affects other entities (e.g. deleting an idea also touches projects/goals), emit all affected keys.
+- `lib/query-client.tsx` exports the shared `queryClient`, the `QueryProvider` (a `PersistQueryClientProvider` mounted inside `AuthProvider` in `app/_layout.tsx`), and `clearPersistedQueryCache()` — call it on sign-out to drop cached user data.
+- `lib/storage.ts` is the cross-platform key/value store used by the persister and misc prefs: web uses `localStorage`, native uses an in-memory `Map`. It is NOT session storage — Supabase sessions still live in `expo-secure-store` via `lib/supabase.ts`.
+- `lib/get-user-id.ts` resolves the current user id for writes; use it instead of re-reading the session in hooks.
 
 ## Naming Conventions
 

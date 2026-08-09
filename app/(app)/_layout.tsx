@@ -21,10 +21,9 @@ export default function AppLayout() {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
-    storage.getLastTab().then((saved) => {
-      setInitialTab(saved && VALID_TABS.includes(saved) ? saved : 'index');
-      setReady(true);
-    });
+    const saved = storage.getLastTab();
+    setInitialTab(saved && VALID_TABS.includes(saved) ? saved : 'index');
+    setReady(true);
   }, []);
 
   if (!ready) return <View className="flex-1 bg-background" />;
@@ -71,6 +70,8 @@ export default function AppLayout() {
       <Tabs.Screen name="goals/[id]" options={{ href: null }} />
       <Tabs.Screen name="projects/[id]" options={{ href: null }} />
       <Tabs.Screen name="settings" options={{ href: null }} />
+      {/* DEV-ONLY design token reference — remove with app/(app)/tokens.tsx in cleanup. */}
+      <Tabs.Screen name="tokens" options={{ href: null }} />
     </Tabs>
   );
 }

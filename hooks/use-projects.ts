@@ -1,24 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../lib/supabase';
 import { getUserId } from '../lib/get-user-id';
 import { emitDataChange, subscribeToDataChanges } from '../lib/data-events';
 import type { Project, ProjectInsert } from '../types';
 
+const projectsQueryKey = ['projects'];
+
+async function fetchProjects(): Promise<Project[]> {
+  const { data, error } = await supabase
+    .from('projects')
+    .select('*')
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+}
+
 export function useProjects() {
   const source = useRef(Symbol('projects'));
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const query = useQuery({ queryKey: projectsQueryKey, queryFn: fetchProjects });
+  const projects = query.data ?? [];
+  const error = query.error instanceof Error ? query.error.message : null;
 
-  const fetch = async () => {
-    setLoading(true);
-    const { data, error: err } = await supabase
-      .from('projects')
-      .select('*')
-      .order('created_at', { ascending: false });
-    if (err) setError(err.message);
-    else setProjects(data ?? []);
-    setLoading(false);
+  const refetch = async () => {
+    await query.refetch();
   };
 
   const create = async (payload: Pick<ProjectInsert, 'title' | 'main_goal' | 'category_id'>): Promise<string | null> => {
@@ -26,7 +32,7 @@ export function useProjects() {
     if (!user_id) return 'Not authenticated';
     const { error: err } = await supabase.from('projects').insert({ ...payload, user_id });
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: projectsQueryKey });
     emitDataChange('projects', source.current);
     return null;
   };
@@ -34,7 +40,7 @@ export function useProjects() {
   const update = async (id: string, payload: Partial<Pick<Project, 'title' | 'main_goal' | 'category_id'>>): Promise<string | null> => {
     const { error: err } = await supabase.from('projects').update(payload).eq('id', id);
     if (err) return err.message;
-    await fetch();
+    await queryClient.invalidateQueries({ queryKey: projectsQueryKey });
     emitDataChange('projects', source.current);
     return null;
   };
@@ -42,17 +48,18 @@ export function useProjects() {
   const remove = async (id: string): Promise<string | null> => {
     const { error: err } = await supabase.from('projects').delete().eq('id', id);
     if (err) return err.message;
-    setProjects((prev) => prev.filter((p) => p.id !== id));
+    queryClient.setQueryData<Project[]>(projectsQueryKey, (prev) => prev?.filter((p) => p.id !== id) ?? []);
     emitDataChange(['projects', 'goals', 'tasks'], source.current);
     return null;
   };
 
   useEffect(() => {
-    fetch();
     return subscribeToDataChanges('projects', (eventSource) => {
-      if (eventSource !== source.current) fetch();
+      if (eventSource !== source.current) {
+        void queryClient.invalidateQueries({ queryKey: projectsQueryKey });
+      }
     });
-  }, []);
+  }, [queryClient]);
 
-  return { projects, loading, error, refetch: fetch, create, update, remove };
+  return { projects, loading: query.isLoading, error, refetch, create, update, remove };
 }

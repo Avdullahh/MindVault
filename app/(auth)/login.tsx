@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { ActivityIndicator, Image, Pressable, Text, TextInput } from 'react-native';
+import { ActivityIndicator, Image, Pressable, Text, TextInput, View } from 'react-native';
 import { Link } from 'expo-router';
 import { useAuth } from '../../context/auth-context';
 import { useThemeColors } from '../../context/ThemeContext';
 import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 
 export default function Login() {
-  const { signIn } = useAuth();
+  const { signIn, signInWithOAuth } = useAuth();
   const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -21,6 +21,14 @@ export default function Login() {
     setLoading(true);
     setError(null);
     const err = await signIn(email.trim(), password);
+    if (err) setError(err);
+    setLoading(false);
+  };
+
+  const handleOAuth = async (provider: 'apple' | 'google') => {
+    setLoading(true);
+    setError(null);
+    const err = await signInWithOAuth(provider);
     if (err) setError(err);
     setLoading(false);
   };
@@ -40,6 +48,8 @@ export default function Login() {
         placeholder="Email"
         placeholderTextColor={colors.muted}
         autoCapitalize="none"
+        autoComplete="email"
+        textContentType="emailAddress"
         keyboardType="email-address"
         value={email}
         onChangeText={setEmail}
@@ -48,12 +58,14 @@ export default function Login() {
         className="bg-surface text-foreground rounded-xl px-4 py-3 mb-4"
         placeholder="Password"
         placeholderTextColor={colors.muted}
+        autoComplete="password"
+        textContentType="password"
         secureTextEntry
         value={password}
         onChangeText={setPassword}
       />
 
-      {error && <Text className="text-red-400 mb-4 text-sm">{error}</Text>}
+      {error ? <Text selectable className="text-destructive mb-4 text-sm">{error}</Text> : null}
 
       <Pressable
         className="bg-primary rounded-xl py-3 items-center mb-6"
@@ -61,10 +73,29 @@ export default function Login() {
         disabled={loading}
       >
         {loading
-          ? <ActivityIndicator color="#fff" />
+          ? <ActivityIndicator color={colors.primaryForeground} />
           : <Text className="text-foreground font-semibold text-base">Log in</Text>
         }
       </Pressable>
+
+      <View className="gap-3 mb-6">
+        <Pressable
+          className="bg-surface border border-border rounded-xl py-3 items-center"
+          onPress={() => handleOAuth('apple')}
+          disabled={loading}
+          accessibilityRole="button"
+        >
+          <Text className="text-foreground font-semibold text-base">Continue with Apple</Text>
+        </Pressable>
+        <Pressable
+          className="bg-surface border border-border rounded-xl py-3 items-center"
+          onPress={() => handleOAuth('google')}
+          disabled={loading}
+          accessibilityRole="button"
+        >
+          <Text className="text-foreground font-semibold text-base">Continue with Google</Text>
+        </Pressable>
+      </View>
 
       <Link href="/(auth)/register" asChild>
         <Pressable className="items-center">
