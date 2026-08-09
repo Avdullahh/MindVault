@@ -86,13 +86,21 @@ export function EntityListScreen<T extends { id: string }>({
         }}
         ListHeaderComponent={
           <View className="mb-3">
-            <TextInput
-              className="bg-surface text-foreground rounded-xl px-4 py-3 border border-border"
-              placeholder={searchPlaceholder}
-              placeholderTextColor={colors.muted}
-              value={query}
-              onChangeText={onQueryChange}
-            />
+            <View className="justify-center">
+              <Ionicons
+                name="search-outline"
+                size={18}
+                color={colors.muted}
+                style={{ position: 'absolute', left: 14, zIndex: 1 }}
+              />
+              <TextInput
+                className="bg-surface text-foreground rounded-control pl-11 pr-4 py-3 border border-border"
+                placeholder={searchPlaceholder}
+                placeholderTextColor={colors.muted}
+                value={query}
+                onChangeText={onQueryChange}
+              />
+            </View>
           </View>
         }
         ListEmptyComponent={
