@@ -92,6 +92,7 @@ export function EntityListScreen<T extends { id: string }>({
                 size={18}
                 color={colors.muted}
                 style={{ position: 'absolute', left: 14, zIndex: 1 }}
+                pointerEvents="none"
               />
               <TextInput
                 className="bg-surface text-foreground rounded-control pl-11 pr-4 py-3 border border-border"
