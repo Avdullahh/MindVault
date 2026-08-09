@@ -7,6 +7,7 @@ import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
 import { AIButton } from '../../components/ui/AIButton';
+import { SectionHeader } from '../../components/ui/SectionHeader';
 import { useThemeColors } from '../../context/ThemeContext';
 import { formatWeekdayLong, formatShortDate } from '../../lib/date-format';
 
@@ -18,26 +19,6 @@ type Metric = {
   icon: IoniconsName;
   route: string;
 };
-
-function SectionHeader({ title, action, onPress }: { title: string; action?: string; onPress?: () => void }) {
-  return (
-    <View className="h-9 flex-row items-center justify-between mb-2">
-      <Text
-        className="text-muted text-xs font-semibold uppercase leading-4"
-        style={{ letterSpacing: 2, includeFontPadding: false }}
-      >
-        {title}
-      </Text>
-      {action && onPress ? (
-        <Pressable className="h-9 pl-4 items-center justify-center" onPress={onPress}>
-          <Text className="text-primary text-sm font-medium leading-5" style={{ includeFontPadding: false }}>
-            {action}
-          </Text>
-        </Pressable>
-      ) : null}
-    </View>
-  );
-}
 
 function EmptyCard({ text }: { text: string }) {
   return (
