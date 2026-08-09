@@ -1,7 +1,8 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { RelationshipGraph } from '../../components/RelationshipGraph';
+import { RelationshipGraph, NODE_VISUALS } from '../../components/RelationshipGraph';
+import { SectionHeader } from '../../components/ui/SectionHeader';
 import { useThemeColors } from '../../context/ThemeContext';
 import { useEntityGraph, type EntityGraphNode } from '../../hooks/use-entity-graph';
 
@@ -57,23 +58,32 @@ export default function MindMapScreen() {
         showsVerticalScrollIndicator={false}
       >
         <View className="flex-row gap-2">
-          <View className="flex-1 rounded-2xl bg-surface border border-border px-3 py-3">
-            <Text className="text-muted text-[11px] font-semibold uppercase">Ideas</Text>
-            <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
-              {ideaCount}
-            </Text>
+          <View className="flex-1 rounded-2xl bg-surface border border-border overflow-hidden">
+            <View style={{ height: 3, backgroundColor: NODE_VISUALS.idea.color }} />
+            <View className="px-3 py-3">
+              <Text className="text-muted text-[11px] font-semibold uppercase">Ideas</Text>
+              <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
+                {ideaCount}
+              </Text>
+            </View>
           </View>
-          <View className="flex-1 rounded-2xl bg-surface border border-border px-3 py-3">
-            <Text className="text-muted text-[11px] font-semibold uppercase">Projects</Text>
-            <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
-              {projectCount}
-            </Text>
+          <View className="flex-1 rounded-2xl bg-surface border border-border overflow-hidden">
+            <View style={{ height: 3, backgroundColor: NODE_VISUALS.project.color }} />
+            <View className="px-3 py-3">
+              <Text className="text-muted text-[11px] font-semibold uppercase">Projects</Text>
+              <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
+                {projectCount}
+              </Text>
+            </View>
           </View>
-          <View className="flex-1 rounded-2xl bg-surface border border-border px-3 py-3">
-            <Text className="text-muted text-[11px] font-semibold uppercase">Goals</Text>
-            <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
-              {goalCount}
-            </Text>
+          <View className="flex-1 rounded-2xl bg-surface border border-border overflow-hidden">
+            <View style={{ height: 3, backgroundColor: NODE_VISUALS.goal.color }} />
+            <View className="px-3 py-3">
+              <Text className="text-muted text-[11px] font-semibold uppercase">Goals</Text>
+              <Text className="text-foreground text-xl font-bold mt-1" style={{ fontVariant: ['tabular-nums'] }}>
+                {goalCount}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -120,7 +130,10 @@ export default function MindMapScreen() {
         ) : null}
 
         {!loading && !error && nodes.length > 0 ? (
-          <RelationshipGraph nodes={nodes} edges={edges} onNodePress={handleNodePress} />
+          <View>
+            <SectionHeader title="Connections" />
+            <RelationshipGraph nodes={nodes} edges={edges} onNodePress={handleNodePress} />
+          </View>
         ) : null}
       </ScrollView>
     </View>
