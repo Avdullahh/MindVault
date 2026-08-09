@@ -2,7 +2,7 @@ import type { ComponentProps, ReactElement, ReactNode } from 'react';
 import { FlatList, Pressable, RefreshControl, Text, TextInput, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useThemeColors } from '../../context/ThemeContext';
+import { useTheme } from '../../context/ThemeContext';
 import { EmptyState } from './EmptyState';
 
 type IconName = ComponentProps<typeof Ionicons>['name'];
@@ -47,7 +47,7 @@ export function EntityListScreen<T extends { id: string }>({
   children,
 }: EntityListScreenProps<T>) {
   const router = useRouter();
-  const colors = useThemeColors();
+  const { colors, colorScheme } = useTheme();
   const hasQuery = Boolean(query.trim());
 
   return (
@@ -122,7 +122,9 @@ export function EntityListScreen<T extends { id: string }>({
       />
 
       <Pressable
-        className="absolute bottom-24 right-6 bg-primary rounded-full w-14 h-14 items-center justify-center shadow-lg border border-primary/40"
+        className={`absolute bottom-24 right-6 bg-primary rounded-pill w-14 h-14 items-center justify-center border ${
+          colorScheme === 'dark' ? 'border-surface-2' : 'shadow-e3 border-primary/40'
+        }`}
         onPress={onCreatePress}
         accessibilityRole="button"
         accessibilityLabel={createAccessibilityLabel}
