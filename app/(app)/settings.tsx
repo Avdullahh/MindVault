@@ -249,7 +249,7 @@ export default function Settings() {
         ) : null}
 
         <Pressable
-          className={`${card} rounded-xl py-4 px-5 items-center flex-row justify-between border`}
+          className="bg-destructive/20 rounded-xl py-4 px-5 items-center flex-row justify-between border border-destructive/30"
           onPress={handleSignOut}
           disabled={signingOut}
           accessibilityRole="button"
