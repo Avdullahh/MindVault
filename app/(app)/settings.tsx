@@ -213,33 +213,28 @@ export default function Settings() {
         </View>
 
         <Text className={`${muted} text-xs font-semibold uppercase mb-3`} style={{ letterSpacing: 1.5 }}>Appearance</Text>
-        <View className={`${card} rounded-2xl border p-2 mb-6`}>
-          {THEME_OPTIONS.map((option, index) => {
+        <View className={`${card} rounded-2xl border p-1 mb-3 flex-row`}>
+          {THEME_OPTIONS.map((option) => {
             const active = mode === option.mode;
             return (
               <Pressable
                 key={option.mode}
-                className={`flex-row items-center px-3 py-3 rounded-xl ${active ? 'bg-primary' : ''} ${index > 0 ? 'mt-1' : ''}`}
+                className={`flex-1 items-center justify-center py-3 rounded-control ${active ? 'bg-primary' : ''}`}
                 onPress={() => setMode(option.mode)}
                 accessibilityRole="radio"
                 accessibilityState={{ selected: active }}
                 accessibilityLabel={`${option.label} theme`}
               >
-                <Ionicons
-                  name={option.icon}
-                  size={20}
-                  color={active ? colors.primaryForeground : colors.muted}
-                />
-                <Text className={`flex-1 ml-3 font-medium ${active ? 'text-primary-foreground' : 'text-foreground'}`}>
+                <Text className={`font-medium ${active ? 'text-primary-foreground' : 'text-foreground'}`}>
                   {option.label}
                 </Text>
-                {active ? (
-                  <Ionicons name="checkmark" size={20} color={colors.primaryForeground} />
-                ) : null}
               </Pressable>
             );
           })}
         </View>
+        <Text className={`${muted} text-xs leading-4 mb-6`}>
+          System follows your device. Depth in dark mode comes from lighter surfaces and hairlines, not shadows.
+        </Text>
 
         {/* DEV-ONLY — remove with app/(app)/tokens.tsx in cleanup. */}
         {__DEV__ ? (
