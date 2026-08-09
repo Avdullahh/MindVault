@@ -6,6 +6,7 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useThemeColors } from '../../context/ThemeContext';
+import { storage } from '../../lib/storage';
 
 const SPACING = ['1', '2', '3', '4', '5', '6', '8', '10', '12'] as const;
 const SPACING_PT: Record<(typeof SPACING)[number], number> = {
@@ -75,6 +76,7 @@ function Section({ title, hint, children }: { title: string; hint?: string; chil
 export default function TokensScreen() {
   const colors = useThemeColors();
   const router = useRouter();
+  const persistent = storage.isPersistent();
 
   return (
     <View className="flex-1 bg-background">
@@ -91,6 +93,22 @@ export default function TokensScreen() {
       </View>
 
       <ScrollView contentContainerClassName="px-5 pb-safe-offset-24 w-full max-w-content self-center">
+        <Section
+          title="Storage backend"
+          hint="MMKV is a native module — an older dev client falls back to memory, and the query cache will not survive a restart."
+        >
+          <View className="bg-surface border border-border rounded-card p-4 flex-row items-center">
+            <Ionicons
+              name={persistent ? 'checkmark-circle-outline' : 'alert-circle-outline'}
+              size={20}
+              color={persistent ? colors.primary : colors.destructive}
+            />
+            <Text className="text-foreground text-base ml-3">
+              {persistent ? 'MMKV — persists across restarts' : 'In-memory — rebuild the dev client'}
+            </Text>
+          </View>
+        </Section>
+
         <Section
           title="Touch target"
           hint="Must measure 44pt. Was 38.5pt before inlineRem: 16."
