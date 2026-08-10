@@ -23,14 +23,14 @@ type RelationshipGraphProps = {
   onNodePress: (node: EntityGraphNode) => void;
 };
 
-type NodeVisual = {
+export type NodeVisual = {
   color: string;
   glow: string;
   icon: ComponentProps<typeof Ionicons>['name'];
   label: string;
 };
 
-const NODE_VISUALS: Record<EntityGraphNodeType, NodeVisual> = {
+export const NODE_VISUALS: Record<EntityGraphNodeType, NodeVisual> = {
   idea: {
     color: '#22d3ee',
     glow: 'rgba(34, 211, 238, 0.16)',
