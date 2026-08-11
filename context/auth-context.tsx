@@ -21,14 +21,25 @@ type AccountUpdateResult = {
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
-  signIn: (email: string, password: string) => Promise<string | null>;
-  signUp: (email: string, password: string) => Promise<string | null>;
+  signInWithOtp: (email: string) => Promise<string | null>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<string | null>;
   updateAccount: (payload: AccountUpdatePayload) => Promise<AccountUpdateResult>;
+  refreshSession: () => Promise<boolean>;
   signOut: () => Promise<void>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
+
+// Shared by the magic-link deep-link listener and the OAuth browser flow:
+// both hand the app back a redirect URL carrying a PKCE `code` param that
+// needs exchanging for a session.
+async function exchangeCodeFromUrl(url: string | null) {
+  if (!url) return null;
+  const parsed = Linking.parse(url);
+  const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code : null;
+  if (!code) return null;
+  return supabase.auth.exchangeCodeForSession(code);
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -55,14 +66,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return error?.message ?? null;
-  };
+  // Magic-link emails (and OAuth's own fallback path, if the browser hands
+  // control back via a bare redirect) land here as a deep link carrying a
+  // PKCE `code` param. Exchange it for a session whenever the app is opened
+  // or resumed with one.
+  useEffect(() => {
+    const handleUrl = async (url: string | null) => {
+      const result = await exchangeCodeFromUrl(url);
+      if (result && !result.error && result.data.session) setSession(result.data.session);
+    };
 
-  const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (data.session) setSession(data.session);
+    Linking.getInitialURL().then(handleUrl);
+    const subscription = Linking.addEventListener('url', ({ url }) => {
+      void handleUrl(url);
+    });
+
+    return () => subscription.remove();
+  }, []);
+
+  const signInWithOtp = async (email: string) => {
+    const redirectTo = Linking.createURL('/');
+    const { error } = await supabase.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+        shouldCreateUser: true,
+      },
+    });
     return error?.message ?? null;
   };
 
@@ -87,13 +117,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
     if (result.type !== 'success') return null;
 
-    const parsed = Linking.parse(result.url);
-    const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code : null;
-    if (!code) return `Could not complete ${provider} sign-in`;
-
-    const { data: sessionData, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
-    if (exchangeError) return exchangeError.message;
-    if (sessionData.session) setSession(sessionData.session);
+    const exchange = await exchangeCodeFromUrl(result.url);
+    if (!exchange) return `Could not complete ${provider} sign-in`;
+    if (exchange.error) return exchange.error.message;
+    if (exchange.data.session) setSession(exchange.data.session);
     return null;
   };
 
@@ -122,6 +149,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { error: null, emailChangePending: Boolean(email) };
   };
 
+  // Re-checks Supabase's local session, for the "I opened the link" affordance:
+  // the deep-link listener above normally picks up a magic-link redirect on its
+  // own, but a user who tapped the link in another app/tab can use this to
+  // nudge the app into noticing the session it already exchanged.
+  const refreshSession = async () => {
+    const { data } = await supabase.auth.getSession();
+    setSession(data.session);
+    return Boolean(data.session);
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
     setSession(null);
@@ -133,10 +170,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         session,
         loading,
-        signIn,
-        signUp,
+        signInWithOtp,
         signInWithOAuth,
         updateAccount,
+        refreshSession,
         signOut,
       }}
     >
