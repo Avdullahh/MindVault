@@ -63,7 +63,7 @@ Added `supabase/functions/_shared/validation.ts` (`MAX_TITLE_LENGTH` 200, `MAX_T
 
 ### Issue 14 - `ai-morning-brief` timezone calculation is fragile
 
-**Status:** Fixed, pending deploy (deployed together with Issue 15, same file)
+**Status:** Fixed and deployed (deployed together with Issue 15, same file)
 
 The `localDayBoundsUTC` helper this ticket names is gone already - removed with `calendar_events` (see `docs/superpowers/plans/2026-06-13-remove-calendar.md`), so that specific fragility no longer exists. But investigating turned up the timezone handling that replaced it was still broken: `hooks/use-ai.ts` sends `{ timezone }` in the request body, but `ai-morning-brief/index.ts` never called `req.json()` at all, so the parameter was silently dropped and `today` was always formatted in the server's (UTC) timezone - wrong day near midnight for any non-UTC user. Fixed: parse the body, pass `timeZone: body.timezone || 'UTC'` to `Intl.DateTimeFormat`, with a try/catch fallback to UTC since `Intl` throws on an unrecognised IANA zone string rather than 500ing the whole brief. Also removed a stale `events: string[]` field from `BriefResult` in `hooks/use-ai.ts` - the server never returned it (dropped when calendar events were removed) and nothing read it, but the type lied about the shape.
 
