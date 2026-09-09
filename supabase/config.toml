@@ -242,6 +242,10 @@ pass = "env(RESEND_API_KEY)"
 admin_email = "onboarding@resend.dev"
 sender_name = "MindVault"
 
+[auth.email.template.magic_link]
+subject = "Your MindVault sign-in link"
+content_path = "./supabase/templates/magic_link.html"
+
 # Uncomment to customize email template
 # [auth.email.template.invite]
 # subject = "You have been invited"
@@ -321,7 +325,7 @@ max_frequency = "5s"
 [auth.external.apple]
 enabled = true
 # Apple "Sign in with Apple" Services ID.
-client_id = ""
+client_id = "com.avhaz.mindvault"
 # DO NOT commit your OAuth provider secret to git. Use environment variable substitution instead:
 secret = "env(SUPABASE_AUTH_EXTERNAL_APPLE_SECRET)"
 # Overrides the default auth callback URL derived from auth.external_url.
