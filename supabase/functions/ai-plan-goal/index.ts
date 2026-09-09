@@ -2,7 +2,7 @@ import { GeminiRequestError, generateText, parseJsonObject } from '../_shared/ge
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
-import { lengthError, MAX_TEXT_LENGTH, MAX_TITLE_LENGTH } from '../_shared/validation.ts';
+import { clamp, MAX_TEXT_LENGTH, MAX_TITLE_LENGTH } from '../_shared/validation.ts';
 
 type PlanResult = { tasks: string[] };
 
@@ -24,14 +24,9 @@ Deno.serve(async (req) => {
     let body: { goalTitle?: string; context?: string };
     try { body = await req.json(); } catch { return badRequest('Invalid JSON'); }
 
-    const goalTitle = body.goalTitle?.trim();
-    const context = body.context?.trim();
+    const goalTitle = clamp(body.goalTitle?.trim(), MAX_TITLE_LENGTH);
+    const context = clamp(body.context?.trim(), MAX_TEXT_LENGTH);
     if (!goalTitle) return badRequest('goalTitle is required');
-
-    const titleError = lengthError(goalTitle, MAX_TITLE_LENGTH, 'goalTitle');
-    if (titleError) return badRequest(titleError);
-    const contextError = lengthError(context, MAX_TEXT_LENGTH, 'context');
-    if (contextError) return badRequest(contextError);
 
     const raw = await generateText({
       system: 'You are a project planning assistant. Return only valid JSON and no markdown.',

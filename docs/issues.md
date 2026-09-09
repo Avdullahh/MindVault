@@ -57,7 +57,9 @@ Investigated: this isn't accidental duplication, it's two different relationship
 
 **Status:** Fixed and deployed
 
-Added `supabase/functions/_shared/validation.ts` (`MAX_TITLE_LENGTH` 200, `MAX_TEXT_LENGTH` 2000, `lengthError()`) and applied it to `ai-plan-goal` and `ai-expand-idea` as the ticket named. Also applied it to **`ai-categorise`**, which wasn't named in the ticket but takes the identical `{ideaTitle, ideaDescription}` shape with no cap - the defect is the property "no unbounded user text reaches Gemini," and two of three functions wouldn't have met it. All three deployed to the linked Supabase project.
+Added `supabase/functions/_shared/validation.ts` and applied it to `ai-plan-goal` and `ai-expand-idea` as the ticket named, plus `ai-categorise` (identical `{ideaTitle, ideaDescription}` shape, same gap, not named in the ticket - the defect is the property "no unbounded user text reaches Gemini," and two of three functions wouldn't have met it).
+
+**Caught during review before this was reported done:** the first version rejected over-length input with a 400. Checked production data (`select max(length(main_goal))... from projects`) and found 2 real projects with `main_goal` up to 397 chars - `main_goal` is passed as `goalTitle` to `ai-plan-goal` from `projects/[id].tsx`, so those users' "Plan with AI" would have started failing. Changed to **clamp (truncate)** instead of reject - `MAX_TITLE_LENGTH` 300, `MAX_TEXT_LENGTH` 4000 - since the actual property needed is "bounded text reaches Gemini," which truncation satisfies without breaking a feature on data that predates the cap. Redeployed all three functions with the fix.
 
 ---
 
