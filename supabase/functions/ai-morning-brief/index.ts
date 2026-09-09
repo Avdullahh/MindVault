@@ -38,7 +38,18 @@ Deno.serve(async (req) => {
     }
 
     const resurface = (ideas ?? [])[0] as { title: string; description: string | null } | undefined;
-    const today = new Intl.DateTimeFormat('en-CA').format(new Date());
+
+    let body: { timezone?: string } = {};
+    try { body = await req.json(); } catch { /* no body is fine, fall back to UTC */ }
+
+    // Intl throws RangeError on an unrecognised IANA zone — fall back to UTC
+    // rather than 500ing the whole brief over a bad client-supplied string.
+    let today: string;
+    try {
+      today = new Intl.DateTimeFormat('en-CA', { timeZone: body.timezone || 'UTC' }).format(new Date());
+    } catch {
+      today = new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(new Date());
+    }
     const raw = await generateText({
       system: 'You are a personal assistant writing a brief morning summary. Return only valid JSON and no markdown.',
       prompt: `Today is ${today}.\n\nIdea to resurface: ${resurface ? `"${resurface.title}"${resurface.description ? ` - ${resurface.description}` : ''}` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,

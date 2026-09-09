@@ -29,7 +29,7 @@ async function callEdgeFunction<T>(name: string, body: object): Promise<T> {
 export type CategoriseResult = { categoryName: string };
 export type ExpandResult = { questions: string[]; angles: string[]; related: string[] };
 export type PlanResult = { tasks: string[] };
-export type BriefResult = { greeting: string; events: string[]; resurface: { title: string; description: string } | null };
+export type BriefResult = { greeting: string; resurface: { title: string; description: string } | null };
 export type CategoriseInput = { ideaTitle: string; ideaDescription?: string };
 export type ExpandInput = CategoriseInput;
 export type PlanGoalInput = { goalTitle: string; context?: string };
