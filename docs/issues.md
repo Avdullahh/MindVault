@@ -71,9 +71,9 @@ The `localDayBoundsUTC` helper this ticket names is gone already - removed with 
 
 ### Issue 15 - Morning brief always resurfaces the same idea
 
-**Status:** Open
+**Status:** Fixed and deployed
 
-`ai-morning-brief` queries ideas ordered by `last_viewed_at ASC NULLS FIRST LIMIT 1`. When multiple ideas have never been viewed (`last_viewed_at IS NULL`) the same one is always returned (lowest insertion order). A secondary sort or random tiebreaker is needed so different ideas are surfaced over time.
+PostgREST/`order()` can't sort by `random()`, so switched `.limit(1)` to `.limit(5)` (still ordered `last_viewed_at ASC NULLS FIRST`, so it's still the 5 least-recently-viewed / never-viewed ideas) and pick one at random from that batch server-side. No need to write `last_viewed_at` back - re-randomizing each call already rotates which idea surfaces. Deployed together with Issue 14 (same file).
 
 ---
 

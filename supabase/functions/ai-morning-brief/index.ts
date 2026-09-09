@@ -26,18 +26,26 @@ Deno.serve(async (req) => {
     if (!authed) return unauthorised();
     if (!await checkProEntitlement(authed.userId)) return paymentRequired();
 
+    // Pull a small batch of the least-recently-viewed ideas (never-viewed
+    // ones first) and pick one at random, rather than always the single
+    // least-recent — otherwise every never-viewed idea ties on
+    // last_viewed_at IS NULL and the same one (lowest insertion order) gets
+    // resurfaced every time.
     const { data: ideas, error: ideasError } = await authed.client
       .from('ideas')
       .select('title, description')
       .order('last_viewed_at', { ascending: true, nullsFirst: true })
-      .limit(1);
+      .limit(5);
 
     if (ideasError) {
       console.error('Failed to load brief context', ideasError);
       return internalError('Failed to load brief context');
     }
 
-    const resurface = (ideas ?? [])[0] as { title: string; description: string | null } | undefined;
+    const candidates = (ideas ?? []) as { title: string; description: string | null }[];
+    const resurface = candidates.length > 0
+      ? candidates[Math.floor(Math.random() * candidates.length)]
+      : undefined;
 
     let body: { timezone?: string } = {};
     try { body = await req.json(); } catch { /* no body is fine, fall back to UTC */ }
