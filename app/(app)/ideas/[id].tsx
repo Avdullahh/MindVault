@@ -16,13 +16,10 @@ import { ModalSheet } from '../../../components/ui/ModalSheet';
 import { AIButton } from '../../../components/ui/AIButton';
 import { Tag } from '../../../components/ui/Tag';
 import { useThemeColors } from '../../../context/ThemeContext';
+import { ExpansionSections } from '../../../components/ExpansionSections';
+import { useIdeaExpansions } from '../../../hooks/use-idea-expansions';
+import { formatShortDate, formatTime } from '../../../lib/date-format';
 import type { Goal, Tag as TagType } from '../../../types';
-
-const EXPAND_SECTION_LABELS = {
-  questions: 'Questions to Explore',
-  angles: 'Different Angles',
-  related: 'Related Concepts',
-} as const;
 
 export default function IdeaDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -33,6 +30,7 @@ export default function IdeaDetail() {
   const { tags: allTags, create: createTag } = useTags();
   const { goals: allGoals } = useGoals();
   const { categorise, categoriseState, expandIdea, expandState, resetExpand } = useAI();
+  const { expansions, loading: expansionsLoading } = useIdeaExpansions(id);
 
   const idea = ideas.find((i) => i.id === id);
 
@@ -44,6 +42,7 @@ export default function IdeaDetail() {
   const [linkedProjects, setLinkedProjects] = useState<{ id: string; title: string }[]>([]);
   const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
+  const [historyVisible, setHistoryVisible] = useState(false);
   const savedTitle = useRef('');
   const savedDescription = useRef('');
   const savedCategoryId = useRef<string | null>(null);
@@ -168,7 +167,7 @@ export default function IdeaDetail() {
   };
 
   const handleExpand = () => {
-    expandIdea(title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
+    expandIdea(idea.id, title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
   };
 
   return (
@@ -226,6 +225,15 @@ export default function IdeaDetail() {
           />
         </View>
 
+        <View className="flex-row justify-end mb-5 -mt-2">
+          <AIButton
+            label="History"
+            icon="time-outline"
+            compact
+            onPress={() => setHistoryVisible(true)}
+          />
+        </View>
+
         {categoriseState.status === 'error' && (
           <Text className="text-destructive text-xs mb-3">{categoriseState.error}</Text>
         )}
@@ -279,22 +287,35 @@ export default function IdeaDetail() {
           <Text className="text-destructive text-sm">{expandState.error}</Text>
         )}
         {expandState.status === 'success' && expandState.data && (
-          <ScrollView showsVerticalScrollIndicator={false}>
-            {(Object.keys(EXPAND_SECTION_LABELS) as (keyof typeof EXPAND_SECTION_LABELS)[]).map((key) => (
-              <View key={key} className="mb-4">
-                <Text className="text-primary text-xs font-semibold uppercase tracking-wider mb-2">
-                  {EXPAND_SECTION_LABELS[key]}
-                </Text>
-                {expandState.data![key].map((item, i) => (
-                  <View key={i} className="flex-row gap-2 mb-1.5">
-                    <Text className="text-muted text-sm">·</Text>
-                    <Text className="text-foreground text-sm flex-1">{item}</Text>
-                  </View>
-                ))}
-              </View>
-            ))}
-          </ScrollView>
+          <ExpansionSections
+            questions={expandState.data.questions}
+            angles={expandState.data.angles}
+            related={expandState.data.related}
+          />
         )}
+      </ModalSheet>
+
+      <ModalSheet visible={historyVisible} onClose={() => setHistoryVisible(false)} title="Suggestion History">
+        {expansionsLoading && (
+          <View className="items-center py-8">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        )}
+        {!expansionsLoading && expansions.length === 0 && (
+          <Text className="text-muted text-sm">No AI suggestions yet for this idea.</Text>
+        )}
+        {expansions.map((expansion, i) => (
+          <View key={expansion.id} className={i > 0 ? 'mt-4 pt-4 border-t border-border' : ''}>
+            <Text className="text-muted text-xs mb-3">
+              {formatShortDate(new Date(expansion.created_at))} · {formatTime(new Date(expansion.created_at))}
+            </Text>
+            <ExpansionSections
+              questions={expansion.questions}
+              angles={expansion.angles}
+              related={expansion.related}
+            />
+          </View>
+        ))}
       </ModalSheet>
 
       <TagPicker
