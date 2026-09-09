@@ -307,18 +307,32 @@ export default function IdeaDetail() {
         {!expansionsLoading && !expansionsError && expansions.length === 0 && (
           <Text className="text-muted text-sm">No AI suggestions yet for this idea.</Text>
         )}
-        {!expansionsLoading && !expansionsError && expansions.length > 0 && expansions.map((expansion, i) => (
-          <View key={expansion.id} className={i > 0 ? 'mt-4 pt-4 border-t border-border' : ''}>
-            <Text className="text-muted text-xs mb-3">
-              {formatShortDate(new Date(expansion.created_at))} · {formatTime(new Date(expansion.created_at))}
-            </Text>
-            <ExpansionSections
-              questions={expansion.questions}
-              angles={expansion.angles}
-              related={expansion.related}
-            />
-          </View>
-        ))}
+        {!expansionsLoading && !expansionsError && expansions.length > 0 && expansions.map((expansion, i) => {
+          const createdAt = new Date(expansion.created_at);
+          const dateLabel = formatShortDate(createdAt);
+          const previousDateLabel = i > 0
+            ? formatShortDate(new Date(expansions[i - 1].created_at))
+            : null;
+          const showDateHeader = dateLabel !== previousDateLabel;
+
+          return (
+            <View key={expansion.id} className={i > 0 ? 'mt-4 pt-4 border-t border-border' : ''}>
+              {showDateHeader && (
+                <Text className="text-muted text-xs font-semibold uppercase mb-3">
+                  {dateLabel}
+                </Text>
+              )}
+              <Text className="text-muted text-xs mb-3">
+                {formatTime(createdAt)}
+              </Text>
+              <ExpansionSections
+                questions={expansion.questions}
+                angles={expansion.angles}
+                related={expansion.related}
+              />
+            </View>
+          );
+        })}
       </ModalSheet>
 
       <TagPicker

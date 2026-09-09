@@ -28,7 +28,7 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
 
   // Available vertical space: full height minus keyboard, then cap at 90% of that
   const PADDING = 20;
-  const maxCardHeight = (height - kbHeight - PADDING * 2) * 0.95;
+  const maxCardHeight = Math.max(160, (height - kbHeight - PADDING * 2) * 0.95);
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
@@ -44,21 +44,21 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
         }}
         onPress={onClose}
       >
-        <Pressable onPress={() => {}} style={{ width: '100%', maxWidth: 480 }}>
-          <View
-            className="bg-background rounded-3xl border border-border overflow-hidden"
-            style={[{ maxHeight: maxCardHeight }, themeStyle]}
-          >
+        <Pressable className="w-full max-w-sheet" onPress={() => {}}>
+          {/* Both the wrapping View's maxHeight AND the ScrollView's own maxHeight+flexShrink
+              are set deliberately, not redundantly: RN's default flexShrink is 0, so a
+              ScrollView with no bound of its own grows to full content height regardless of
+              an ancestor's maxHeight, and silently fails to detect it has anything to scroll
+              (see git history on this file for two prior single-constraint attempts that
+              didn't reliably reproduce as fixed). Constraining both the ancestor AND the
+              ScrollView itself removes any dependence on Yoga stretch/shrink propagation
+              working a particular way across RN versions. */}
+          <View className="bg-background rounded-sheet border border-border overflow-hidden" style={[{ maxHeight: maxCardHeight }, themeStyle]}>
             <ScrollView
-              // flexShrink: 1 is required so this ScrollView actually shrinks to the
-              // maxHeight-capped card above instead of growing to its full content
-              // height (RN's default flexShrink is 0). Without it, the ScrollView
-              // never realizes it needs to scroll -- the card's overflow-hidden just
-              // silently clips the bottom instead of making it reachable.
-              style={{ flexShrink: 1 }}
+              style={{ maxHeight: maxCardHeight, flexGrow: 0, flexShrink: 1 }}
               bounces={false}
               keyboardShouldPersistTaps="handled"
-              showsVerticalScrollIndicator={false}
+              showsVerticalScrollIndicator
               contentContainerStyle={{ paddingHorizontal: 24, paddingTop: 20, paddingBottom: 24 }}
             >
               {title && (
