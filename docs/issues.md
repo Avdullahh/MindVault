@@ -42,9 +42,14 @@ Migration `20240106000000_harden_direct_rls.sql` later adds `constraint tasks_pr
 
 ### Issue 12 - Dual goal↔project relationship is inconsistent
 
-**Status:** Open
+**Status:** Open - needs a product decision, not a schema fix
 
-Goals can be linked to a project via both `goals.project_id` (direct FK, initial schema) and the `goal_projects` junction table (migration 20240107). Two paths exist simultaneously with no enforcement that they stay in sync. One should be removed or the two should be reconciled.
+Investigated: this isn't accidental duplication, it's two different relationships that happen to share a table pair. `goals.project_id` is the goal's "home" project, set once at creation (`hooks/use-goals.ts`). `goal_projects` is an intentional many-to-many for linking a goal to *additional* projects later, built and used from `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx`, which already merge and de-duplicate both sources for display (`projects/[id].tsx:65-69`). Removing either path removes a real, currently-used cross-linking capability, which CLAUDE.md's "ideas, goals, tasks, and projects must stay meaningfully cross-linkable" rule protects - same category as the entitlement stub (Issue 10): a product call, not mine to make unilaterally. Leaving open pending a decision:
+
+- **Option A (recommended):** keep both, rename/document the distinction clearly (e.g. `project_id` = "primary project", `goal_projects` = "also linked to") so it reads as intentional rather than leftover.
+- **Option B:** collapse to junction-only - drop `goals.project_id`, migrate existing values into `goal_projects`, update every read site. Loses the "one primary project" concept the UI currently uses to group goals under a project by default.
+
+**Separate, smaller finding from this investigation:** `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx` call `supabase.from('goal_projects')` directly from route files instead of through a hook, which violates CLAUDE.md's "hooks/ owns all Supabase reads/writes" rule. Worth a `use-goal-projects` hook regardless of which option above is chosen - not done here to keep this change scoped to the ticket.
 
 ---
 
