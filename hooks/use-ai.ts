@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
+import { emitDataChange } from '../lib/data-events';
 import { supabase } from '../lib/supabase';
 
 export type AIStatus = 'idle' | 'loading' | 'success' | 'error';
@@ -31,7 +32,7 @@ export type ExpandResult = { questions: string[]; angles: string[]; related: str
 export type PlanResult = { tasks: string[] };
 export type BriefResult = { greeting: string; resurface: { title: string; description: string } | null };
 export type CategoriseInput = { ideaTitle: string; ideaDescription?: string };
-export type ExpandInput = CategoriseInput;
+export type ExpandInput = CategoriseInput & { ideaId: string };
 export type PlanGoalInput = { goalTitle: string; context?: string };
 export type MorningBriefInput = { timezone: string };
 
@@ -44,6 +45,7 @@ export function useAI() {
   const [expandState, setExpandState] = useState<AIState<ExpandResult>>(makeState);
   const [planState, setPlanState] = useState<AIState<PlanResult>>(makeState);
   const [briefState, setBriefState] = useState<AIState<BriefResult>>(makeState);
+  const source = useRef(Symbol('ai'));
 
   async function run<T>(
     setState: React.Dispatch<React.SetStateAction<AIState<T>>>,
@@ -66,10 +68,13 @@ export function useAI() {
       callEdgeFunction<CategoriseResult>('ai-categorise', { ideaTitle, ideaDescription } satisfies CategoriseInput),
     );
 
-  const expandIdea = (ideaTitle: string, ideaDescription?: string) =>
-    run(setExpandState, () =>
-      callEdgeFunction<ExpandResult>('ai-expand-idea', { ideaTitle, ideaDescription } satisfies ExpandInput),
+  const expandIdea = async (ideaId: string, ideaTitle: string, ideaDescription?: string) => {
+    const result = await run(setExpandState, () =>
+      callEdgeFunction<ExpandResult>('ai-expand-idea', { ideaId, ideaTitle, ideaDescription } satisfies ExpandInput),
     );
+    if (result.data) emitDataChange('idea-expansions', source.current);
+    return result;
+  };
 
   const planGoal = (goalTitle: string, context?: string) =>
     run(setPlanState, () =>
