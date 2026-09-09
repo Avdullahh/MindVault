@@ -4,7 +4,8 @@ export type DataTopic =
   | 'ideas'
   | 'projects'
   | 'goals'
-  | 'tasks';
+  | 'tasks'
+  | 'idea-expansions';
 
 type DataListener = (source?: symbol) => void;
 
