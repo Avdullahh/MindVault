@@ -42,7 +42,12 @@ export default function IdeaDetail() {
   const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
-  const { expansions, loading: expansionsLoading, error: expansionsError } = useIdeaExpansions(id, historyVisible);
+  const {
+    expansions,
+    loading: expansionsLoading,
+    error: expansionsError,
+    refetch: refetchExpansions,
+  } = useIdeaExpansions(id, historyVisible);
   const savedTitle = useRef('');
   const savedDescription = useRef('');
   const savedCategoryId = useRef<string | null>(null);
@@ -170,6 +175,11 @@ export default function IdeaDetail() {
     expandIdea(idea.id, title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
   };
 
+  const handleOpenHistory = () => {
+    setHistoryVisible(true);
+    refetchExpansions();
+  };
+
   return (
     <View className="flex-1 bg-background">
       <View className="flex-row items-center justify-between px-5 pt-14 pb-3">
@@ -230,7 +240,7 @@ export default function IdeaDetail() {
             label="History"
             icon="time-outline"
             compact
-            onPress={() => setHistoryVisible(true)}
+            onPress={handleOpenHistory}
           />
         </View>
 

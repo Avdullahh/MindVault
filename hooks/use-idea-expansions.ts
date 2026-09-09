@@ -23,6 +23,9 @@ export function useIdeaExpansions(ideaId: string, enabled: boolean = true) {
     queryKey: queryKey(ideaId),
     queryFn: () => fetchIdeaExpansions(ideaId),
     enabled: !!ideaId && enabled,
+    // 0 (not the app-wide 30s default) so opening History always reflects the
+    // most recent "Expand with AI" run, not a stale cached read.
+    staleTime: 0,
   });
 
   useEffect(() => {

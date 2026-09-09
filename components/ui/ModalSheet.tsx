@@ -14,12 +14,11 @@ type Props = {
 export function ModalSheet({ visible, onClose, title, children }: Props) {
   const { height } = useWindowDimensions();
   const [kbHeight, setKbHeight] = useState(0);
-  const [contentHeight, setContentHeight] = useState(0);
   const { colorScheme } = useTheme();
   const themeStyle = vars(colorScheme === 'dark' ? darkVars : lightVars);
 
   useEffect(() => {
-    if (!visible) { setKbHeight(0); setContentHeight(0); return; }
+    if (!visible) { setKbHeight(0); return; }
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const show = Keyboard.addListener(showEvent, (e) => setKbHeight(e.endCoordinates.height));
@@ -33,7 +32,7 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
 
   return (
     <Modal visible={visible} animationType="fade" transparent onRequestClose={onClose}>
-      <Pressable
+      <View
         style={{
           flex: 1,
           backgroundColor: 'rgba(0,0,0,0.6)',
@@ -43,24 +42,27 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
           paddingTop: PADDING,
           paddingBottom: kbHeight + PADDING,
         }}
-        onPress={onClose}
       >
-        <Pressable className="w-full max-w-sheet" onPress={() => {}}>
-          {/* Three prior attempts (flexShrink alone, maxHeight-on-ScrollView alone, and both
-              together) relied on Yoga auto-computing the ScrollView's own bound from a
-              maxHeight/flexShrink clamp, and none of them reliably made the ScrollView
-              recognize it had overflow to scroll on device. Rather than try a fourth variant
-              of the same "let Yoga figure out the bound" approach, this measures the actual
-              rendered content height (onContentSizeChange) and gives the ScrollView a
-              DEFINITE height -- min(measured content height, the screen-based cap) -- once
-              known. A definite height is resolved identically by Yoga in every case, with no
-              dependence on stretch/shrink propagation through the auto-sized Pressable/View
-              wrappers above it. Before the first measurement (contentHeight === 0), it falls
-              back to the cap so nothing is clipped on the very first frame. */}
+        {/* Four prior fixes on this file (flexShrink, maxHeight-on-ScrollView, both
+            together, then a measured-content-height rework) all assumed the bug was
+            about the ScrollView's height, and none fixed scrolling on device. The
+            actual cause: the ScrollView used to be nested inside two layered
+            Pressables (this backdrop + a no-op card wrapper), and a full-screen
+            Pressable ancestor can win the touch-responder negotiation over a nested
+            ScrollView's own pan gesture regardless of how correctly it's sized. The
+            backdrop is now a non-interactive View with only an absolutely-positioned
+            tap target behind the card, so the ScrollView below is the sole scroll
+            gesture owner in this subtree. */}
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close modal"
+          onPress={onClose}
+          style={{ position: 'absolute', top: 0, right: 0, bottom: 0, left: 0 }}
+        />
+        <View className="w-full max-w-sheet">
           <View className="bg-background rounded-sheet border border-border overflow-hidden" style={themeStyle}>
             <ScrollView
-              style={{ height: Math.min(contentHeight || maxCardHeight, maxCardHeight) }}
-              onContentSizeChange={(_w, h) => setContentHeight(h)}
+              style={{ maxHeight: maxCardHeight }}
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator
@@ -74,8 +76,8 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
               {children}
             </ScrollView>
           </View>
-        </Pressable>
-      </Pressable>
+        </View>
+      </View>
     </Modal>
   );
 }
