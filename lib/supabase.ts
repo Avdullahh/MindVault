@@ -81,5 +81,11 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: false,
+    // Magic-link and OAuth redirects are exchanged manually in
+    // context/auth-context.tsx via a `code` query param — that param
+    // only exists under PKCE. Without this, supabase-js defaults to
+    // 'implicit', which returns tokens in a URL fragment instead and
+    // exchangeCodeFromUrl() never finds a code to exchange.
+    flowType: 'pkce',
   },
 });
