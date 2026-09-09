@@ -14,11 +14,12 @@ type Props = {
 export function ModalSheet({ visible, onClose, title, children }: Props) {
   const { height } = useWindowDimensions();
   const [kbHeight, setKbHeight] = useState(0);
+  const [contentHeight, setContentHeight] = useState(0);
   const { colorScheme } = useTheme();
   const themeStyle = vars(colorScheme === 'dark' ? darkVars : lightVars);
 
   useEffect(() => {
-    if (!visible) { setKbHeight(0); return; }
+    if (!visible) { setKbHeight(0); setContentHeight(0); return; }
     const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
     const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
     const show = Keyboard.addListener(showEvent, (e) => setKbHeight(e.endCoordinates.height));
@@ -45,17 +46,21 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
         onPress={onClose}
       >
         <Pressable className="w-full max-w-sheet" onPress={() => {}}>
-          {/* Both the wrapping View's maxHeight AND the ScrollView's own maxHeight+flexShrink
-              are set deliberately, not redundantly: RN's default flexShrink is 0, so a
-              ScrollView with no bound of its own grows to full content height regardless of
-              an ancestor's maxHeight, and silently fails to detect it has anything to scroll
-              (see git history on this file for two prior single-constraint attempts that
-              didn't reliably reproduce as fixed). Constraining both the ancestor AND the
-              ScrollView itself removes any dependence on Yoga stretch/shrink propagation
-              working a particular way across RN versions. */}
-          <View className="bg-background rounded-sheet border border-border overflow-hidden" style={[{ maxHeight: maxCardHeight }, themeStyle]}>
+          {/* Three prior attempts (flexShrink alone, maxHeight-on-ScrollView alone, and both
+              together) relied on Yoga auto-computing the ScrollView's own bound from a
+              maxHeight/flexShrink clamp, and none of them reliably made the ScrollView
+              recognize it had overflow to scroll on device. Rather than try a fourth variant
+              of the same "let Yoga figure out the bound" approach, this measures the actual
+              rendered content height (onContentSizeChange) and gives the ScrollView a
+              DEFINITE height -- min(measured content height, the screen-based cap) -- once
+              known. A definite height is resolved identically by Yoga in every case, with no
+              dependence on stretch/shrink propagation through the auto-sized Pressable/View
+              wrappers above it. Before the first measurement (contentHeight === 0), it falls
+              back to the cap so nothing is clipped on the very first frame. */}
+          <View className="bg-background rounded-sheet border border-border overflow-hidden" style={themeStyle}>
             <ScrollView
-              style={{ maxHeight: maxCardHeight, flexGrow: 0, flexShrink: 1 }}
+              style={{ height: Math.min(contentHeight || maxCardHeight, maxCardHeight) }}
+              onContentSizeChange={(_w, h) => setContentHeight(h)}
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator
