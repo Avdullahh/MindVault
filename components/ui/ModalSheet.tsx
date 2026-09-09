@@ -50,6 +50,12 @@ export function ModalSheet({ visible, onClose, title, children }: Props) {
             style={[{ maxHeight: maxCardHeight }, themeStyle]}
           >
             <ScrollView
+              // flexShrink: 1 is required so this ScrollView actually shrinks to the
+              // maxHeight-capped card above instead of growing to its full content
+              // height (RN's default flexShrink is 0). Without it, the ScrollView
+              // never realizes it needs to scroll -- the card's overflow-hidden just
+              // silently clips the bottom instead of making it reachable.
+              style={{ flexShrink: 1 }}
               bounces={false}
               keyboardShouldPersistTaps="handled"
               showsVerticalScrollIndicator={false}
