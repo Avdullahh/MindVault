@@ -6,6 +6,7 @@
 
 ## Completed
 
+- Release-readiness sweep: excluded `lib/__tests__/**` from `tsc` (was failing `npx tsc --noEmit` with no test runner installed), added the `expo-image-picker` config plugin with a `photosPermission` string (avatar picker had no Info.plist usage description), and fixed `ChunkedSecureStore.setItem` in `lib/supabase.ts` to write session chunks before the `.count` key and prune leftover chunks from a shorter value (previously a mid-write failure could point `.count` at missing chunks and silently drop the session)
 - Goals link to both ideas and projects
 - Project tasks selectable and displayed as read-only milestones on a linked goal
 - Projects link to both ideas and goals
@@ -65,6 +66,14 @@ Goals can be linked to a project via both `goals.project_id` (direct FK, initial
 **Status:** Open
 
 `ai-morning-brief` queries ideas ordered by `last_viewed_at ASC NULLS FIRST LIMIT 1`. When multiple ideas have never been viewed (`last_viewed_at IS NULL`) the same one is always returned (lowest insertion order). A secondary sort or random tiebreaker is needed so different ideas are surfaced over time.
+
+---
+
+### Issue 16 - No in-app account deletion path
+
+**Status:** Open
+
+Apple App Store Review Guideline 5.1.1(v) requires any app that supports account creation to let users initiate account deletion from inside the app (not just via a support email or web page). There is currently no delete-account action anywhere in `app/`, `hooks/`, or `supabase/` - `settings.tsx` only offers sign-out. Since `auth.users` deletion requires the `service_role` key, this needs an Edge Function (authenticate → delete the user's rows, relying on `ON DELETE CASCADE` from `user_id` FKs → call `auth.admin.deleteUser`) plus a confirmation UI in Settings. This is a hard App Store rejection reason if missing, not just a quality issue.
 
 ---
 

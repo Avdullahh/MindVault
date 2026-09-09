@@ -40,12 +40,29 @@ const ChunkedSecureStore = {
     for (let i = 0; i < value.length; i += CHUNK_SIZE) {
       chunks.push(value.slice(i, i + CHUNK_SIZE));
     }
-    await SecureStore.setItemAsync(`${key}.count`, chunks.length.toString());
+
+    // Write chunks before the count, and only advance the count once every
+    // chunk has landed — getItem() trusts `.count` to know how many chunks
+    // to read, so writing it first would let a mid-write failure leave it
+    // pointing at chunks that don't exist yet (session silently dropped).
+    const prevCountStr = await SecureStore.getItemAsync(`${key}.count`);
+    const prevCount = prevCountStr ? parseInt(prevCountStr, 10) : 0;
+
     await Promise.all(
       chunks.map((chunk, i) =>
         SecureStore.setItemAsync(`${key}.${i}`, chunk),
       ),
     );
+    await SecureStore.setItemAsync(`${key}.count`, chunks.length.toString());
+
+    // Clean up any leftover chunks from a previous, longer value.
+    if (prevCount > chunks.length) {
+      await Promise.all(
+        Array.from({ length: prevCount - chunks.length }, (_, i) =>
+          SecureStore.deleteItemAsync(`${key}.${chunks.length + i}`),
+        ),
+      );
+    }
   },
 
   removeItem: async (key: string) => {

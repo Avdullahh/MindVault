@@ -40,7 +40,13 @@
           "backgroundColor": "#ffffff"
         }
       ],
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "MindVault uses your photo library to let you choose a profile picture."
+        }
+      ]
     ],
     "extra": {
       "router": {},
