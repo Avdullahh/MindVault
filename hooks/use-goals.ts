@@ -28,6 +28,11 @@ export function useGoals() {
     await query.refetch();
   };
 
+  // `project_id` here is the goal's primary/home project, set once at
+  // creation. It's distinct from the goal_projects junction table (see
+  // app/(app)/goals/[id].tsx and app/(app)/projects/[id].tsx), which links
+  // a goal to additional projects afterward — both are intentional,
+  // documented in docs/issues.md Issue 12.
   const create = async (
     payload: Pick<GoalInsert, 'title' | 'deadline' | 'priority' | 'category_id' | 'project_id'>,
   ): Promise<string | null> => {

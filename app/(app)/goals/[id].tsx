@@ -43,6 +43,9 @@ export default function GoalDetail() {
     setLinkedIdeas(((data ?? []) as { ideas: Idea }[]).map((r) => r.ideas).filter(Boolean));
   };
 
+  // goal_projects links this goal to *additional* projects beyond its
+  // primary project (goals.project_id, set at creation) — see docs/issues.md
+  // Issue 12. Both are intentional and merged for display in projects/[id].tsx.
   const loadLinkedProjects = async () => {
     const { data } = await supabase.from('goal_projects').select('projects(*)').eq('goal_id', id);
     setLinkedProjects(((data ?? []) as { projects: Project }[]).map((r) => r.projects).filter(Boolean));

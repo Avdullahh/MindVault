@@ -62,6 +62,10 @@ export default function ProjectDetail() {
 
   const exitToProjects = () => router.replace('/(app)/projects');
 
+  // Two intentional relationships merged for display (docs/issues.md
+  // Issue 12): directProjectGoals via goals.project_id (this goal's
+  // primary project, set at creation) and linkedGoals via the goal_projects
+  // junction (additional links added later), de-duplicated below.
   const directProjectGoals = allGoals.filter((g) => g.project_id === id);
   const projectGoals = [
     ...directProjectGoals,

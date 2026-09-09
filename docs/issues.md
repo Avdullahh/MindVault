@@ -42,14 +42,13 @@ Migration `20240106000000_harden_direct_rls.sql` later adds `constraint tasks_pr
 
 ### Issue 12 - Dual goal↔project relationship is inconsistent
 
-**Status:** Open - needs a product decision, not a schema fix
+**Status:** Closed - Option A chosen by user (keep both, document the distinction)
 
-Investigated: this isn't accidental duplication, it's two different relationships that happen to share a table pair. `goals.project_id` is the goal's "home" project, set once at creation (`hooks/use-goals.ts`). `goal_projects` is an intentional many-to-many for linking a goal to *additional* projects later, built and used from `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx`, which already merge and de-duplicate both sources for display (`projects/[id].tsx:65-69`). Removing either path removes a real, currently-used cross-linking capability, which CLAUDE.md's "ideas, goals, tasks, and projects must stay meaningfully cross-linkable" rule protects - same category as the entitlement stub (Issue 10): a product call, not mine to make unilaterally. Leaving open pending a decision:
+Investigated: this isn't accidental duplication, it's two different relationships that happen to share a table pair. `goals.project_id` is the goal's "home" project, set once at creation (`hooks/use-goals.ts`). `goal_projects` is an intentional many-to-many for linking a goal to *additional* projects later, built and used from `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx`, which already merge and de-duplicate both sources for display. Removing either path removes a real, currently-used cross-linking capability, which CLAUDE.md's "ideas, goals, tasks, and projects must stay meaningfully cross-linkable" rule protects, so this was put to the user rather than decided unilaterally (same category as the entitlement stub, Issue 10).
 
-- **Option A (recommended):** keep both, rename/document the distinction clearly (e.g. `project_id` = "primary project", `goal_projects` = "also linked to") so it reads as intentional rather than leftover.
-- **Option B:** collapse to junction-only - drop `goals.project_id`, migrate existing values into `goal_projects`, update every read site. Loses the "one primary project" concept the UI currently uses to group goals under a project by default.
+User chose **Option A: keep both, document the distinction**. Applied via migration `20260909120100_document_goal_project_link.sql` (`comment on column goals.project_id`, `comment on table goal_projects`) plus explanatory comments at every read/write site: `hooks/use-goals.ts` (`create`), `app/(app)/goals/[id].tsx` (`loadLinkedProjects`), `app/(app)/projects/[id].tsx` (`directProjectGoals`/`projectGoals`). No schema or behavior change - both relationships stay, now legible as intentional rather than leftover.
 
-**Separate, smaller finding from this investigation:** `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx` call `supabase.from('goal_projects')` directly from route files instead of through a hook, which violates CLAUDE.md's "hooks/ owns all Supabase reads/writes" rule. Worth a `use-goal-projects` hook regardless of which option above is chosen - not done here to keep this change scoped to the ticket.
+**Separate, smaller finding from this investigation, not fixed:** `app/(app)/goals/[id].tsx` and `app/(app)/projects/[id].tsx` call `supabase.from('goal_projects')` directly from route files instead of through a hook, which violates CLAUDE.md's "hooks/ owns all Supabase reads/writes" rule. Worth a `use-goal-projects` hook as a future pass - kept out of this change to stay scoped to the ticket.
 
 ---
 
