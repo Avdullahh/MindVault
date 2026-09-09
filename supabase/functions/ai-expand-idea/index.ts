@@ -21,11 +21,12 @@ Deno.serve(async (req) => {
     if (!authed) return unauthorised();
     if (!await checkProEntitlement(authed.userId)) return paymentRequired();
 
-    let body: { ideaTitle?: string; ideaDescription?: string };
+    let body: { ideaTitle?: string; ideaDescription?: string; ideaId?: string };
     try { body = await req.json(); } catch { return badRequest('Invalid JSON'); }
 
     const ideaTitle = clamp(body.ideaTitle?.trim(), MAX_TITLE_LENGTH);
     const ideaDescription = clamp(body.ideaDescription?.trim(), MAX_TEXT_LENGTH);
+    const ideaId = body.ideaId?.trim();
     if (!ideaTitle) return badRequest('ideaTitle is required');
 
     const raw = await generateText({
@@ -37,6 +38,21 @@ Deno.serve(async (req) => {
     let parsed: unknown;
     try { parsed = parseJsonObject(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();
+
+    if (ideaId) {
+      const { error: insertError } = await authed.client.from('idea_expansions').insert({
+        idea_id: ideaId,
+        questions: parsed.questions,
+        angles: parsed.angles,
+        related: parsed.related,
+      });
+      // Best-effort: history is supplementary, never blocks returning the
+      // expansion result the user is waiting on. RLS also rejects an
+      // ideaId that isn't the caller's, which lands here rather than failing
+      // the request.
+      if (insertError) console.error('idea_expansions insert failed', insertError);
+    }
+
     return ok(parsed);
   } catch (e) {
     console.error(e);
