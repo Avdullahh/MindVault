@@ -32,9 +32,11 @@
 
 ### Issue 11 - `tasks.project_id` uses ON DELETE CASCADE instead of SET NULL
 
-**Status:** Open
+**Status:** Closed - working as intended, not a bug
 
-Migration `20240104` adds `tasks.project_id` with `ON DELETE CASCADE`, meaning deleting a project silently deletes all its tasks. Every other nullable FK in the schema uses `ON DELETE SET NULL`. This should be changed to match.
+Migration `20240106000000_harden_direct_rls.sql` later adds `constraint tasks_project_required check (project_id is not null) not valid` - tasks are project-scoped by design (see CLAUDE.md: "Tasks are project-scoped... do not create tasks without project_id"). `NOT VALID` only skips validating pre-existing rows; it's still enforced on every subsequent INSERT/UPDATE. Changing the FK to `ON DELETE SET NULL` would make Postgres try to null out `project_id` on delete, immediately trip that check constraint, and abort the entire project deletion - strictly worse than the current cascade. `ON DELETE CASCADE` is correct for a NOT-NULL, project-scoped child row.
+
+**Follow-up found while verifying this:** `select count(*) from tasks where project_id is null` on production returns **10** - pre-existing rows that violate the `tasks_project_required` invariant (the `NOT VALID` constraint doesn't retroactively enforce them). Not fixed here since deciding what happens to orphaned tasks (delete vs. reassign) is a product/data decision, not a schema one.
 
 ---
 
