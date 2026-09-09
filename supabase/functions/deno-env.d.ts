@@ -20,6 +20,9 @@ declare module 'https://esm.sh/@supabase/supabase-js@2' {
         data: { user: { id: string } | null };
         error: unknown;
       }>;
+      admin: {
+        deleteUser(userId: string): Promise<{ error: unknown }>;
+      };
     };
     from(table: string): {
       select(columns?: string): any;

@@ -5,6 +5,7 @@ import { Ionicons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth-context';
 import { useTheme, useThemeColors, type ThemeMode } from '../../context/ThemeContext';
+import { ModalSheet } from '../../components/ui/ModalSheet';
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
@@ -13,7 +14,7 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionico
 ];
 
 export default function Settings() {
-  const { session, signOut, updateAccount } = useAuth();
+  const { session, signOut, updateAccount, deleteAccount } = useAuth();
   const { mode, setMode } = useTheme();
   const colors = useThemeColors();
   const router = useRouter();
@@ -33,6 +34,9 @@ export default function Settings() {
   const [avatar, setAvatar] = useState<string | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [deleteModalVisible, setDeleteModalVisible] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [profileMessage, setProfileMessage] = useState<string | null>(null);
   const [profileMessageType, setProfileMessageType] = useState<'success' | 'error'>('success');
 
@@ -104,6 +108,18 @@ export default function Settings() {
   const handleSignOut = async () => {
     setSigningOut(true);
     await signOut();
+  };
+
+  const handleDeleteAccount = async () => {
+    setDeleting(true);
+    setDeleteError(null);
+    const error = await deleteAccount();
+    if (error) {
+      setDeleting(false);
+      setDeleteError(error);
+      return;
+    }
+    setDeleteModalVisible(false);
   };
 
   return (
@@ -261,7 +277,52 @@ export default function Settings() {
             <Ionicons name="log-out-outline" size={20} color={colors.destructive} />
           )}
         </Pressable>
+
+        <Pressable
+          className="mt-3 py-4 px-5 items-center flex-row justify-center"
+          onPress={() => { setDeleteError(null); setDeleteModalVisible(true); }}
+          accessibilityRole="button"
+        >
+          <Text className="text-destructive/70 font-medium text-sm">Delete account</Text>
+        </Pressable>
       </ScrollView>
+
+      <ModalSheet
+        visible={deleteModalVisible}
+        onClose={() => { if (!deleting) setDeleteModalVisible(false); }}
+        title="Delete account?"
+      >
+        <Text className={`${muted} mb-5`}>
+          This permanently deletes your ideas, goals, projects, and tasks. This can't be undone.
+        </Text>
+
+        {deleteError ? (
+          <Text selectable className="text-sm mb-4 text-destructive">{deleteError}</Text>
+        ) : null}
+
+        <View className="flex-row gap-3">
+          <Pressable
+            className={`${card} flex-1 rounded-xl py-3 items-center border`}
+            onPress={() => setDeleteModalVisible(false)}
+            disabled={deleting}
+            accessibilityRole="button"
+          >
+            <Text className="text-foreground font-semibold">Cancel</Text>
+          </Pressable>
+          <Pressable
+            className="flex-1 rounded-xl py-3 items-center bg-destructive"
+            onPress={handleDeleteAccount}
+            disabled={deleting}
+            accessibilityRole="button"
+          >
+            {deleting ? (
+              <ActivityIndicator color={colors.primaryForeground} />
+            ) : (
+              <Text className="text-primary-foreground font-semibold">Delete</Text>
+            )}
+          </Pressable>
+        </View>
+      </ModalSheet>
     </View>
   );
 }

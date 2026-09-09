@@ -26,6 +26,7 @@ type AuthContextValue = {
   updateAccount: (payload: AccountUpdatePayload) => Promise<AccountUpdateResult>;
   refreshSession: () => Promise<boolean>;
   signOut: () => Promise<void>;
+  deleteAccount: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -165,6 +166,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     clearPersistedQueryCache();
   };
 
+  // Deletes the account server-side (via the delete-account Edge Function,
+  // which needs the service-role key to call auth.admin.deleteUser) then
+  // clears local session state the same way signOut() does.
+  const deleteAccount = async (): Promise<string | null> => {
+    const { error } = await supabase.functions.invoke('delete-account');
+    if (error) {
+      const fnError = error as { message: string; context?: Response };
+      let message = fnError.message;
+      if (fnError.context) {
+        const payload = await fnError.context.clone().json().catch(() => null);
+        if (payload && typeof payload === 'object' && 'error' in payload && typeof payload.error === 'string') {
+          message = payload.error;
+        }
+      }
+      return message;
+    }
+
+    await supabase.auth.signOut();
+    setSession(null);
+    clearPersistedQueryCache();
+    return null;
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -175,6 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         updateAccount,
         refreshSession,
         signOut,
+        deleteAccount,
       }}
     >
       {children}

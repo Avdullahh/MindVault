@@ -6,6 +6,7 @@
 
 ## Completed
 
+- In-app account deletion (Apple guideline 5.1.1(v)): new `delete-account` Edge Function (service-role `auth.admin.deleteUser`, relies on existing `ON DELETE CASCADE` from every `user_id` FK to clean up all rows) plus a confirmation modal and "Delete account" action in Settings, wired through `deleteAccount()` in `context/auth-context.tsx`
 - Release-readiness sweep: excluded `lib/__tests__/**` from `tsc` (was failing `npx tsc --noEmit` with no test runner installed), added the `expo-image-picker` config plugin with a `photosPermission` string (avatar picker had no Info.plist usage description), and fixed `ChunkedSecureStore.setItem` in `lib/supabase.ts` to write session chunks before the `.count` key and prune leftover chunks from a shorter value (previously a mid-write failure could point `.count` at missing chunks and silently drop the session)
 - Goals link to both ideas and projects
 - Project tasks selectable and displayed as read-only milestones on a linked goal
@@ -69,13 +70,6 @@ Goals can be linked to a project via both `goals.project_id` (direct FK, initial
 
 ---
 
-### Issue 16 - No in-app account deletion path
-
-**Status:** Open
-
-Apple App Store Review Guideline 5.1.1(v) requires any app that supports account creation to let users initiate account deletion from inside the app (not just via a support email or web page). There is currently no delete-account action anywhere in `app/`, `hooks/`, or `supabase/` - `settings.tsx` only offers sign-out. Since `auth.users` deletion requires the `service_role` key, this needs an Edge Function (authenticate → delete the user's rows, relying on `ON DELETE CASCADE` from `user_id` FKs → call `auth.admin.deleteUser`) plus a confirmation UI in Settings. This is a hard App Store rejection reason if missing, not just a quality issue.
-
----
 
 ### Issue 9 - Research competitor apps and propose UI/UX improvements
 
