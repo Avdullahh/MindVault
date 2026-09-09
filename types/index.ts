@@ -18,3 +18,5 @@ export type Goal          = Database['public']['Tables']['goals']['Row'];
 export type TaskInsert        = Database['public']['Tables']['tasks']['Insert'];
 export type TaskUpdate        = Database['public']['Tables']['tasks']['Update'];
 export type Task          = Database['public']['Tables']['tasks']['Row'];
+export type IdeaExpansionInsert = Database['public']['Tables']['idea_expansions']['Insert'];
+export type IdeaExpansion       = Database['public']['Tables']['idea_expansions']['Row'];
