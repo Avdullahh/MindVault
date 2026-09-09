@@ -16,13 +16,13 @@ async function fetchIdeaExpansions(ideaId: string): Promise<IdeaExpansion[]> {
   return data ?? [];
 }
 
-export function useIdeaExpansions(ideaId: string) {
+export function useIdeaExpansions(ideaId: string, enabled: boolean = true) {
   const source = useRef(Symbol('idea-expansions'));
   const queryClient = useQueryClient();
   const query = useQuery({
     queryKey: queryKey(ideaId),
     queryFn: () => fetchIdeaExpansions(ideaId),
-    enabled: !!ideaId,
+    enabled: !!ideaId && enabled,
   });
 
   useEffect(() => {

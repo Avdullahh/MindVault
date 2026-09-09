@@ -30,7 +30,6 @@ export default function IdeaDetail() {
   const { tags: allTags, create: createTag } = useTags();
   const { goals: allGoals } = useGoals();
   const { categorise, categoriseState, expandIdea, expandState, resetExpand } = useAI();
-  const { expansions, loading: expansionsLoading } = useIdeaExpansions(id);
 
   const idea = ideas.find((i) => i.id === id);
 
@@ -43,6 +42,7 @@ export default function IdeaDetail() {
   const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
+  const { expansions, loading: expansionsLoading, error: expansionsError } = useIdeaExpansions(id, historyVisible);
   const savedTitle = useRef('');
   const savedDescription = useRef('');
   const savedCategoryId = useRef<string | null>(null);
@@ -301,10 +301,13 @@ export default function IdeaDetail() {
             <ActivityIndicator color={colors.primary} />
           </View>
         )}
-        {!expansionsLoading && expansions.length === 0 && (
+        {!expansionsLoading && expansionsError && (
+          <Text className="text-destructive text-sm">{expansionsError}</Text>
+        )}
+        {!expansionsLoading && !expansionsError && expansions.length === 0 && (
           <Text className="text-muted text-sm">No AI suggestions yet for this idea.</Text>
         )}
-        {expansions.map((expansion, i) => (
+        {!expansionsLoading && !expansionsError && expansions.length > 0 && expansions.map((expansion, i) => (
           <View key={expansion.id} className={i > 0 ? 'mt-4 pt-4 border-t border-border' : ''}>
             <Text className="text-muted text-xs mb-3">
               {formatShortDate(new Date(expansion.created_at))} · {formatTime(new Date(expansion.created_at))}
