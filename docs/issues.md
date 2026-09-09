@@ -32,11 +32,11 @@
 
 ### Issue 11 - `tasks.project_id` uses ON DELETE CASCADE instead of SET NULL
 
-**Status:** Closed - working as intended, not a bug
+**Status:** Closed - working as intended (CASCADE is correct); follow-up data issue fixed
 
 Migration `20240106000000_harden_direct_rls.sql` later adds `constraint tasks_project_required check (project_id is not null) not valid` - tasks are project-scoped by design (see CLAUDE.md: "Tasks are project-scoped... do not create tasks without project_id"). `NOT VALID` only skips validating pre-existing rows; it's still enforced on every subsequent INSERT/UPDATE. Changing the FK to `ON DELETE SET NULL` would make Postgres try to null out `project_id` on delete, immediately trip that check constraint, and abort the entire project deletion - strictly worse than the current cascade. `ON DELETE CASCADE` is correct for a NOT-NULL, project-scoped child row.
 
-**Follow-up found while verifying this:** `select count(*) from tasks where project_id is null` on production returns **10** - pre-existing rows that violate the `tasks_project_required` invariant (the `NOT VALID` constraint doesn't retroactively enforce them). Not fixed here since deciding what happens to orphaned tasks (delete vs. reassign) is a product/data decision, not a schema one.
+**Follow-up found while verifying this, now resolved:** production had 10 tasks with `project_id IS NULL` (the `NOT VALID` constraint never retroactively checked them) - leftover pre-project-scoping dev/test rows from the app's own early development, all undone, invisible in the current project-scoped UI. Per user decision: deleted the 10 rows, then applied migration `20260909120000_validate_tasks_project_required.sql` (`alter table tasks validate constraint tasks_project_required`) so Postgres now actually enforces the invariant retroactively, not just on new writes. Verified `convalidated` and a 0 count after.
 
 ---
 
