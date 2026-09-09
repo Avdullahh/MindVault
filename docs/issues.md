@@ -55,9 +55,9 @@ Investigated: this isn't accidental duplication, it's two different relationship
 
 ### Issue 13 - No input length limits on Edge Function prompts
 
-**Status:** Open
+**Status:** Fixed and deployed
 
-`ai-plan-goal` and `ai-expand-idea` inject `ideaTitle`, `ideaDescription`, and `context` directly into Gemini prompts with no size cap. An arbitrarily long input causes an expensive API call and opens a prompt injection surface. Add server-side length validation before the Gemini call.
+Added `supabase/functions/_shared/validation.ts` (`MAX_TITLE_LENGTH` 200, `MAX_TEXT_LENGTH` 2000, `lengthError()`) and applied it to `ai-plan-goal` and `ai-expand-idea` as the ticket named. Also applied it to **`ai-categorise`**, which wasn't named in the ticket but takes the identical `{ideaTitle, ideaDescription}` shape with no cap - the defect is the property "no unbounded user text reaches Gemini," and two of three functions wouldn't have met it. All three deployed to the linked Supabase project.
 
 ---
 

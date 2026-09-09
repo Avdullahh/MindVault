@@ -2,6 +2,7 @@ import { GeminiRequestError, generateText } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
+import { lengthError, MAX_TEXT_LENGTH, MAX_TITLE_LENGTH } from '../_shared/validation.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsPreflight();
@@ -14,8 +15,14 @@ Deno.serve(async (req) => {
     let body: { ideaTitle?: string; ideaDescription?: string };
     try { body = await req.json(); } catch { return badRequest('Invalid JSON'); }
 
-    const { ideaTitle, ideaDescription } = body;
-    if (!ideaTitle?.trim()) return badRequest('ideaTitle is required');
+    const ideaTitle = body.ideaTitle?.trim();
+    const ideaDescription = body.ideaDescription?.trim();
+    if (!ideaTitle) return badRequest('ideaTitle is required');
+
+    const titleError = lengthError(ideaTitle, MAX_TITLE_LENGTH, 'ideaTitle');
+    if (titleError) return badRequest(titleError);
+    const descError = lengthError(ideaDescription, MAX_TEXT_LENGTH, 'ideaDescription');
+    if (descError) return badRequest(descError);
 
     const { data: cats, error: categoryError } = await authed.client.from('categories').select('name').order('name');
     if (categoryError) {
@@ -28,7 +35,7 @@ Deno.serve(async (req) => {
 
     const raw = await generateText({
       system: 'You are a categorisation assistant. Reply with only one category name from the supplied list, nothing else.',
-      prompt: `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle.trim()}"${ideaDescription ? `\n${ideaDescription.trim()}` : ''}\n\nWhich single category best fits?`,
+      prompt: `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle}"${ideaDescription ? `\n${ideaDescription}` : ''}\n\nWhich single category best fits?`,
       maxTokens: 80,
       temperature: 0,
     });

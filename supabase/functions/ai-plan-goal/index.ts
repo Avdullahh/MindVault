@@ -2,6 +2,7 @@ import { GeminiRequestError, generateText, parseJsonObject } from '../_shared/ge
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
 import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
+import { lengthError, MAX_TEXT_LENGTH, MAX_TITLE_LENGTH } from '../_shared/validation.ts';
 
 type PlanResult = { tasks: string[] };
 
@@ -22,11 +23,19 @@ Deno.serve(async (req) => {
 
     let body: { goalTitle?: string; context?: string };
     try { body = await req.json(); } catch { return badRequest('Invalid JSON'); }
-    if (!body.goalTitle?.trim()) return badRequest('goalTitle is required');
+
+    const goalTitle = body.goalTitle?.trim();
+    const context = body.context?.trim();
+    if (!goalTitle) return badRequest('goalTitle is required');
+
+    const titleError = lengthError(goalTitle, MAX_TITLE_LENGTH, 'goalTitle');
+    if (titleError) return badRequest(titleError);
+    const contextError = lengthError(context, MAX_TEXT_LENGTH, 'context');
+    if (contextError) return badRequest(contextError);
 
     const raw = await generateText({
       system: 'You are a project planning assistant. Return only valid JSON and no markdown.',
-      prompt: `Generate concrete tasks for this project: "${body.goalTitle.trim()}"${body.context ? `\n\nContext: ${body.context.trim()}` : ''}\n\nRespond with JSON:\n{\n  "tasks": ["specific action task 1", "specific action task 2"]\n}\n3-6 specific, actionable tasks a person should do to move this project forward.`,
+      prompt: `Generate concrete tasks for this project: "${goalTitle}"${context ? `\n\nContext: ${context}` : ''}\n\nRespond with JSON:\n{\n  "tasks": ["specific action task 1", "specific action task 2"]\n}\n3-6 specific, actionable tasks a person should do to move this project forward.`,
       maxTokens: 400,
     });
 
