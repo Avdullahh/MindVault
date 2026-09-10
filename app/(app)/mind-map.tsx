@@ -1,5 +1,5 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useIsFocused, useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { RelationshipGraph, NODE_VISUALS } from '../../components/RelationshipGraph';
 import { SectionHeader } from '../../components/ui/SectionHeader';
@@ -14,6 +14,7 @@ function routeForNode(node: EntityGraphNode) {
 
 export default function MindMapScreen() {
   const router = useRouter();
+  const isFocused = useIsFocused();
   const colors = useThemeColors();
   const { nodes, edges, loading, refreshing, error, refetch } = useEntityGraph();
 
@@ -24,6 +25,10 @@ export default function MindMapScreen() {
   const handleNodePress = (node: EntityGraphNode) => {
     router.push(routeForNode(node));
   };
+
+  if (!isFocused) {
+    return <View style={{ flex: 1, backgroundColor: colors.background }} />;
+  }
 
   return (
     <View className="flex-1 bg-background">
