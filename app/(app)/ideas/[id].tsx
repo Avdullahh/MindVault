@@ -9,6 +9,7 @@ import { useIdeaTags } from '../../../hooks/use-idea-tags';
 import { useTags } from '../../../hooks/use-tags';
 import { useGoals } from '../../../hooks/use-goals';
 import { useAI } from '../../../hooks/use-ai';
+import { useAiUsage } from '../../../hooks/use-ai-usage';
 import { CategoryPicker } from '../../../components/CategoryPicker';
 import { TagPicker } from '../../../components/TagPicker';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
@@ -30,6 +31,7 @@ export default function IdeaDetail() {
   const { tags: allTags, create: createTag } = useTags();
   const { goals: allGoals } = useGoals();
   const { categorise, categoriseState, expandIdea, expandState, resetExpand } = useAI();
+  const { usage: aiUsage, hint: usageHint } = useAiUsage();
 
   const idea = ideas.find((i) => i.id === id);
 
@@ -223,7 +225,8 @@ export default function IdeaDetail() {
             loading={categoriseState.status === 'loading'}
             onPress={handleSuggestCategory}
             flex
-            hint="Reads your title & description, then suggests a matching category"
+            disabled={aiUsage?.remaining === 0}
+            hint={usageHint ?? 'Reads your title & description, then suggests a matching category'}
           />
           <AIButton
             label="Expand with AI"
@@ -231,7 +234,8 @@ export default function IdeaDetail() {
             loading={expandState.status === 'loading'}
             onPress={handleExpand}
             flex
-            hint="Generates questions, fresh angles, and related concepts for this idea"
+            disabled={aiUsage?.remaining === 0}
+            hint={usageHint ?? 'Generates questions, fresh angles, and related concepts for this idea'}
           />
         </View>
 

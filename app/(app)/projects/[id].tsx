@@ -9,6 +9,7 @@ import { useIdeas } from '../../../hooks/use-ideas';
 import { useGoals } from '../../../hooks/use-goals';
 import { useProjectTasks } from '../../../hooks/use-tasks';
 import { useAI } from '../../../hooks/use-ai';
+import { useAiUsage } from '../../../hooks/use-ai-usage';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
@@ -40,6 +41,7 @@ export default function ProjectDetail() {
   const { goals: allGoals } = useGoals();
   const { tasks: projectTasks, create: createTask, update: updateTask, toggle: toggleTask, remove: removeTask } = useProjectTasks(id);
   const { planGoal, planState } = useAI();
+  const { usage: aiUsage, hint: usageHint } = useAiUsage();
 
   const project = projects.find((p) => p.id === id);
 
@@ -243,6 +245,8 @@ export default function ProjectDetail() {
             label="Plan with AI"
             loading={planState.status === 'loading'}
             onPress={handlePlanWithAI}
+            disabled={aiUsage?.remaining === 0}
+            hint={usageHint ?? undefined}
           />
           {aiError && <Text className="text-destructive text-xs mt-2">{aiError}</Text>}
         </View>

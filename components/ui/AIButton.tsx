@@ -47,7 +47,7 @@ export function AIButton({
   };
 
   return (
-    <View className={flex ? 'flex-1' : ''}>
+    <View className={flex ? 'flex-1' : 'max-w-36'}>
       <Pressable
         className={`flex-row min-h-11 items-center justify-center gap-2 ${compact ? 'px-3 py-2' : 'px-4 py-2.5'} rounded-xl border ${inactive ? 'border-border bg-surface opacity-60' : 'border-primary bg-primary/20'}`}
         onPress={handlePress}

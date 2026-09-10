@@ -1,8 +1,9 @@
 import { GeminiRequestError, generateText } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
-import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
+import { badGateway, badRequest, corsPreflight, internalError, ok, paymentRequired, quotaExceeded, unauthorised } from '../_shared/responses.ts';
 import { clamp, MAX_TEXT_LENGTH, MAX_TITLE_LENGTH } from '../_shared/validation.ts';
+import { refundAiUsage, reserveAiUsage } from '../_shared/usage.ts';
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return corsPreflight();
@@ -28,14 +29,23 @@ Deno.serve(async (req) => {
     const categoryNames = (cats ?? []).map((c: { name: string }) => c.name);
     if (categoryNames.length === 0) return ok({ categoryName: 'Other' });
 
-    const raw = await generateText({
-      system: 'You are a categorisation assistant. Reply with only one category name from the supplied list, nothing else.',
-      prompt: `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle}"${ideaDescription ? `\n${ideaDescription}` : ''}\n\nWhich single category best fits?`,
-      maxTokens: 80,
-      temperature: 0,
-    });
+    const reservation = await reserveAiUsage(authed.client);
+    if (!reservation.allowed) return quotaExceeded(reservation);
+
+    let raw: string;
+    try {
+      raw = await generateText({
+        system: 'You are a categorisation assistant. Reply with only one category name from the supplied list, nothing else.',
+        prompt: `Categories: ${categoryNames.join(', ')}\n\nIdea: "${ideaTitle}"${ideaDescription ? `\n${ideaDescription}` : ''}\n\nWhich single category best fits?`,
+        maxTokens: 80,
+        temperature: 0,
+      });
+    } catch (err) {
+      if (err instanceof GeminiRequestError) await refundAiUsage(authed.client);
+      throw err;
+    }
     const match = categoryNames.find((n: string) => n.toLowerCase() === raw.toLowerCase()) ?? 'Other';
-    return ok({ categoryName: match });
+    return ok({ categoryName: match }, reservation);
   } catch (e) {
     console.error(e);
     if (e instanceof GeminiRequestError) return badGateway(e.message);

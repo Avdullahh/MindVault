@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
 import { useAI } from '../../hooks/use-ai';
+import { useAiUsage } from '../../hooks/use-ai-usage';
 import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
 import { useProjects } from '../../hooks/use-projects';
@@ -35,6 +36,7 @@ export default function DashboardScreen() {
   const { goals, loading: goalsLoading, refetch: refetchGoals } = useGoals();
   const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
   const { morningBrief, briefState } = useAI();
+  const { usage: aiUsage, hint: usageHint } = useAiUsage();
 
   const loading = ideasLoading || goalsLoading || projectsLoading;
   const dateLabel = useMemo(
@@ -130,6 +132,8 @@ export default function DashboardScreen() {
               loading={briefState.status === 'loading'}
               onPress={morningBrief}
               compact
+              disabled={aiUsage?.remaining === 0}
+              hint={usageHint ?? undefined}
             />
           </View>
           {briefState.status === 'loading' ? (

@@ -1,4 +1,4 @@
-﻿export type Json =
+export type Json =
   | string
   | number
   | boolean
@@ -48,6 +48,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      ai_usage: {
+        Row: {
+          request_count: number
+          updated_at: string
+          user_id: string
+          window_started_at: string
+        }
+        Insert: {
+          request_count?: number
+          updated_at?: string
+          user_id: string
+          window_started_at: string
+        }
+        Update: {
+          request_count?: number
+          updated_at?: string
+          user_id?: string
+          window_started_at?: string
+        }
+        Relationships: []
       }
       categories: {
         Row: {
@@ -497,7 +518,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      check_ai_usage: { Args: never; Returns: Json }
       get_entity_graph: { Args: never; Returns: Json }
+      refund_ai_usage: { Args: never; Returns: undefined }
+      reserve_ai_usage: { Args: never; Returns: Json }
     }
     Enums: {
       [_ in never]: never

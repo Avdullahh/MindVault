@@ -1,7 +1,8 @@
 import { GeminiRequestError, generateText, parseJsonObject } from '../_shared/gemini.ts';
 import { getAuthedClient } from '../_shared/auth.ts';
 import { checkProEntitlement } from '../_shared/entitlement.ts';
-import { badGateway, corsPreflight, internalError, ok, paymentRequired, unauthorised } from '../_shared/responses.ts';
+import { badGateway, corsPreflight, internalError, ok, paymentRequired, quotaExceeded, unauthorised } from '../_shared/responses.ts';
+import { refundAiUsage, reserveAiUsage } from '../_shared/usage.ts';
 
 type Resurface = { title: string; description: string };
 type BriefResult = { greeting: string; resurface: Resurface | null };
@@ -58,16 +59,25 @@ Deno.serve(async (req) => {
     } catch {
       today = new Intl.DateTimeFormat('en-CA', { timeZone: 'UTC' }).format(new Date());
     }
-    const raw = await generateText({
-      system: 'You are a personal assistant writing a brief morning summary. Return only valid JSON and no markdown.',
-      prompt: `Today is ${today}.\n\nIdea to resurface: ${resurface ? `"${resurface.title}"${resurface.description ? ` - ${resurface.description}` : ''}` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
-      maxTokens: 400,
-    });
+    const reservation = await reserveAiUsage(authed.client);
+    if (!reservation.allowed) return quotaExceeded(reservation);
+
+    let raw: string;
+    try {
+      raw = await generateText({
+        system: 'You are a personal assistant writing a brief morning summary. Return only valid JSON and no markdown.',
+        prompt: `Today is ${today}.\n\nIdea to resurface: ${resurface ? `"${resurface.title}"${resurface.description ? ` - ${resurface.description}` : ''}` : 'none'}\n\nRespond with JSON:\n{ "greeting": "short morning greeting", "resurface": { "title": "idea title", "description": "one-sentence teaser" } or null }`,
+        maxTokens: 400,
+      });
+    } catch (err) {
+      if (err instanceof GeminiRequestError) await refundAiUsage(authed.client);
+      throw err;
+    }
 
     let parsed: unknown;
     try { parsed = parseJsonObject(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();
-    return ok(parsed);
+    return ok(parsed, reservation);
   } catch (e) {
     console.error(e);
     if (e instanceof GeminiRequestError) return badGateway(e.message);
