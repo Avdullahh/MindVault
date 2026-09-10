@@ -41,6 +41,7 @@ export default function AppLayout() {
       }}
       screenOptions={{
         headerShown: false,
+        freezeOnBlur: true,
         tabBarStyle: { backgroundColor: colors.background, borderTopColor: colors.border },
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.muted,

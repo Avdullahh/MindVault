@@ -7,8 +7,8 @@ import {
   useCallback,
   type ReactNode,
 } from 'react';
-import { Platform, View } from 'react-native';
-import { useColorScheme, vars } from 'nativewind';
+import { Platform, useColorScheme as useSystemColorScheme, View } from 'react-native';
+import { vars } from 'nativewind';
 import * as SecureStore from 'expo-secure-store';
 import {
   lightColors,
@@ -25,6 +25,10 @@ const isWeb = Platform.OS === 'web';
 
 function isThemeMode(value: string | null): value is ThemeMode {
   return value === 'system' || value === 'light' || value === 'dark';
+}
+
+function resolveSystemScheme(value: ReturnType<typeof useSystemColorScheme>): 'light' | 'dark' {
+  return value === 'dark' ? 'dark' : 'light';
 }
 
 async function readStoredMode(): Promise<ThemeMode | null> {
@@ -65,7 +69,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const { colorScheme, setColorScheme } = useColorScheme();
+  const systemColorScheme = useSystemColorScheme();
   const [mode, setModeState] = useState<ThemeMode>('system');
   const [themeLoaded, setThemeLoaded] = useState(false);
 
@@ -76,7 +80,6 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         if (!mounted) return;
         if (savedMode) {
           setModeState(savedMode);
-          setColorScheme(savedMode);
         }
       })
       .finally(() => {
@@ -85,15 +88,15 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     return () => {
       mounted = false;
     };
-  }, [setColorScheme]);
+  }, []);
 
   const setMode = useCallback((next: ThemeMode) => {
     setModeState(next);
-    setColorScheme(next);
     void writeStoredMode(next);
-  }, [setColorScheme]);
+  }, []);
 
-  const resolved: 'light' | 'dark' = colorScheme ?? 'light';
+  const resolved: 'light' | 'dark' =
+    mode === 'system' ? resolveSystemScheme(systemColorScheme) : mode;
   const colors = resolved === 'dark' ? darkColors : lightColors;
 
   // On web, sync a `dark` class on <html> so .dark:root CSS variables cascade
