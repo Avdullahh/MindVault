@@ -10,6 +10,7 @@ import {
   forceSimulation,
   type SimulationNodeDatum,
 } from 'd3-force';
+import { useThemeColors } from '../context/ThemeContext';
 import type { EntityGraphEdge, EntityGraphNode, EntityGraphNodeType } from '../hooks/use-entity-graph';
 
 type PositionedNode = EntityGraphNode & SimulationNodeDatum & {
@@ -94,7 +95,7 @@ function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: 
   }));
 }
 
-function edgeStyle(source: PositionedNode, target: PositionedNode) {
+function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: string) {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
   const length = Math.sqrt(dx * dx + dy * dy);
@@ -106,13 +107,14 @@ function edgeStyle(source: PositionedNode, target: PositionedNode) {
     top: source.y,
     width: length,
     height: 1.5,
-    backgroundColor: 'rgba(148, 163, 184, 0.36)',
+    backgroundColor: edgeColor,
     transform: [{ rotate: angle }],
     transformOrigin: '0px 0px',
   };
 }
 
 export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGraphProps) {
+  const colors = useThemeColors();
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const graphWidth = Math.max(980, viewportWidth * 1.35);
   const graphHeight = Math.max(720, viewportHeight * 0.72);
@@ -136,11 +138,11 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
       style={{
         height: graphHeight,
         overflow: 'hidden',
-        backgroundColor: '#111827',
+        backgroundColor: colors.surface,
         borderRadius: 28,
         borderCurve: 'continuous',
         borderWidth: 1,
-        borderColor: '#253142',
+        borderColor: colors.border,
       }}
     >
       <ScrollView
@@ -151,7 +153,7 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
         <View style={{ width: graphWidth, height: graphHeight }}>
           <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
             {drawableEdges.map(({ edge, source, target }) => (
-              <View key={edge.id} style={edgeStyle(source, target)} />
+              <View key={edge.id} style={edgeStyle(source, target, colors.border)} />
             ))}
           </View>
 
@@ -201,7 +203,7 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
                         borderRadius: 14,
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: '#111827',
+                        backgroundColor: colors.surface,
                       }}
                     >
                       <Ionicons name={visual.icon} size={16} color={visual.color} />
@@ -216,16 +218,16 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
                     paddingVertical: 6,
                     borderRadius: 10,
                     borderCurve: 'continuous',
-                    backgroundColor: 'rgba(17, 24, 39, 0.88)',
+                    backgroundColor: colors.surface2,
                     borderWidth: 1,
-                    borderColor: 'rgba(148, 163, 184, 0.22)',
+                    borderColor: colors.border,
                   }}
                 >
                   <Text
                     selectable
                     numberOfLines={2}
                     style={{
-                      color: '#f8fafc',
+                      color: colors.foreground,
                       fontSize: 11,
                       lineHeight: 14,
                       fontWeight: '700',
