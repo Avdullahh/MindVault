@@ -10,13 +10,16 @@ import { useGoals } from '../../../hooks/use-goals';
 import { useProjectTasks } from '../../../hooks/use-tasks';
 import { useAI } from '../../../hooks/use-ai';
 import { useAiUsage } from '../../../hooks/use-ai-usage';
+import { useProjectPlans } from '../../../hooks/use-project-plans';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { AITaskPreviewModal } from '../../../components/AITaskPreviewModal';
 import { CreateTaskModal } from '../../../components/CreateTaskModal';
 import { EditTaskModal } from '../../../components/EditTaskModal';
 import { AIButton } from '../../../components/ui/AIButton';
+import { ModalSheet } from '../../../components/ui/ModalSheet';
 import { emitDataChange } from '../../../lib/data-events';
 import { getUserId } from '../../../lib/get-user-id';
+import { formatShortDate, formatTime } from '../../../lib/date-format';
 import { useThemeColors } from '../../../context/ThemeContext';
 import type { Goal, Idea, Task } from '../../../types';
 import type { PlanResult } from '../../../hooks/use-ai';
@@ -42,6 +45,13 @@ export default function ProjectDetail() {
   const { tasks: projectTasks, create: createTask, update: updateTask, toggle: toggleTask, remove: removeTask } = useProjectTasks(id);
   const { planGoal, planState } = useAI();
   const { usage: aiUsage, hint: usageHint } = useAiUsage();
+  const [historyVisible, setHistoryVisible] = useState(false);
+  const {
+    plans: planHistory,
+    loading: planHistoryLoading,
+    error: planHistoryError,
+    refetch: refetchPlanHistory,
+  } = useProjectPlans(id, historyVisible);
 
   const project = projects.find((p) => p.id === id);
 
@@ -167,10 +177,21 @@ export default function ProjectDetail() {
   const handlePlanWithAI = async () => {
     const goalTitle = project.main_goal?.trim() || project.title;
     setAiError(null);
-    const { data, error } = await planGoal(goalTitle, project.main_goal ?? undefined);
+    const { data, error } = await planGoal(goalTitle, project.main_goal ?? undefined, id);
     if (error) { setAiError(error); return; }
     if (!data) return;
     setPreviewPlan(data);
+    setPreviewVisible(true);
+  };
+
+  const handleOpenHistory = () => {
+    setHistoryVisible(true);
+    refetchPlanHistory();
+  };
+
+  const handleUsePlan = (tasks: string[]) => {
+    setHistoryVisible(false);
+    setPreviewPlan({ tasks });
     setPreviewVisible(true);
   };
 
@@ -240,16 +261,26 @@ export default function ProjectDetail() {
           accessibilityLabel="Project main goal"
         />
 
-        <View className="mb-5">
+        <View className="flex-row mb-5">
           <AIButton
             label="Plan with AI"
             loading={planState.status === 'loading'}
             onPress={handlePlanWithAI}
             disabled={aiUsage?.remaining === 0}
-            hint={usageHint ?? undefined}
+            flex
+            hint={usageHint ?? 'Generates a task plan from this project goal'}
           />
-          {aiError && <Text className="text-destructive text-xs mt-2">{aiError}</Text>}
         </View>
+
+        <View className="flex-row justify-end mb-5 -mt-2">
+          <AIButton
+            label="History"
+            icon="time-outline"
+            compact
+            onPress={handleOpenHistory}
+          />
+        </View>
+        {aiError && <Text className="text-destructive text-xs -mt-3 mb-5">{aiError}</Text>}
 
         <View className="flex-row items-center justify-between mb-2">
           <Text className="text-muted text-xs font-semibold uppercase">Goals</Text>
@@ -353,6 +384,47 @@ export default function ProjectDetail() {
         searchPlaceholder="Search goals..."
         emptyMessage="No goals available"
       />
+      <ModalSheet visible={historyVisible} onClose={() => setHistoryVisible(false)} title="Plan History">
+        {planHistoryLoading && (
+          <View className="items-center py-8">
+            <ActivityIndicator color={colors.primary} />
+          </View>
+        )}
+        {!planHistoryLoading && planHistoryError && (
+          <Text className="text-destructive text-sm">{planHistoryError}</Text>
+        )}
+        {!planHistoryLoading && !planHistoryError && planHistory.length === 0 && (
+          <Text className="text-muted text-sm">No AI plans yet for this project.</Text>
+        )}
+        {!planHistoryLoading && !planHistoryError && planHistory.length > 0 && planHistory.map((plan, i) => {
+          const createdAt = new Date(plan.created_at);
+          const dateLabel = formatShortDate(createdAt);
+          const previousDateLabel = i > 0
+            ? formatShortDate(new Date(planHistory[i - 1].created_at))
+            : null;
+          const showDateHeader = dateLabel !== previousDateLabel;
+
+          return (
+            <View key={plan.id} className={i > 0 ? 'mt-4 pt-4 border-t border-border' : ''}>
+              {showDateHeader && (
+                <Text className="text-muted text-xs font-semibold uppercase mb-3">
+                  {dateLabel}
+                </Text>
+              )}
+              <Text className="text-muted text-xs mb-3">
+                {formatTime(createdAt)}
+              </Text>
+              {plan.tasks.map((task, taskIndex) => (
+                <Text key={taskIndex} className="text-foreground text-sm mb-1">• {task}</Text>
+              ))}
+              <Pressable className="self-start min-h-11 justify-center mt-2" onPress={() => handleUsePlan(plan.tasks)}>
+                <Text className="text-primary text-sm">Use this plan</Text>
+              </Pressable>
+            </View>
+          );
+        })}
+      </ModalSheet>
+
       <AITaskPreviewModal
         visible={previewVisible}
         onClose={() => { setPreviewVisible(false); setPreviewPlan(null); }}

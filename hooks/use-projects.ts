@@ -27,7 +27,7 @@ export function useProjects() {
     await query.refetch();
   };
 
-  const create = async (payload: Pick<ProjectInsert, 'title' | 'main_goal' | 'category_id'>): Promise<string | null> => {
+  const create = async (payload: Pick<ProjectInsert, 'title' | 'main_goal'>): Promise<string | null> => {
     const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';
     const { error: err } = await supabase.from('projects').insert({ ...payload, user_id });
@@ -37,7 +37,7 @@ export function useProjects() {
     return null;
   };
 
-  const update = async (id: string, payload: Partial<Pick<Project, 'title' | 'main_goal' | 'category_id'>>): Promise<string | null> => {
+  const update = async (id: string, payload: Partial<Pick<Project, 'title' | 'main_goal'>>): Promise<string | null> => {
     const { error: err } = await supabase.from('projects').update(payload).eq('id', id);
     if (err) return err.message;
     await queryClient.invalidateQueries({ queryKey: projectsQueryKey });

@@ -34,7 +34,7 @@ export function useGoals() {
   // a goal to additional projects afterward — both are intentional,
   // documented in docs/issues.md Issue 12.
   const create = async (
-    payload: Pick<GoalInsert, 'title' | 'deadline' | 'priority' | 'category_id' | 'project_id'>,
+    payload: Pick<GoalInsert, 'title' | 'deadline' | 'priority' | 'project_id'>,
   ): Promise<string | null> => {
     const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';
@@ -47,7 +47,7 @@ export function useGoals() {
 
   const update = async (
     id: string,
-    payload: Partial<Pick<Goal, 'title' | 'deadline' | 'priority' | 'category_id'>>,
+    payload: Partial<Pick<Goal, 'title' | 'deadline' | 'priority'>>,
   ): Promise<string | null> => {
     const { error: err } = await supabase.from('goals').update(payload).eq('id', id);
     if (err) return err.message;

@@ -49,7 +49,6 @@ async function callEdgeFunction<T>(name: string, body: object): Promise<WithUsag
   return data;
 }
 
-export type CategoriseResult = { categoryName: string };
 export type ExpandResult = { questions: string[]; angles: string[]; related: string[] };
 export type PlanResult = { tasks: string[] };
 export type BriefMove = {
@@ -61,9 +60,8 @@ export type BriefMove = {
   logId: string | null;
 };
 export type BriefResult = { greeting: string; move: BriefMove | null };
-export type CategoriseInput = { ideaTitle: string; ideaDescription?: string };
-export type ExpandInput = CategoriseInput & { ideaId: string };
-export type PlanGoalInput = { goalTitle: string; context?: string };
+export type ExpandInput = { ideaTitle: string; ideaDescription?: string; ideaId: string };
+export type PlanGoalInput = { goalTitle: string; context?: string; projectId?: string };
 export type MorningBriefInput = { timezone: string };
 
 function makeState<T>(): AIState<T> {
@@ -71,7 +69,6 @@ function makeState<T>(): AIState<T> {
 }
 
 export function useAI() {
-  const [categoriseState, setCategoriseState] = useState<AIState<CategoriseResult>>(makeState);
   const [expandState, setExpandState] = useState<AIState<ExpandResult>>(makeState);
   const [planState, setPlanState] = useState<AIState<PlanResult>>(makeState);
   const [briefState, setBriefState] = useState<AIState<BriefResult>>(makeState);
@@ -101,11 +98,6 @@ export function useAI() {
     }
   }
 
-  const categorise = (ideaTitle: string, ideaDescription?: string) =>
-    run(setCategoriseState, () =>
-      callEdgeFunction<CategoriseResult>('ai-categorise', { ideaTitle, ideaDescription } satisfies CategoriseInput),
-    );
-
   const expandIdea = async (ideaId: string, ideaTitle: string, ideaDescription?: string) => {
     const result = await run(setExpandState, () =>
       callEdgeFunction<ExpandResult>('ai-expand-idea', { ideaId, ideaTitle, ideaDescription } satisfies ExpandInput),
@@ -114,10 +106,13 @@ export function useAI() {
     return result;
   };
 
-  const planGoal = (goalTitle: string, context?: string) =>
-    run(setPlanState, () =>
-      callEdgeFunction<PlanResult>('ai-plan-goal', { goalTitle, context } satisfies PlanGoalInput),
+  const planGoal = async (goalTitle: string, context?: string, projectId?: string) => {
+    const result = await run(setPlanState, () =>
+      callEdgeFunction<PlanResult>('ai-plan-goal', { goalTitle, context, projectId } satisfies PlanGoalInput),
     );
+    if (result.data && projectId) emitDataChange('project-plans', source.current);
+    return result;
+  };
 
   const morningBrief = () =>
     run(setBriefState, () =>
@@ -139,10 +134,8 @@ export function useAI() {
   const resetExpand = () => setExpandState(makeState);
   const resetBrief = () => setBriefState(makeState);
   const resetPlan = () => setPlanState(makeState);
-  const resetCategorise = () => setCategoriseState(makeState);
 
   return {
-    categoriseState, categorise, resetCategorise,
     expandState, expandIdea, resetExpand,
     planState, planGoal, resetPlan,
     briefState, morningBrief, resetBrief, respondToBriefMove,

@@ -27,7 +27,7 @@ export function useProjectTasks(projectId: string) {
   };
 
   const create = async (
-    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes' | 'category_id'>,
+    payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes'>,
   ): Promise<string | null> => {
     const user_id = await getUserId().catch(() => null);
     if (!user_id) return 'Not authenticated';

@@ -65,7 +65,7 @@ export function useEntityGraph() {
 
   useEffect(() => {
     void fetch();
-    const unsubscribeLocal = subscribeToDataChanges(['ideas', 'projects', 'goals', 'tasks', 'categories', 'tags'], (eventSource) => {
+    const unsubscribeLocal = subscribeToDataChanges(['ideas', 'projects', 'goals', 'tasks'], (eventSource) => {
       if (eventSource !== source.current) void fetch();
     });
 

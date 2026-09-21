@@ -7,7 +7,7 @@ import { EntityFormModal } from './ui/EntityFormModal';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onCreate: (payload: Pick<GoalInsert, 'title' | 'deadline' | 'priority' | 'category_id'>) => Promise<string | null>;
+  onCreate: (payload: Pick<GoalInsert, 'title' | 'deadline' | 'priority'>) => Promise<string | null>;
 };
 
 export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
@@ -22,7 +22,7 @@ export function CreateGoalModal({ visible, onClose, onCreate }: Props) {
   const handleCreate = async () => {
     if (!title.trim()) { setError('Give the goal a name'); return; }
     setLoading(true); setError(null);
-    const err = await onCreate({ title: title.trim(), deadline: null, priority, category_id: null });
+    const err = await onCreate({ title: title.trim(), deadline: null, priority });
     setLoading(false);
     if (err) { setError(err); } else { reset(); onClose(); }
   };

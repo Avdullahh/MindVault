@@ -4,7 +4,7 @@ import { EntityFormModal } from './ui/EntityFormModal';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onCreate: (title: string, description: string | null, categoryId: string | null) => Promise<string | null>;
+  onCreate: (title: string, description: string | null) => Promise<string | null>;
 };
 
 export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
@@ -20,7 +20,7 @@ export function CreateIdeaModal({ visible, onClose, onCreate }: Props) {
     if (!title.trim()) { setError('Give the idea a name'); return; }
     setLoading(true);
     setError(null);
-    const err = await onCreate(title.trim(), description.trim() || null, null);
+    const err = await onCreate(title.trim(), description.trim() || null);
     setLoading(false);
     if (err) { setError(err); } else { reset(); onClose(); }
   };

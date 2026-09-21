@@ -5,43 +5,33 @@ import { Ionicons } from '@expo/vector-icons';
 import { supabase } from '../../../lib/supabase';
 import { emitDataChange } from '../../../lib/data-events';
 import { useIdeas } from '../../../hooks/use-ideas';
-import { useIdeaTags } from '../../../hooks/use-idea-tags';
-import { useTags } from '../../../hooks/use-tags';
 import { useGoals } from '../../../hooks/use-goals';
 import { useAI } from '../../../hooks/use-ai';
 import { useAiUsage } from '../../../hooks/use-ai-usage';
-import { CategoryPicker } from '../../../components/CategoryPicker';
-import { TagPicker } from '../../../components/TagPicker';
 import { ItemPickerModal } from '../../../components/ItemPickerModal';
 import { ModalSheet } from '../../../components/ui/ModalSheet';
 import { AIButton } from '../../../components/ui/AIButton';
-import { Tag } from '../../../components/ui/Tag';
 import { useThemeColors } from '../../../context/ThemeContext';
 import { ExpansionSections } from '../../../components/ExpansionSections';
 import { useIdeaExpansions } from '../../../hooks/use-idea-expansions';
 import { formatShortDate, formatTime } from '../../../lib/date-format';
-import type { Goal, Tag as TagType } from '../../../types';
+import type { Goal } from '../../../types';
 
 export default function IdeaDetail() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const colors = useThemeColors();
   const { ideas, loading, update, remove } = useIdeas();
-  const { fetchTagsForIdea, addTag, removeTag } = useIdeaTags();
-  const { tags: allTags, create: createTag } = useTags();
   const { goals: allGoals } = useGoals();
-  const { categorise, categoriseState, expandIdea, expandState, resetExpand } = useAI();
+  const { expandIdea, expandState, resetExpand } = useAI();
   const { usage: aiUsage, hint: usageHint } = useAiUsage();
 
   const idea = ideas.find((i) => i.id === id);
 
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [categoryId, setCategoryId] = useState<string | null>(null);
-  const [ideaTags, setIdeaTags] = useState<TagType[]>([]);
   const [linkedGoals, setLinkedGoals] = useState<Goal[]>([]);
   const [linkedProjects, setLinkedProjects] = useState<{ id: string; title: string }[]>([]);
-  const [tagPickerVisible, setTagPickerVisible] = useState(false);
   const [goalPickerVisible, setGoalPickerVisible] = useState(false);
   const [historyVisible, setHistoryVisible] = useState(false);
   const {
@@ -52,7 +42,6 @@ export default function IdeaDetail() {
   } = useIdeaExpansions(id, historyVisible);
   const savedTitle = useRef('');
   const savedDescription = useRef('');
-  const savedCategoryId = useRef<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const exitToIdeas = () => router.replace('/(app)/ideas');
@@ -69,7 +58,6 @@ export default function IdeaDetail() {
 
   useEffect(() => {
     if (!id) return;
-    fetchTagsForIdea(id).then(setIdeaTags);
     loadLinkedGoals();
     loadLinkedProjects();
     update(id, { last_viewed_at: new Date().toISOString() });
@@ -79,10 +67,8 @@ export default function IdeaDetail() {
     if (idea) {
       setTitle(idea.title);
       setDescription(idea.description ?? '');
-      setCategoryId(idea.category_id ?? null);
       savedTitle.current = idea.title;
       savedDescription.current = idea.description ?? '';
-      savedCategoryId.current = idea.category_id ?? null;
     }
   }, [idea?.id]);
 
@@ -132,32 +118,11 @@ export default function IdeaDetail() {
     }
   };
 
-  const handleCategoryChange = async (newCategoryId: string | null) => {
-    if (newCategoryId === savedCategoryId.current) return;
-    const previous = savedCategoryId.current;
-    setCategoryId(newCategoryId);
-    const err = await update(id, { category_id: newCategoryId });
-    if (err) {
-      setCategoryId(previous);
-      setError(err);
-    } else {
-      savedCategoryId.current = newCategoryId;
-      setError(null);
-    }
-  };
-
   const handleDelete = () => {
     Alert.alert('Delete idea', 'This cannot be undone.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Delete', style: 'destructive', onPress: async () => { await remove(id); exitToIdeas(); } },
     ]);
-  };
-
-  const handleTagToggle = async (tagId: string) => {
-    const linked = ideaTags.some((t) => t.id === tagId);
-    if (linked) await removeTag(id, tagId);
-    else await addTag(id, tagId);
-    setIdeaTags(await fetchTagsForIdea(id));
   };
 
   const handleGoalToggle = async (goalId: string) => {
@@ -166,11 +131,6 @@ export default function IdeaDetail() {
     else await supabase.from('goal_ideas').insert({ idea_id: id, goal_id: goalId });
     await loadLinkedGoals();
     emitDataChange(['ideas', 'goals']);
-  };
-
-  const handleSuggestCategory = async () => {
-    const { data } = await categorise(title.trim() || idea.title, description.trim() || (idea.description ?? undefined));
-    if (data) Alert.alert('Suggested category', data.categoryName);
   };
 
   const handleExpand = () => {
@@ -218,16 +178,7 @@ export default function IdeaDetail() {
           textAlignVertical="top"
         />
 
-        <View className="flex-row gap-3 mb-5">
-          <AIButton
-            label="Suggest category"
-            icon="pricetag-outline"
-            loading={categoriseState.status === 'loading'}
-            onPress={handleSuggestCategory}
-            flex
-            disabled={aiUsage?.remaining === 0}
-            hint={usageHint ?? 'Reads your title & description, then suggests a matching category'}
-          />
+        <View className="flex-row mb-5">
           <AIButton
             label="Expand with AI"
             icon="sparkles-outline"
@@ -247,23 +198,6 @@ export default function IdeaDetail() {
             onPress={handleOpenHistory}
           />
         </View>
-
-        {categoriseState.status === 'error' && (
-          <Text className="text-destructive text-xs mb-3">{categoriseState.error}</Text>
-        )}
-
-        <Text className="text-muted text-xs font-semibold uppercase mb-2">Category</Text>
-        <CategoryPicker value={categoryId} onChange={handleCategoryChange} />
-
-        <Text className="text-muted text-xs font-semibold uppercase mt-4 mb-2">Tags</Text>
-        <View className="flex-row flex-wrap mb-2">
-          {ideaTags.map((t) => (
-            <Tag key={t.id} label={t.name} onRemove={() => handleTagToggle(t.id)} />
-          ))}
-        </View>
-        <Pressable className="self-start min-h-11 justify-center mb-6" onPress={() => setTagPickerVisible(true)}>
-          <Text className="text-primary text-sm">+ Add tag</Text>
-        </Pressable>
 
         <Text className="text-muted text-xs font-semibold uppercase mb-2">Linked Goals</Text>
         {linkedGoals.map((g) => (
@@ -348,15 +282,6 @@ export default function IdeaDetail() {
           );
         })}
       </ModalSheet>
-
-      <TagPicker
-        visible={tagPickerVisible}
-        onClose={() => setTagPickerVisible(false)}
-        allTags={allTags}
-        selectedIds={ideaTags.map((t) => t.id)}
-        onToggle={handleTagToggle}
-        onCreateTag={createTag}
-      />
 
       <ItemPickerModal
         visible={goalPickerVisible}

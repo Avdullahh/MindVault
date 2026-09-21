@@ -1,11 +1,5 @@
 import type { Database } from './database.generated';
 
-export type CategoryInsert    = Database['public']['Tables']['categories']['Insert'];
-export type CategoryUpdate    = Database['public']['Tables']['categories']['Update'];
-export type Category      = Database['public']['Tables']['categories']['Row'];
-export type TagInsert         = Database['public']['Tables']['tags']['Insert'];
-export type TagUpdate         = Database['public']['Tables']['tags']['Update'];
-export type Tag           = Database['public']['Tables']['tags']['Row'];
 export type IdeaInsert        = Database['public']['Tables']['ideas']['Insert'];
 export type IdeaUpdate        = Database['public']['Tables']['ideas']['Update'];
 export type Idea          = Database['public']['Tables']['ideas']['Row'];
@@ -20,6 +14,8 @@ export type TaskUpdate        = Database['public']['Tables']['tasks']['Update'];
 export type Task          = Database['public']['Tables']['tasks']['Row'];
 export type IdeaExpansionInsert = Database['public']['Tables']['idea_expansions']['Insert'];
 export type IdeaExpansion       = Database['public']['Tables']['idea_expansions']['Row'];
+export type ProjectPlanInsert   = Database['public']['Tables']['project_plans']['Insert'];
+export type ProjectPlan         = Database['public']['Tables']['project_plans']['Row'];
 export type MorningBriefLogInsert = Database['public']['Tables']['morning_brief_log']['Insert'];
 export type MorningBriefLogUpdate = Database['public']['Tables']['morning_brief_log']['Update'];
 export type MorningBriefLog       = Database['public']['Tables']['morning_brief_log']['Row'];

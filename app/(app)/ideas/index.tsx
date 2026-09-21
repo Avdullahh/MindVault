@@ -43,9 +43,7 @@ export default function IdeasScreen() {
       <CreateIdeaModal
         visible={modalVisible}
         onClose={() => setModalVisible(false)}
-        onCreate={(title, description, categoryId) =>
-          create({ title, description, category_id: categoryId })
-        }
+        onCreate={(title, description) => create({ title, description })}
       />
     </EntityListScreen>
   );

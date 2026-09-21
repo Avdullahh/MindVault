@@ -8,7 +8,7 @@ import { PRIORITIES, PRIORITY_LABELS, priorityActive, type Priority } from '../l
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onCreate: (payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes' | 'category_id'>) => Promise<string | null>;
+  onCreate: (payload: Pick<TaskInsert, 'title' | 'due_date' | 'priority' | 'notes'>) => Promise<string | null>;
   projectId?: string;
 };
 
@@ -25,7 +25,7 @@ export function CreateTaskModal({ visible, onClose, onCreate }: Props) {
   const handleCreate = async () => {
     if (!title.trim()) { setError('Give the task a name'); return; }
     setLoading(true); setError(null);
-    const err = await onCreate({ title: title.trim(), due_date: null, priority, notes: null, category_id: null });
+    const err = await onCreate({ title: title.trim(), due_date: null, priority, notes: null });
     setLoading(false);
     if (err) { setError(err); } else { reset(); onClose(); }
   };

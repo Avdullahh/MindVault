@@ -1,11 +1,10 @@
 export type DataTopic =
-  | 'categories'
-  | 'tags'
   | 'ideas'
   | 'projects'
   | 'goals'
   | 'tasks'
-  | 'idea-expansions';
+  | 'idea-expansions'
+  | 'project-plans';
 
 type DataListener = (source?: symbol) => void;
 

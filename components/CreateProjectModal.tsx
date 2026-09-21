@@ -5,7 +5,7 @@ import { EntityFormModal } from './ui/EntityFormModal';
 type Props = {
   visible: boolean;
   onClose: () => void;
-  onCreate: (payload: Pick<ProjectInsert, 'title' | 'main_goal' | 'category_id'>) => Promise<string | null>;
+  onCreate: (payload: Pick<ProjectInsert, 'title' | 'main_goal'>) => Promise<string | null>;
 };
 
 export function CreateProjectModal({ visible, onClose, onCreate }: Props) {
@@ -20,7 +20,7 @@ export function CreateProjectModal({ visible, onClose, onCreate }: Props) {
   const handleCreate = async () => {
     if (!title.trim()) { setError('Give the project a name'); return; }
     setLoading(true); setError(null);
-    const err = await onCreate({ title: title.trim(), main_goal: mainGoal.trim() || null, category_id: null });
+    const err = await onCreate({ title: title.trim(), main_goal: mainGoal.trim() || null });
     setLoading(false);
     if (err) { setError(err); } else { reset(); onClose(); }
   };

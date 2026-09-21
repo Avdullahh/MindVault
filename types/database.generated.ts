@@ -70,30 +70,6 @@ export type Database = {
         }
         Relationships: []
       }
-      categories: {
-        Row: {
-          created_at: string
-          id: string
-          is_protected: boolean
-          name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_protected?: boolean
-          name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_protected?: boolean
-          name?: string
-          user_id?: string
-        }
-        Relationships: []
-      }
       goal_ideas: {
         Row: {
           goal_id: string
@@ -159,7 +135,6 @@ export type Database = {
       }
       goals: {
         Row: {
-          category_id: string | null
           created_at: string
           deadline: string | null
           id: string
@@ -169,7 +144,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          category_id?: string | null
           created_at?: string
           deadline?: string | null
           id?: string
@@ -179,7 +153,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          category_id?: string | null
           created_at?: string
           deadline?: string | null
           id?: string
@@ -189,13 +162,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "goals_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "goals_project_id_fkey"
             columns: ["project_id"]
@@ -240,39 +206,8 @@ export type Database = {
           },
         ]
       }
-      idea_tags: {
-        Row: {
-          idea_id: string
-          tag_id: string
-        }
-        Insert: {
-          idea_id: string
-          tag_id: string
-        }
-        Update: {
-          idea_id?: string
-          tag_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "idea_tags_idea_id_fkey"
-            columns: ["idea_id"]
-            isOneToOne: false
-            referencedRelation: "ideas"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "idea_tags_tag_id_fkey"
-            columns: ["tag_id"]
-            isOneToOne: false
-            referencedRelation: "tags"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
       ideas: {
         Row: {
-          category_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -281,7 +216,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -290,7 +224,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -298,15 +231,7 @@ export type Database = {
           title?: string
           user_id?: string
         }
-        Relationships: [
-          {
-            foreignKeyName: "ideas_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
+        Relationships: []
       }
       milestones: {
         Row: {
@@ -403,9 +328,37 @@ export type Database = {
           },
         ]
       }
+      project_plans: {
+        Row: {
+          created_at: string
+          id: string
+          project_id: string
+          tasks: string[]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          project_id: string
+          tasks?: string[]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          project_id?: string
+          tasks?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "project_plans_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       projects: {
         Row: {
-          category_id: string | null
           created_at: string
           id: string
           main_goal: string | null
@@ -413,7 +366,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          category_id?: string | null
           created_at?: string
           id?: string
           main_goal?: string | null
@@ -421,40 +373,10 @@ export type Database = {
           user_id: string
         }
         Update: {
-          category_id?: string | null
           created_at?: string
           id?: string
           main_goal?: string | null
           title?: string
-          user_id?: string
-        }
-        Relationships: [
-          {
-            foreignKeyName: "projects_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      tags: {
-        Row: {
-          created_at: string
-          id: string
-          name: string
-          user_id: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          name: string
-          user_id: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          name?: string
           user_id?: string
         }
         Relationships: []
@@ -491,7 +413,6 @@ export type Database = {
       }
       tasks: {
         Row: {
-          category_id: string | null
           created_at: string
           done: boolean
           due_date: string | null
@@ -503,7 +424,6 @@ export type Database = {
           user_id: string
         }
         Insert: {
-          category_id?: string | null
           created_at?: string
           done?: boolean
           due_date?: string | null
@@ -515,7 +435,6 @@ export type Database = {
           user_id: string
         }
         Update: {
-          category_id?: string | null
           created_at?: string
           done?: boolean
           due_date?: string | null
@@ -527,13 +446,6 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
-          {
-            foreignKeyName: "tasks_category_id_fkey"
-            columns: ["category_id"]
-            isOneToOne: false
-            referencedRelation: "categories"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "tasks_project_id_fkey"
             columns: ["project_id"]

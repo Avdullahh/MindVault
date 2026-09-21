@@ -7,7 +7,7 @@ import type { Idea, IdeaInsert } from '../types';
 
 const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
 
-type CreatePayload = Pick<IdeaInsert, 'title' | 'description' | 'category_id'>;
+type CreatePayload = Pick<IdeaInsert, 'title' | 'description'>;
 const ideasQueryKey = ['ideas'];
 
 async function fetchIdeas(): Promise<Idea[]> {
@@ -42,7 +42,7 @@ export function useIdeas() {
 
   const update = async (
     id: string,
-    payload: Partial<Pick<Idea, 'title' | 'description' | 'category_id' | 'last_viewed_at'>>,
+    payload: Partial<Pick<Idea, 'title' | 'description' | 'last_viewed_at'>>,
   ): Promise<string | null> => {
     const { error: err } = await supabase.from('ideas').update(payload).eq('id', id);
     if (err) return err.message;

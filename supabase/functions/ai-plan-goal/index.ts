@@ -22,11 +22,12 @@ Deno.serve(async (req) => {
     if (!authed) return unauthorised();
     if (!await checkProEntitlement(authed.userId)) return paymentRequired();
 
-    let body: { goalTitle?: string; context?: string };
+    let body: { goalTitle?: string; context?: string; projectId?: string };
     try { body = await req.json(); } catch { return badRequest('Invalid JSON'); }
 
     const goalTitle = clamp(body.goalTitle?.trim(), MAX_TITLE_LENGTH);
     const context = clamp(body.context?.trim(), MAX_TEXT_LENGTH);
+    const projectId = body.projectId?.trim();
     if (!goalTitle) return badRequest('goalTitle is required');
 
     const reservation = await reserveAiUsage(authed.client);
@@ -47,6 +48,19 @@ Deno.serve(async (req) => {
     let parsed: unknown;
     try { parsed = parseJsonObject(raw); } catch { return badGateway('Model returned invalid JSON'); }
     if (!isValid(parsed)) return badGateway();
+
+    if (projectId) {
+      const { error: insertError } = await authed.client.from('project_plans').insert({
+        project_id: projectId,
+        tasks: parsed.tasks,
+      });
+      // Best-effort: history is supplementary, never blocks returning the
+      // plan result the user is waiting on. RLS also rejects a projectId
+      // that isn't the caller's, which lands here rather than failing the
+      // request.
+      if (insertError) console.error('project_plans insert failed', insertError);
+    }
+
     return ok(parsed, reservation);
   } catch (e) {
     console.error(e);
