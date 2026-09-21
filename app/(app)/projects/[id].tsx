@@ -288,29 +288,26 @@ export default function ProjectDetail() {
           : projectTasks.map((t) => (
               <View
                 key={t.id}
-                className="flex-row items-center gap-3 bg-surface rounded-xl px-4 py-3 mb-2"
+                className="flex-row items-start gap-3 bg-surface rounded-xl px-4 py-3 mb-2"
               >
-                <Pressable onPress={() => toggleTask(t.id, !t.done)} hitSlop={8}>
+                <Pressable onPress={() => toggleTask(t.id, !t.done)} hitSlop={8} className="pt-0.5">
                   <Ionicons
                     name={t.done ? 'checkmark-circle' : 'ellipse-outline'}
                     size={20}
                     color={t.done ? colors.primary : colors.muted}
                   />
                 </Pressable>
-                <View className="flex-1">
-                  <Text className={`text-sm ${t.done ? 'text-muted line-through' : 'text-foreground'}`} numberOfLines={1}>
+                <Pressable className="flex-1" onPress={() => setEditingTask(t)}>
+                  <Text className={`text-sm ${t.done ? 'text-muted line-through' : 'text-foreground'}`}>
                     {t.title}
                   </Text>
                   {t.due_date ? <Text className="text-muted text-xs mt-0.5">{t.due_date}</Text> : null}
-                </View>
+                </Pressable>
                 {t.priority ? (
-                  <Text className={`text-xs capitalize ${PRIORITY_COLOR[t.priority] ?? 'text-muted'}`}>
+                  <Text className={`text-xs capitalize pt-0.5 ${PRIORITY_COLOR[t.priority] ?? 'text-muted'}`}>
                     {t.priority}
                   </Text>
                 ) : null}
-                <Pressable onPress={() => setEditingTask(t)} hitSlop={8} className="p-1">
-                  <Ionicons name="pencil-outline" size={16} color={colors.muted} />
-                </Pressable>
                 <Pressable onPress={() => handleDeleteTask(t.id)} hitSlop={8} className="p-1">
                   <Ionicons name="trash-outline" size={16} color={colors.muted} />
                 </Pressable>
