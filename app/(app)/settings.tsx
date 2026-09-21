@@ -6,6 +6,9 @@ import * as ImagePicker from 'expo-image-picker';
 import { useAuth } from '../../context/auth-context';
 import { useTheme, useThemeColors, type ThemeMode } from '../../context/ThemeContext';
 import { ModalSheet } from '../../components/ui/ModalSheet';
+import { useIdeas } from '../../hooks/use-ideas';
+import { useProjects } from '../../hooks/use-projects';
+import { useGoals } from '../../hooks/use-goals';
 
 const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionicons.glyphMap }[] = [
   { mode: 'system', label: 'System', icon: 'phone-portrait-outline' },
@@ -13,11 +16,42 @@ const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: keyof typeof Ionico
   { mode: 'dark', label: 'Dark', icon: 'moon-outline' },
 ];
 
+// A hook's `[]` is indistinguishable from a real empty result while it's still
+// loading or after it errored -- rendering that as "0" reads as data loss on
+// the account screen. Show a spinner or an explicit "unavailable" mark instead.
+function StatValue({
+  loading, error, value, textClass, colors,
+}: {
+  loading: boolean;
+  error: string | null;
+  value: number;
+  textClass: string;
+  colors: ReturnType<typeof useThemeColors>;
+}) {
+  if (loading) {
+    return <ActivityIndicator size="small" color={colors.muted} />;
+  }
+  if (error) {
+    return (
+      <Text
+        className="text-destructive text-lg font-bold font-rounded"
+        accessibilityLabel="Failed to load"
+      >
+        —
+      </Text>
+    );
+  }
+  return <Text className={`${textClass} text-lg font-bold font-rounded`}>{value}</Text>;
+}
+
 export default function Settings() {
   const { session, signOut, updateAccount, deleteAccount } = useAuth();
   const { mode, setMode } = useTheme();
   const colors = useThemeColors();
   const router = useRouter();
+  const { ideas, loading: ideasLoading, error: ideasError } = useIdeas();
+  const { projects, loading: projectsLoading, error: projectsError } = useProjects();
+  const { goals, loading: goalsLoading, error: goalsError } = useGoals();
 
   const email = session?.user.email ?? '';
   const metadata = session?.user.user_metadata ?? {};
@@ -27,6 +61,11 @@ export default function Settings() {
   const title = 'text-foreground';
   const muted = 'text-muted';
   const input = 'bg-surface text-foreground border-border';
+  const displayNameFromMetadata = typeof metadata.display_name === 'string' ? metadata.display_name : '';
+  const profileName = displayNameFromMetadata || email;
+  const memberSince = session?.user.created_at
+    ? new Date(session.user.created_at).toLocaleDateString('en-US', { month: 'long', year: 'numeric' })
+    : null;
 
   const [displayName, setDisplayName] = useState('');
   const [nextEmail, setNextEmail] = useState('');
@@ -137,19 +176,6 @@ export default function Settings() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 48, width: '100%', maxWidth: 720, alignSelf: 'center' }}>
-        <View className={`${card} rounded-2xl border p-5 mb-5`}>
-          <View className="flex-row items-center gap-4">
-            <View className="bg-surface-2 w-14 h-14 rounded-full border border-primary items-center justify-center">
-              <Text className="text-primary text-lg font-bold font-rounded">{initials}</Text>
-            </View>
-            <View className="flex-1">
-              <Text className={`${muted} text-xs uppercase tracking-widest mb-0.5`} style={{ letterSpacing: 1.5 }}>Signed in as</Text>
-              <Text className={`${title} font-medium`} numberOfLines={1}>{email}</Text>
-            </View>
-          </View>
-        </View>
-
-        <Text className={`${muted} text-xs font-semibold uppercase mb-3`} style={{ letterSpacing: 1.5 }}>Personal Information</Text>
         <View className={`${card} rounded-2xl border p-5 mb-6`}>
           <View className="items-center mb-5">
             <Pressable
@@ -164,7 +190,28 @@ export default function Settings() {
                 <Text className="text-primary text-2xl font-bold font-rounded">{initials}</Text>
               )}
             </Pressable>
-            <Text className="text-primary text-sm mt-2">Change profile photo</Text>
+            <Text className={`${title} text-lg font-bold font-rounded mt-3`} numberOfLines={1}>{profileName}</Text>
+            {displayNameFromMetadata ? (
+              <Text className={`${muted} text-sm mt-0.5`} numberOfLines={1}>{email}</Text>
+            ) : null}
+            {memberSince ? (
+              <Text className={`${muted} text-xs mt-0.5`}>Member since {memberSince}</Text>
+            ) : null}
+          </View>
+
+          <View className="flex-row mb-5">
+            <View className="flex-1 items-center">
+              <StatValue loading={ideasLoading} error={ideasError} value={ideas.length} textClass={title} colors={colors} />
+              <Text className={`${muted} text-xs mt-0.5`}>Ideas</Text>
+            </View>
+            <View className="flex-1 items-center border-x border-border">
+              <StatValue loading={projectsLoading} error={projectsError} value={projects.length} textClass={title} colors={colors} />
+              <Text className={`${muted} text-xs mt-0.5`}>Projects</Text>
+            </View>
+            <View className="flex-1 items-center">
+              <StatValue loading={goalsLoading} error={goalsError} value={goals.length} textClass={title} colors={colors} />
+              <Text className={`${muted} text-xs mt-0.5`}>Goals</Text>
+            </View>
           </View>
 
           <Text className={`${muted} text-xs font-semibold mb-2`}>Display name</Text>
@@ -251,18 +298,6 @@ export default function Settings() {
         <Text className={`${muted} text-xs leading-4 mb-6`}>
           System follows your device. Depth in dark mode comes from lighter surfaces and hairlines, not shadows.
         </Text>
-
-        {/* DEV-ONLY — remove with app/(app)/tokens.tsx in cleanup. */}
-        {__DEV__ ? (
-          <Pressable
-            className={`${card} rounded-xl py-4 px-5 items-center flex-row justify-between border mb-6`}
-            onPress={() => router.push('/(app)/tokens')}
-            accessibilityRole="button"
-          >
-            <Text className="text-foreground font-medium">Design tokens</Text>
-            <Ionicons name="chevron-forward" size={20} color={colors.muted} />
-          </Pressable>
-        ) : null}
 
         <Pressable
           className="bg-destructive/20 rounded-xl py-4 px-5 items-center flex-row justify-between border border-destructive/30"
