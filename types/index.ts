@@ -20,3 +20,6 @@ export type TaskUpdate        = Database['public']['Tables']['tasks']['Update'];
 export type Task          = Database['public']['Tables']['tasks']['Row'];
 export type IdeaExpansionInsert = Database['public']['Tables']['idea_expansions']['Insert'];
 export type IdeaExpansion       = Database['public']['Tables']['idea_expansions']['Row'];
+export type MorningBriefLogInsert = Database['public']['Tables']['morning_brief_log']['Insert'];
+export type MorningBriefLogUpdate = Database['public']['Tables']['morning_brief_log']['Update'];
+export type MorningBriefLog       = Database['public']['Tables']['morning_brief_log']['Row'];

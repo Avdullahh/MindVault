@@ -340,6 +340,36 @@ export type Database = {
           },
         ]
       }
+      morning_brief_log: {
+        Row: {
+          created_at: string
+          id: string
+          reason: string
+          response: string | null
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          reason: string
+          response?: string | null
+          target_id: string
+          target_type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          reason?: string
+          response?: string | null
+          target_id?: string
+          target_type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       project_ideas: {
         Row: {
           added_at: string

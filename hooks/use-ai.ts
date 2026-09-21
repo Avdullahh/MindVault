@@ -52,7 +52,15 @@ async function callEdgeFunction<T>(name: string, body: object): Promise<WithUsag
 export type CategoriseResult = { categoryName: string };
 export type ExpandResult = { questions: string[]; angles: string[]; related: string[] };
 export type PlanResult = { tasks: string[] };
-export type BriefResult = { greeting: string; resurface: { title: string; description: string } | null };
+export type BriefMove = {
+  targetType: 'idea' | 'goal' | 'project';
+  targetId: string;
+  title: string;
+  reason: string;
+  ctaLabel: string;
+  logId: string | null;
+};
+export type BriefResult = { greeting: string; move: BriefMove | null };
 export type CategoriseInput = { ideaTitle: string; ideaDescription?: string };
 export type ExpandInput = CategoriseInput & { ideaId: string };
 export type PlanGoalInput = { goalTitle: string; context?: string };
@@ -118,6 +126,16 @@ export function useAI() {
       } satisfies MorningBriefInput),
     );
 
+  // Best-effort: records what the user did with a "Today's Move"
+  // recommendation (tapped the CTA vs. dismissed it) against its
+  // morning_brief_log row, so future briefs can avoid repeats and, later,
+  // learn from taste. Not wired into React Query — nothing reads this
+  // table client-side yet.
+  const respondToBriefMove = async (logId: string, response: 'acted' | 'dismissed') => {
+    const { error } = await supabase.from('morning_brief_log').update({ response }).eq('id', logId);
+    if (error) console.error('Failed to record brief response', error);
+  };
+
   const resetExpand = () => setExpandState(makeState);
   const resetBrief = () => setBriefState(makeState);
   const resetPlan = () => setPlanState(makeState);
@@ -127,6 +145,6 @@ export function useAI() {
     categoriseState, categorise, resetCategorise,
     expandState, expandIdea, resetExpand,
     planState, planGoal, resetPlan,
-    briefState, morningBrief, resetBrief,
+    briefState, morningBrief, resetBrief, respondToBriefMove,
   };
 }

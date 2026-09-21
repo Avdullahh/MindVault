@@ -1,8 +1,8 @@
 import { ActivityIndicator, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAI } from '../../hooks/use-ai';
+import { useAI, type BriefMove } from '../../hooks/use-ai';
 import { useAiUsage } from '../../hooks/use-ai-usage';
 import { useGoals } from '../../hooks/use-goals';
 import { useIdeas } from '../../hooks/use-ideas';
@@ -29,13 +29,22 @@ function EmptyCard({ text }: { text: string }) {
   );
 }
 
+function moveRoute(move: BriefMove): string {
+  switch (move.targetType) {
+    case 'idea': return `/(app)/ideas/${move.targetId}`;
+    case 'goal': return `/(app)/goals/${move.targetId}`;
+    case 'project': return `/(app)/projects/${move.targetId}`;
+  }
+}
+
 export default function DashboardScreen() {
   const router = useRouter();
   const colors = useThemeColors();
+  const [dismissedLogId, setDismissedLogId] = useState<string | null>(null);
   const { ideas, forgottenIdeas, loading: ideasLoading, refetch: refetchIdeas } = useIdeas();
   const { goals, loading: goalsLoading, refetch: refetchGoals } = useGoals();
   const { projects, loading: projectsLoading, refetch: refetchProjects } = useProjects();
-  const { morningBrief, briefState } = useAI();
+  const { morningBrief, briefState, respondToBriefMove } = useAI();
   const { usage: aiUsage, hint: usageHint } = useAiUsage();
 
   const loading = ideasLoading || goalsLoading || projectsLoading;
@@ -124,13 +133,13 @@ export default function DashboardScreen() {
         <View className="bg-surface rounded-2xl p-4 border border-primary mb-5">
           <View className="flex-row items-center justify-between gap-3">
             <View className="flex-1">
-              <Text className="text-foreground font-bold font-rounded">Morning Brief</Text>
-              <Text className="text-muted text-xs mt-1">Reads your ideas vault and surfaces a forgotten idea with an inspirational thought for the day.</Text>
+              <Text className="text-foreground font-bold font-rounded">Today's Move</Text>
+              <Text className="text-muted text-xs mt-1">Reads your ideas, goals, and projects and picks one thing worth acting on today, with the reason why.</Text>
             </View>
             <AIButton
               label={briefState.status === 'success' ? 'Refresh' : 'Generate'}
               loading={briefState.status === 'loading'}
-              onPress={morningBrief}
+              onPress={() => { setDismissedLogId(null); morningBrief(); }}
               compact
               disabled={aiUsage?.remaining === 0}
               hint={usageHint ?? undefined}
@@ -148,15 +157,33 @@ export default function DashboardScreen() {
           {briefState.status === 'success' && briefState.data ? (
             <View className="mt-4">
               <Text className="text-foreground text-sm leading-5">{briefState.data.greeting}</Text>
-              {briefState.data.resurface ? (
-                <Pressable
-                  className="bg-background rounded-xl p-3 mt-3 min-h-16 border border-border"
-                  onPress={() => router.push('/(app)/ideas')}
-                >
-                  <Text className="text-primary text-xs font-semibold uppercase">Resurface</Text>
-                  <Text className="text-foreground font-medium mt-1" numberOfLines={1}>{briefState.data.resurface.title}</Text>
-                  <Text className="text-muted text-xs mt-1" numberOfLines={2}>{briefState.data.resurface.description}</Text>
-                </Pressable>
+              {briefState.data.move && briefState.data.move.logId !== dismissedLogId ? (
+                <View className="bg-background rounded-xl p-3 mt-3 border border-border">
+                  <Text className="text-foreground font-medium" numberOfLines={1}>{briefState.data.move.title}</Text>
+                  <Text className="text-muted text-xs mt-1 leading-4" style={{ includeFontPadding: false }}>{briefState.data.move.reason}</Text>
+                  <View className="flex-row items-center gap-3 mt-3">
+                    <Pressable
+                      className="bg-primary rounded-full px-4 py-2 min-h-9 items-center justify-center"
+                      onPress={() => {
+                        const move = briefState.data!.move!;
+                        if (move.logId) respondToBriefMove(move.logId, 'acted');
+                        router.push(moveRoute(move));
+                      }}
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-primary-foreground text-xs font-semibold">{briefState.data.move.ctaLabel}</Text>
+                    </Pressable>
+                    <Pressable
+                      onPress={() => {
+                        const move = briefState.data!.move!;
+                        if (move.logId) { respondToBriefMove(move.logId, 'dismissed'); setDismissedLogId(move.logId); }
+                      }}
+                      accessibilityRole="button"
+                    >
+                      <Text className="text-muted text-xs font-semibold">Not now</Text>
+                    </Pressable>
+                  </View>
+                </View>
               ) : null}
             </View>
           ) : null}
