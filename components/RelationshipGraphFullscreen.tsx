@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView, View, useWindowDimensions } from 'react-native';
 import { useThemeColors } from '../context/ThemeContext';
 import type { EntityGraphEdge, EntityGraphEdgeType, EntityGraphNode } from '../hooks/use-entity-graph';
@@ -25,6 +25,10 @@ function edgeColorForType(type: EntityGraphEdgeType) {
 
 export function RelationshipGraphFullscreen({ nodes, edges, onNodePress }: RelationshipGraphFullscreenProps) {
   const colors = useThemeColors();
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handleToggle = (node: EntityGraphNode) => {
+    setSelectedId((prev) => (prev === node.id ? null : node.id));
+  };
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const graphWidth = viewportWidth * 1.6;
   const graphHeight = viewportHeight * 1.6;
@@ -74,7 +78,14 @@ export function RelationshipGraphFullscreen({ nodes, edges, onNodePress }: Relat
           const degree = degreeById.get(node.id) ?? 0;
           const glowScale = 1 + Math.min(degree, 6) * 0.06;
           return (
-            <GraphNodeMarker key={node.id} node={node} onPress={onNodePress} glowScale={glowScale} />
+            <GraphNodeMarker
+              key={node.id}
+              node={node}
+              isSelected={node.id === selectedId}
+              onToggle={handleToggle}
+              onOpen={onNodePress}
+              glowScale={glowScale}
+            />
           );
         })}
       </View>
