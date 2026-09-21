@@ -13,7 +13,7 @@ import {
 import { useThemeColors } from '../context/ThemeContext';
 import type { EntityGraphEdge, EntityGraphNode, EntityGraphNodeType } from '../hooks/use-entity-graph';
 
-type PositionedNode = EntityGraphNode & SimulationNodeDatum & {
+export type PositionedNode = EntityGraphNode & SimulationNodeDatum & {
   x: number;
   y: number;
 };
@@ -52,7 +52,7 @@ export const NODE_VISUALS: Record<EntityGraphNodeType, NodeVisual> = {
   },
 };
 
-function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: number, height: number) {
+export function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: number, height: number) {
   if (nodes.length === 0) return [];
 
   const simulationNodes: PositionedNode[] = nodes.map((node, index) => ({
@@ -95,7 +95,7 @@ function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: 
   }));
 }
 
-function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: string) {
+export function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: string) {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
   const length = Math.sqrt(dx * dx + dy * dy);
@@ -111,6 +111,116 @@ function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: st
     transform: [{ rotate: angle }],
     transformOrigin: '0px 0px',
   };
+}
+
+type GraphNodeMarkerProps = {
+  node: PositionedNode;
+  onPress: (node: EntityGraphNode) => void;
+  glowScale?: number;
+};
+
+export function GraphNodeMarker({ node, onPress, glowScale = 1 }: GraphNodeMarkerProps) {
+  const colors = useThemeColors();
+  const visual = NODE_VISUALS[node.type];
+  const glowSize = 76 * glowScale;
+  const badgeSize = 48 * glowScale;
+  const iconWrapSize = 28 * glowScale;
+
+  return (
+    <Pressable
+      onPress={() => onPress(node)}
+      accessibilityRole="button"
+      accessibilityLabel={`${visual.label}: ${node.title}`}
+      style={{
+        position: 'absolute',
+        left: node.x - 58,
+        top: node.y - 58,
+        width: 116,
+        minHeight: 104,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 7,
+      }}
+    >
+      <View
+        style={{
+          width: glowSize,
+          height: glowSize,
+          borderRadius: glowSize / 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: visual.glow,
+        }}
+      >
+        <View
+          style={{
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: badgeSize / 2,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: visual.color,
+          }}
+        >
+          <View
+            style={{
+              width: iconWrapSize,
+              height: iconWrapSize,
+              borderRadius: iconWrapSize / 2,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.surface,
+            }}
+          >
+            <Ionicons name={visual.icon} size={16} color={visual.color} />
+          </View>
+        </View>
+      </View>
+      <View
+        style={{
+          maxWidth: 112,
+          minHeight: 42,
+          paddingHorizontal: 8,
+          paddingVertical: 6,
+          borderRadius: 10,
+          borderCurve: 'continuous',
+          backgroundColor: colors.surface2,
+          borderWidth: 1,
+          borderColor: colors.border,
+        }}
+      >
+        <Text
+          selectable
+          numberOfLines={2}
+          style={{
+            color: colors.foreground,
+            fontSize: 11,
+            lineHeight: 14,
+            fontWeight: '700',
+            textAlign: 'center',
+            includeFontPadding: false,
+          }}
+        >
+          {node.title}
+        </Text>
+        <Text
+          selectable
+          numberOfLines={1}
+          style={{
+            color: visual.color,
+            fontSize: 9,
+            lineHeight: 12,
+            fontWeight: '700',
+            textAlign: 'center',
+            textTransform: 'uppercase',
+            includeFontPadding: false,
+          }}
+        >
+          {visual.label}
+        </Text>
+      </View>
+    </Pressable>
+  );
 }
 
 export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGraphProps) {
@@ -157,105 +267,9 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
             ))}
           </View>
 
-          {positionedNodes.map((node) => {
-            const visual = NODE_VISUALS[node.type];
-            return (
-              <Pressable
-                key={node.id}
-                onPress={() => onNodePress(node)}
-                accessibilityRole="button"
-                accessibilityLabel={`${visual.label}: ${node.title}`}
-                style={{
-                  position: 'absolute',
-                  left: node.x - 58,
-                  top: node.y - 58,
-                  width: 116,
-                  minHeight: 104,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 7,
-                }}
-              >
-                <View
-                  style={{
-                    width: 76,
-                    height: 76,
-                    borderRadius: 38,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: visual.glow,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: visual.color,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 14,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: colors.surface,
-                      }}
-                    >
-                      <Ionicons name={visual.icon} size={16} color={visual.color} />
-                    </View>
-                  </View>
-                </View>
-                <View
-                  style={{
-                    maxWidth: 112,
-                    minHeight: 42,
-                    paddingHorizontal: 8,
-                    paddingVertical: 6,
-                    borderRadius: 10,
-                    borderCurve: 'continuous',
-                    backgroundColor: colors.surface2,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Text
-                    selectable
-                    numberOfLines={2}
-                    style={{
-                      color: colors.foreground,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      fontWeight: '700',
-                      textAlign: 'center',
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {node.title}
-                  </Text>
-                  <Text
-                    selectable
-                    numberOfLines={1}
-                    style={{
-                      color: visual.color,
-                      fontSize: 9,
-                      lineHeight: 12,
-                      fontWeight: '700',
-                      textAlign: 'center',
-                      textTransform: 'uppercase',
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {visual.label}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
+          {positionedNodes.map((node) => (
+            <GraphNodeMarker key={node.id} node={node} onPress={onNodePress} />
+          ))}
         </View>
       </ScrollView>
     </View>

@@ -49,7 +49,9 @@ function ThemedApp() {
       <AuthProvider>
         <QueryProvider>
           <AuthGate />
-          <Stack screenOptions={{ headerShown: false }} />
+          <Stack screenOptions={{ headerShown: false }}>
+            <Stack.Screen name="mind-map-fullscreen" options={{ presentation: 'fullScreenModal', animation: 'fade' }} />
+          </Stack>
         </QueryProvider>
       </AuthProvider>
     </NavigationThemeProvider>

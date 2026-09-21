@@ -137,7 +137,13 @@ export default function MindMapScreen() {
         {!loading && !error && nodes.length > 0 ? (
           <View>
             <SectionHeader title="Connections" />
-            <RelationshipGraph nodes={nodes} edges={edges} onNodePress={handleNodePress} />
+            <Pressable
+              onPress={() => router.push('/mind-map-fullscreen')}
+              accessibilityRole="button"
+              accessibilityLabel="Expand mind map to fullscreen"
+            >
+              <RelationshipGraph nodes={nodes} edges={edges} onNodePress={handleNodePress} />
+            </Pressable>
           </View>
         ) : null}
       </ScrollView>

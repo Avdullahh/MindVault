@@ -41,6 +41,7 @@ function parseGraphPayload(payload: EntityGraphPayload | null): EntityGraphPaylo
 
 export function useEntityGraph() {
   const source = useRef(Symbol('entity-graph'));
+  const channelName = useRef(`entity-graph-${Math.random().toString(36).slice(2)}`);
   const [graph, setGraph] = useState<EntityGraphPayload>({ nodes: [], edges: [] });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -70,7 +71,7 @@ export function useEntityGraph() {
     });
 
     const channel = supabase
-      .channel('entity-graph')
+      .channel(channelName.current)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'ideas' }, () => void fetch())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, () => void fetch())
       .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' }, () => void fetch())
