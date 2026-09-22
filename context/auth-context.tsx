@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Session } from '@supabase/supabase-js';
 import * as Linking from 'expo-linking';
 import { supabase } from '../lib/supabase';
@@ -18,11 +18,18 @@ type AccountUpdateResult = {
   emailChangePending: boolean;
 };
 
+type OAuthResult =
+  | { status: 'success' }
+  | { status: 'cancelled'; message: string }
+  | { status: 'error'; message: string };
+
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
+  authError: string | null;
+  clearAuthError: () => void;
   signInWithOtp: (email: string) => Promise<string | null>;
-  signInWithOAuth: (provider: OAuthProvider) => Promise<string | null>;
+  signInWithOAuth: (provider: OAuthProvider) => Promise<OAuthResult>;
   updateAccount: (payload: AccountUpdatePayload) => Promise<AccountUpdateResult>;
   refreshSession: () => Promise<boolean>;
   signOut: () => Promise<void>;
@@ -31,13 +38,96 @@ type AuthContextValue = {
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
+const MAGIC_LINK_EXPIRED_MESSAGE =
+  'This link has expired or has already been used. Please request a new one.';
+
+function getAuthExchangeErrorMessage(error: unknown) {
+  if (!error) return 'Could not complete sign-in. Please try again.';
+
+  if (typeof error === 'string') {
+    return error.toLowerCase().includes('invalid grant') ? MAGIC_LINK_EXPIRED_MESSAGE : error;
+  }
+
+  if (typeof error !== 'object') return 'Could not complete sign-in. Please try again.';
+
+  const maybeError = error as { code?: unknown; message?: unknown; status?: unknown };
+  const code = typeof maybeError.code === 'string' ? maybeError.code.toLowerCase() : '';
+  const message = typeof maybeError.message === 'string' ? maybeError.message : '';
+  const status = typeof maybeError.status === 'number' ? maybeError.status : null;
+  const lowerMessage = message.toLowerCase();
+
+  if (
+    code === 'bad_code' ||
+    code === 'invalid_grant' ||
+    code === 'otp_expired' ||
+    status === 400 ||
+    lowerMessage.includes('invalid grant') ||
+    lowerMessage.includes('expired') ||
+    lowerMessage.includes('already been used')
+  ) {
+    return MAGIC_LINK_EXPIRED_MESSAGE;
+  }
+
+  return message || 'Could not complete sign-in. Please try again.';
+}
+
+function appendSearchParams(target: URLSearchParams, value: string | null | undefined) {
+  if (!value) return;
+
+  const normalized = value.replace(/^[#?]/, '');
+  const queryStart = normalized.indexOf('?');
+  const paramsString = queryStart >= 0 ? normalized.slice(queryStart + 1) : normalized;
+
+  new URLSearchParams(paramsString).forEach((paramValue, key) => {
+    target.set(key, paramValue);
+  });
+}
+
+function getFirstParam(params: URLSearchParams, keys: string[]) {
+  for (const key of keys) {
+    const value = params.get(key);
+    if (value) return value;
+  }
+  return null;
+}
+
+function parseAuthCallbackParams(url: string) {
+  const params = new URLSearchParams();
+
+  try {
+    const parsed = new URL(url);
+    parsed.searchParams.forEach((value, key) => {
+      params.set(key, value);
+    });
+    appendSearchParams(params, parsed.hash);
+  } catch {
+    appendSearchParams(params, url);
+  }
+
+  return {
+    code: getFirstParam(params, ['code']),
+    error: getFirstParam(params, ['error']),
+    errorCode: getFirstParam(params, ['error_code']),
+    errorDescription: getFirstParam(params, ['error_description', 'error_description[]']),
+  };
+}
+
+function getAuthCallbackErrorMessage(url: string) {
+  const { error, errorCode, errorDescription } = parseAuthCallbackParams(url);
+  if (!error && !errorCode && !errorDescription) return null;
+
+  return getAuthExchangeErrorMessage({
+    code: errorCode ?? error ?? undefined,
+    message: errorDescription ?? error ?? undefined,
+  });
+}
+
 // Shared by the magic-link deep-link listener and the OAuth browser flow:
 // both hand the app back a redirect URL carrying a PKCE `code` param that
 // needs exchanging for a session.
 async function exchangeCodeFromUrl(url: string | null) {
   if (!url) return null;
-  const parsed = Linking.parse(url);
-  const code = typeof parsed.queryParams?.code === 'string' ? parsed.queryParams.code : null;
+  const { code } = parseAuthCallbackParams(url);
   if (!code) return null;
   return supabase.auth.exchangeCodeForSession(code);
 }
@@ -45,6 +135,8 @@ async function exchangeCodeFromUrl(url: string | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const handledUrlsRef = useRef(new Set<string>());
 
   useEffect(() => {
     let mounted = true;
@@ -73,10 +165,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // or resumed with one.
   useEffect(() => {
     const handleUrl = async (url: string | null) => {
-      const result = await exchangeCodeFromUrl(url);
-      if (result && !result.error && result.data.session) setSession(result.data.session);
+      if (!url || handledUrlsRef.current.has(url)) return;
+      handledUrlsRef.current.add(url);
+
+      const callbackError = getAuthCallbackErrorMessage(url);
+      if (callbackError) {
+        setAuthError(callbackError);
+        return;
+      }
+
+      try {
+        const result = await exchangeCodeFromUrl(url);
+        if (result?.error) {
+          setAuthError(getAuthExchangeErrorMessage(result.error));
+          return;
+        }
+        if (result && !result.error && result.data.session) setSession(result.data.session);
+      } catch (error) {
+        setAuthError(getAuthExchangeErrorMessage(error));
+        return;
+      }
     };
 
+    void handleUrl(Linking.getLinkingURL());
     Linking.getInitialURL().then(handleUrl);
     const subscription = Linking.addEventListener('url', ({ url }) => {
       void handleUrl(url);
@@ -97,7 +208,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   };
 
-  const signInWithOAuth = async (provider: OAuthProvider) => {
+  const signInWithOAuth = async (provider: OAuthProvider): Promise<OAuthResult> => {
     const redirectTo = Linking.createURL('/');
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider,
@@ -106,24 +217,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         skipBrowserRedirect: true,
       },
     });
-    if (error) return error.message;
-    if (!data.url) return `${provider} sign-in is not configured`;
+    if (error) return { status: 'error', message: error.message };
+    if (!data.url) return { status: 'error', message: `${provider} sign-in is not configured` };
 
     const WebBrowser = await import('expo-web-browser').catch(() => null);
     if (!WebBrowser) {
       await Linking.openURL(data.url);
-      return null;
+      return { status: 'success' };
     }
 
-    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (result.type !== 'success') return null;
+    const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo).catch(() => null);
+    if (!result) {
+      return { status: 'error', message: `Could not complete ${provider} sign-in. Please try again.` };
+    }
+    if (result.type !== 'success') {
+      if (result.type === 'cancel' || result.type === 'dismiss') {
+        return { status: 'cancelled', message: 'Sign-in was cancelled.' };
+      }
+      return { status: 'error', message: `Could not complete ${provider} sign-in. Please try again.` };
+    }
 
     const exchange = await exchangeCodeFromUrl(result.url);
-    if (!exchange) return `Could not complete ${provider} sign-in`;
-    if (exchange.error) return exchange.error.message;
-    if (exchange.data.session) setSession(exchange.data.session);
-    return null;
+    if (!exchange) return { status: 'error', message: `Could not complete ${provider} sign-in` };
+    if (exchange.error) return { status: 'error', message: getAuthExchangeErrorMessage(exchange.error) };
+    if (exchange.data.session) {
+      if (provider === 'apple' && exchange.data.session.provider_refresh_token) {
+        void supabase.functions.invoke('store-apple-credential', {
+          body: { refreshToken: exchange.data.session.provider_refresh_token },
+        }).then(({ error }) => {
+          if (error) console.warn('Failed to store Apple credential', error);
+        }).catch((err) => {
+          console.warn('Failed to store Apple credential', err);
+        });
+      }
+      setSession(exchange.data.session);
+    }
+    return { status: 'success' };
   };
+
+  const clearAuthError = useCallback(() => setAuthError(null), []);
 
   const updateAccount = async ({
     displayName,
@@ -194,6 +326,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         session,
         loading,
+        authError,
+        clearAuthError,
         signInWithOtp,
         signInWithOAuth,
         updateAccount,

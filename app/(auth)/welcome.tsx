@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../context/ThemeContext';
+import { useTheme, useThemeColors } from '../../context/ThemeContext';
+import { useAuth } from '../../context/auth-context';
 import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 import { OAuthButtons } from '../../components/ui/OAuthButtons';
 
@@ -12,15 +13,24 @@ const FEATURES = [
   { icon: 'git-network-outline' as const, label: 'See the whole map, not just the list.' },
 ];
 
+const LOGOS = {
+  light: require('../../assets/logo-light.png'),
+  dark: require('../../assets/logo-dark.png'),
+};
+
 export default function Welcome() {
   const colors = useThemeColors();
+  const { colorScheme } = useTheme();
+  const { authError, clearAuthError } = useAuth();
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
+  const displayedError = error ?? authError;
 
   return (
     <AuthFormContainer>
       <Image
-        source={require('../../assets/icon.png')}
+        source={LOGOS[colorScheme]}
         className="w-24 h-24 rounded-2xl mb-5 self-center"
         accessibilityLabel="MindVault logo"
       />
@@ -38,13 +48,17 @@ export default function Welcome() {
         ))}
       </View>
 
-      {error ? <Text selectable className="text-destructive mb-4 text-sm">{error}</Text> : null}
+      {notice ? <Text selectable className="text-muted mb-4 text-sm">{notice}</Text> : null}
+      {displayedError ? <Text selectable className="text-destructive mb-4 text-sm">{displayedError}</Text> : null}
 
-      <OAuthButtons loading={loading} onLoadingChange={setLoading} onError={setError} />
+      <OAuthButtons loading={loading} onLoadingChange={setLoading} onError={setError} onNotice={setNotice} />
 
       <Pressable
         className="flex-row items-center justify-center gap-2 mb-8"
-        onPress={() => router.push('/(auth)/login')}
+        onPress={() => {
+          clearAuthError();
+          router.push('/(auth)/login');
+        }}
         disabled={loading}
         accessibilityRole="button"
       >

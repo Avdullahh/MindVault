@@ -12,13 +12,15 @@ import { OAuthButtons } from '../../components/ui/OAuthButtons';
 const RESEND_COOLDOWN_SECONDS = 30;
 
 export default function Login() {
-  const { signInWithOtp, refreshSession } = useAuth();
+  const { signInWithOtp, refreshSession, authError, clearAuthError } = useAuth();
   const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [cooldown, setCooldown] = useState(0);
+  const displayedError = error ?? authError;
 
   // Standard countdown pattern: each tick schedules the next one, so the
   // effect's own dependency array does the "stop at zero" bookkeeping.
@@ -33,11 +35,15 @@ export default function Login() {
   const handleSendLink = async () => {
     const trimmed = email.trim();
     if (!trimmed || !trimmed.includes('@')) {
+      setNotice(null);
+      clearAuthError();
       setError('Enter a valid email address');
       return;
     }
     setLoading(true);
     setError(null);
+    setNotice(null);
+    clearAuthError();
     const err = await signInWithOtp(trimmed);
     setLoading(false);
     if (err) {
@@ -51,6 +57,8 @@ export default function Login() {
   const handleCheckOpened = async () => {
     setLoading(true);
     setError(null);
+    setNotice(null);
+    clearAuthError();
     const hasSession = await refreshSession();
     setLoading(false);
     if (!hasSession) setError("We haven't seen that link opened yet. Try again in a moment.");
@@ -68,7 +76,7 @@ export default function Login() {
             We sent a one-time sign-in link to {email.trim()}. Open it on this device and you'll land straight in your vault.
           </Text>
 
-          {error ? <Text selectable className="text-destructive mb-4 text-sm">{error}</Text> : null}
+          {displayedError ? <Text selectable className="text-destructive mb-4 text-sm">{displayedError}</Text> : null}
 
           <View className="flex-row gap-3 self-stretch">
             <View className="flex-1">
@@ -91,6 +99,8 @@ export default function Login() {
           onPress={() => {
             setSent(false);
             setError(null);
+            setNotice(null);
+            clearAuthError();
           }}
         >
           <Text className="text-muted">
@@ -108,7 +118,7 @@ export default function Login() {
         One account keeps every idea, goal and project in sync.
       </Text>
 
-      <OAuthButtons loading={loading} onLoadingChange={setLoading} onError={setError} />
+      <OAuthButtons loading={loading} onLoadingChange={setLoading} onError={setError} onNotice={setNotice} />
 
       <View className="flex-row items-center mb-6">
         <View className="flex-1 h-px bg-border" />
@@ -130,7 +140,8 @@ export default function Login() {
       />
       <Text className="text-muted text-xs mb-4">We'll email you a link — no password needed.</Text>
 
-      {error ? <Text selectable className="text-destructive mb-4 text-sm">{error}</Text> : null}
+      {notice ? <Text selectable className="text-muted mb-4 text-sm">{notice}</Text> : null}
+      {displayedError ? <Text selectable className="text-destructive mb-4 text-sm">{displayedError}</Text> : null}
 
       <View className="mb-6">
         <Button label="Send me a link" variant="ghost" onPress={handleSendLink} loading={loading} />
@@ -140,7 +151,13 @@ export default function Login() {
         New here? The same buttons create your vault — there's nothing else to set up.
       </Text>
 
-      <Pressable className="items-center mt-6" onPress={() => router.back()}>
+      <Pressable
+        className="items-center mt-6"
+        onPress={() => {
+          clearAuthError();
+          router.back();
+        }}
+      >
         <Text className="text-primary">Back</Text>
       </Pressable>
     </AuthFormContainer>

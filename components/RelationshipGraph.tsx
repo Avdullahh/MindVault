@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { ComponentProps } from 'react';
 import { Pressable, ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
@@ -13,7 +13,7 @@ import {
 import { useThemeColors } from '../context/ThemeContext';
 import type { EntityGraphEdge, EntityGraphNode, EntityGraphNodeType } from '../hooks/use-entity-graph';
 
-type PositionedNode = EntityGraphNode & SimulationNodeDatum & {
+export type PositionedNode = EntityGraphNode & SimulationNodeDatum & {
   x: number;
   y: number;
 };
@@ -30,6 +30,8 @@ export type NodeVisual = {
   icon: ComponentProps<typeof Ionicons>['name'];
   label: string;
 };
+
+export const DOUBLE_TAP_DELAY_MS = 300;
 
 export const NODE_VISUALS: Record<EntityGraphNodeType, NodeVisual> = {
   idea: {
@@ -52,7 +54,7 @@ export const NODE_VISUALS: Record<EntityGraphNodeType, NodeVisual> = {
   },
 };
 
-function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: number, height: number) {
+export function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: number, height: number) {
   if (nodes.length === 0) return [];
 
   const simulationNodes: PositionedNode[] = nodes.map((node, index) => ({
@@ -65,10 +67,22 @@ function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: 
     .filter((edge) => validNodeIds.has(edge.source) && validNodeIds.has(edge.target))
     .map((edge) => ({ source: edge.source, target: edge.target }));
 
+  const degreeById = new Map<string, number>();
+  simulationLinks.forEach((link) => {
+    degreeById.set(link.source, (degreeById.get(link.source) ?? 0) + 1);
+    degreeById.set(link.target, (degreeById.get(link.target) ?? 0) + 1);
+  });
+
   forceSimulation(simulationNodes)
     .force('charge', forceManyBody<PositionedNode>().strength(-460))
     .force('center', forceCenter(width / 2, height / 2))
-    .force('collide', forceCollide<PositionedNode>().radius(78).strength(0.95))
+    .force(
+      'collide',
+      forceCollide<PositionedNode>()
+        .radius((node) => 78 + Math.min(degreeById.get(node.id) ?? 0, 6) * 6)
+        .strength(0.95)
+        .iterations(3),
+    )
     .force(
       'link',
       forceLink<PositionedNode, { source: string; target: string }>(simulationLinks)
@@ -77,9 +91,9 @@ function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: 
         .strength(0.64),
     )
     .stop()
-    .tick(220);
+    .tick(260);
 
-  const padding = 110;
+  const padding = 130;
   const minX = Math.min(...simulationNodes.map((node) => node.x));
   const maxX = Math.max(...simulationNodes.map((node) => node.x));
   const minY = Math.min(...simulationNodes.map((node) => node.y));
@@ -95,7 +109,7 @@ function buildLayout(nodes: EntityGraphNode[], edges: EntityGraphEdge[], width: 
   }));
 }
 
-function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: string) {
+export function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: string) {
   const dx = target.x - source.x;
   const dy = target.y - source.y;
   const length = Math.sqrt(dx * dx + dy * dy);
@@ -113,8 +127,141 @@ function edgeStyle(source: PositionedNode, target: PositionedNode, edgeColor: st
   };
 }
 
+type GraphNodeMarkerProps = {
+  node: PositionedNode;
+  isSelected: boolean;
+  onToggle: (node: EntityGraphNode) => void;
+  onOpen: (node: EntityGraphNode) => void;
+  glowScale?: number;
+};
+
+export function GraphNodeMarker({ node, isSelected, onToggle, onOpen, glowScale = 1 }: GraphNodeMarkerProps) {
+  const colors = useThemeColors();
+  const visual = NODE_VISUALS[node.type];
+  const glowSize = 76 * glowScale;
+  const badgeSize = 48 * glowScale;
+  const iconWrapSize = 28 * glowScale;
+  const lastTapRef = useRef(0);
+
+  const handlePress = () => {
+    const now = Date.now();
+    const isDoubleTap = isSelected && now - lastTapRef.current < DOUBLE_TAP_DELAY_MS;
+    lastTapRef.current = now;
+    if (isDoubleTap) {
+      onOpen(node);
+      return;
+    }
+    onToggle(node);
+  };
+
+  return (
+    <Pressable
+      onPress={handlePress}
+      accessibilityRole="button"
+      accessibilityLabel={`${visual.label}: ${node.title}`}
+      style={{
+        position: 'absolute',
+        left: node.x - 58,
+        top: node.y - 58,
+        width: 116,
+        minHeight: 104,
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 7,
+        zIndex: isSelected ? 10 : 1,
+        elevation: isSelected ? 10 : 1,
+      }}
+    >
+      <View
+        style={{
+          width: glowSize,
+          height: glowSize,
+          borderRadius: glowSize / 2,
+          alignItems: 'center',
+          justifyContent: 'center',
+          backgroundColor: visual.glow,
+        }}
+      >
+        <View
+          style={{
+            width: badgeSize,
+            height: badgeSize,
+            borderRadius: badgeSize / 2,
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: visual.color,
+          }}
+        >
+          <View
+            style={{
+              width: iconWrapSize,
+              height: iconWrapSize,
+              borderRadius: iconWrapSize / 2,
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor: colors.surface,
+            }}
+          >
+            <Ionicons name={visual.icon} size={16} color={visual.color} />
+          </View>
+        </View>
+      </View>
+      {isSelected ? (
+        <View
+          style={{
+            maxWidth: 112,
+            minHeight: 42,
+            paddingHorizontal: 8,
+            paddingVertical: 6,
+            borderRadius: 10,
+            borderCurve: 'continuous',
+            backgroundColor: colors.surface2,
+            borderWidth: 1,
+            borderColor: colors.border,
+          }}
+        >
+          <Text
+            selectable
+            numberOfLines={2}
+            style={{
+              color: colors.foreground,
+              fontSize: 11,
+              lineHeight: 14,
+              fontWeight: '700',
+              textAlign: 'center',
+              includeFontPadding: false,
+            }}
+          >
+            {node.title}
+          </Text>
+          <Text
+            selectable
+            numberOfLines={1}
+            style={{
+              color: visual.color,
+              fontSize: 9,
+              lineHeight: 12,
+              fontWeight: '700',
+              textAlign: 'center',
+              textTransform: 'uppercase',
+              includeFontPadding: false,
+            }}
+          >
+            {visual.label}
+          </Text>
+        </View>
+      ) : null}
+    </Pressable>
+  );
+}
+
 export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGraphProps) {
   const colors = useThemeColors();
+  const scrollRef = useRef<ScrollView>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handleToggle = (node: EntityGraphNode) => {
+    setSelectedId((prev) => (prev === node.id ? null : node.id));
+  };
   const { width: viewportWidth, height: viewportHeight } = useWindowDimensions();
   const graphWidth = Math.max(980, viewportWidth * 1.35);
   const graphHeight = Math.max(720, viewportHeight * 0.72);
@@ -146,9 +293,15 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
       }}
     >
       <ScrollView
+        ref={scrollRef}
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ minWidth: graphWidth }}
+        onLayout={(event) => {
+          const visibleWidth = event.nativeEvent.layout.width;
+          const centerX = Math.max(0, (graphWidth - visibleWidth) / 2);
+          scrollRef.current?.scrollTo({ x: centerX, y: 0, animated: false });
+        }}
       >
         <View style={{ width: graphWidth, height: graphHeight }}>
           <View pointerEvents="none" style={{ position: 'absolute', inset: 0 }}>
@@ -157,105 +310,15 @@ export function RelationshipGraph({ nodes, edges, onNodePress }: RelationshipGra
             ))}
           </View>
 
-          {positionedNodes.map((node) => {
-            const visual = NODE_VISUALS[node.type];
-            return (
-              <Pressable
-                key={node.id}
-                onPress={() => onNodePress(node)}
-                accessibilityRole="button"
-                accessibilityLabel={`${visual.label}: ${node.title}`}
-                style={{
-                  position: 'absolute',
-                  left: node.x - 58,
-                  top: node.y - 58,
-                  width: 116,
-                  minHeight: 104,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 7,
-                }}
-              >
-                <View
-                  style={{
-                    width: 76,
-                    height: 76,
-                    borderRadius: 38,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    backgroundColor: visual.glow,
-                  }}
-                >
-                  <View
-                    style={{
-                      width: 48,
-                      height: 48,
-                      borderRadius: 24,
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      backgroundColor: visual.color,
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: 28,
-                        height: 28,
-                        borderRadius: 14,
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: colors.surface,
-                      }}
-                    >
-                      <Ionicons name={visual.icon} size={16} color={visual.color} />
-                    </View>
-                  </View>
-                </View>
-                <View
-                  style={{
-                    maxWidth: 112,
-                    minHeight: 42,
-                    paddingHorizontal: 8,
-                    paddingVertical: 6,
-                    borderRadius: 10,
-                    borderCurve: 'continuous',
-                    backgroundColor: colors.surface2,
-                    borderWidth: 1,
-                    borderColor: colors.border,
-                  }}
-                >
-                  <Text
-                    selectable
-                    numberOfLines={2}
-                    style={{
-                      color: colors.foreground,
-                      fontSize: 11,
-                      lineHeight: 14,
-                      fontWeight: '700',
-                      textAlign: 'center',
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {node.title}
-                  </Text>
-                  <Text
-                    selectable
-                    numberOfLines={1}
-                    style={{
-                      color: visual.color,
-                      fontSize: 9,
-                      lineHeight: 12,
-                      fontWeight: '700',
-                      textAlign: 'center',
-                      textTransform: 'uppercase',
-                      includeFontPadding: false,
-                    }}
-                  >
-                    {visual.label}
-                  </Text>
-                </View>
-              </Pressable>
-            );
-          })}
+          {positionedNodes.map((node) => (
+            <GraphNodeMarker
+              key={node.id}
+              node={node}
+              isSelected={node.id === selectedId}
+              onToggle={handleToggle}
+              onOpen={onNodePress}
+            />
+          ))}
         </View>
       </ScrollView>
     </View>
