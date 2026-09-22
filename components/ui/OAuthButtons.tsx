@@ -9,21 +9,25 @@ type Props = {
   loading: boolean;
   onLoadingChange: (loading: boolean) => void;
   onError: (message: string | null) => void;
+  onNotice: (message: string | null) => void;
 };
 
 const CONTROL_RADIUS = 12; // Mirrors the `rounded-control` design token.
 
 // Shared by the welcome and login screens — both offer the same
 // Apple/Google continue-with-OAuth actions.
-export function OAuthButtons({ loading, onLoadingChange, onError }: Props) {
-  const { signInWithOAuth } = useAuth();
+export function OAuthButtons({ loading, onLoadingChange, onError, onNotice }: Props) {
+  const { signInWithOAuth, clearAuthError } = useAuth();
   const colors = useThemeColors();
 
   const handleOAuth = async (provider: 'apple' | 'google') => {
     onLoadingChange(true);
     onError(null);
-    const err = await signInWithOAuth(provider);
-    if (err) onError(err);
+    onNotice(null);
+    clearAuthError();
+    const result = await signInWithOAuth(provider);
+    if (result.status === 'cancelled') onNotice(result.message);
+    if (result.status === 'error') onError(result.message);
     onLoadingChange(false);
   };
 
