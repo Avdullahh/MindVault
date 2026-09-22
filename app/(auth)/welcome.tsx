@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { router } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useThemeColors } from '../../context/ThemeContext';
+import { useTheme, useThemeColors } from '../../context/ThemeContext';
 import { useAuth } from '../../context/auth-context';
 import { AuthFormContainer } from '../../components/ui/AuthFormContainer';
 import { OAuthButtons } from '../../components/ui/OAuthButtons';
@@ -13,8 +13,14 @@ const FEATURES = [
   { icon: 'git-network-outline' as const, label: 'See the whole map, not just the list.' },
 ];
 
+const LOGOS = {
+  light: require('../../assets/logo-light.png'),
+  dark: require('../../assets/logo-dark.png'),
+};
+
 export default function Welcome() {
   const colors = useThemeColors();
+  const { colorScheme } = useTheme();
   const { authError, clearAuthError } = useAuth();
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
@@ -24,7 +30,7 @@ export default function Welcome() {
   return (
     <AuthFormContainer>
       <Image
-        source={require('../../assets/icon.png')}
+        source={LOGOS[colorScheme]}
         className="w-24 h-24 rounded-2xl mb-5 self-center"
         accessibilityLabel="MindVault logo"
       />
