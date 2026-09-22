@@ -12,7 +12,7 @@ import { OAuthButtons } from '../../components/ui/OAuthButtons';
 const RESEND_COOLDOWN_SECONDS = 30;
 
 export default function Login() {
-  const { signInWithOtp, refreshSession } = useAuth();
+  const { signInWithOtp, refreshSession, authError, clearAuthError } = useAuth();
   const colors = useThemeColors();
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -27,6 +27,12 @@ export default function Login() {
     const timeout = setTimeout(() => setCooldown((prev) => prev - 1), 1000);
     return () => clearTimeout(timeout);
   }, [cooldown]);
+
+  useEffect(() => {
+    if (!authError || !sent) return;
+    setError(authError);
+    clearAuthError();
+  }, [authError, clearAuthError, sent]);
 
   const startCooldown = () => setCooldown(RESEND_COOLDOWN_SECONDS);
 

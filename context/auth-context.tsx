@@ -21,6 +21,8 @@ type AccountUpdateResult = {
 type AuthContextValue = {
   session: Session | null;
   loading: boolean;
+  authError: string | null;
+  clearAuthError: () => void;
   signInWithOtp: (email: string) => Promise<string | null>;
   signInWithOAuth: (provider: OAuthProvider) => Promise<string | null>;
   updateAccount: (payload: AccountUpdatePayload) => Promise<AccountUpdateResult>;
@@ -45,6 +47,7 @@ async function exchangeCodeFromUrl(url: string | null) {
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [authError, setAuthError] = useState<string | null>(null);
 
   useEffect(() => {
     let mounted = true;
@@ -74,6 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const handleUrl = async (url: string | null) => {
       const result = await exchangeCodeFromUrl(url);
+      if (result?.error) {
+        setAuthError('That link has expired or already been used. Send a new one.');
+        return;
+      }
       if (result && !result.error && result.data.session) setSession(result.data.session);
     };
 
@@ -116,14 +123,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const result = await WebBrowser.openAuthSessionAsync(data.url, redirectTo);
-    if (result.type !== 'success') return null;
+    if (result.type !== 'success') {
+      if (result.type === 'cancel' || result.type === 'dismiss') return null;
+      return `Could not complete ${provider} sign-in. Please try again.`;
+    }
 
     const exchange = await exchangeCodeFromUrl(result.url);
     if (!exchange) return `Could not complete ${provider} sign-in`;
     if (exchange.error) return exchange.error.message;
-    if (exchange.data.session) setSession(exchange.data.session);
+    if (exchange.data.session) {
+      if (provider === 'apple' && exchange.data.session.provider_refresh_token) {
+        void supabase.functions.invoke('store-apple-credential', {
+          body: { refreshToken: exchange.data.session.provider_refresh_token },
+        }).then(({ error }) => {
+          if (error) console.warn('Failed to store Apple credential', error);
+        }).catch((err) => {
+          console.warn('Failed to store Apple credential', err);
+        });
+      }
+      setSession(exchange.data.session);
+    }
     return null;
   };
+
+  const clearAuthError = () => setAuthError(null);
 
   const updateAccount = async ({
     displayName,
@@ -194,6 +217,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         session,
         loading,
+        authError,
+        clearAuthError,
         signInWithOtp,
         signInWithOAuth,
         updateAccount,

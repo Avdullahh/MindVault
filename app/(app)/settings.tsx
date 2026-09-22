@@ -249,6 +249,9 @@ export default function Settings() {
             placeholder="Leave blank to keep current password"
             placeholderTextColor={colors.muted}
           />
+          <Text className={`${muted} text-xs mb-4`}>
+            Optional backup credential - sign-in still uses magic links or Apple/Google, not this password.
+          </Text>
 
           {profileMessage ? (
             <Text
